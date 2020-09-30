@@ -1,10 +1,10 @@
 // Copyright (c) 2016-2020 Bluespec, Inc. All Rights Reserved.
 
-package D_MMU_Cache;
+package DT_MMU_Cache;
 
 // ================================================================
 // A combined MMU and L1 Cache for the RISC-V data stream.
-// Handles LD, ST, AMO_LR, AMO_SC, and remaining AMO_ops for tags.
+// Handles LD, ST, AMO_LR, AMO_SC, and remaining AMO_ops.
 //
 // The MMU does VA-to-PA addr translation.
 // (VA=virtual addr; PA=physical addr.)
@@ -15,7 +15,7 @@ package D_MMU_Cache;
 //
 // After MMU translation, there is a 2-way triage based on PA:
 //  - Cacheable:   request goes to the cache module
-//  - Uncacheable: request goes to the MMIO  module // this will be removed as tag are not available for uncacheable data
+//  - Uncacheable: request goes to the MMIO  module
 //
 // For cacheable addrs:
 //    Provide the MMU-translated PA to the cache for tag-matching, and
@@ -126,14 +126,9 @@ interface DT_MMU_Cache_IFC;
    // TLB flush
    method Action tlb_flush;
 
-   // PTW and PTE-writeback requests from I_MMU_Cache are serviced by D_MMU_Cache
-   interface Server #(PTW_Req, PTW_Rsp)  imem_ptw_server;
-   interface Put #(Tuple2 #(PA, WordXL)) imem_pte_writeback_p;
-
    // PTW and PTE-writeback requests from DT_MMU_Cache are serviced by D_MMU_Cache
-   interface Server #(PTW_Req, PTW_Rsp)  dtmem_ptw_server;
-   interface Put #(Tuple2 #(PA, WordXL)) dtmem_pte_writeback_p;
-
+   interface Client #(PTW_Req, PTW_Rsp)  ptw_client;
+   interface Get #(Tuple2 #(PA, WordXL)) pte_writeback_g;
 `endif
 
    // ----------------
@@ -147,14 +142,6 @@ interface DT_MMU_Cache_IFC;
    // MMIO interface facing memory
 
    interface Client #(Single_Req, Single_Rsp) mmio_client;
-
-`ifdef WATCH_TOHOST
-   // ----------------------------------------------------------------
-   // For ISA tests: watch memory writes to <tohost> addr (see NOTE: "tohost" above)
-
-   method Action set_watch_tohost (Bool watch_tohost, Bit #(64) tohost_addr);
-   method Bit #(64) mv_tohost_value;
-`endif
 
 endinterface
 
@@ -262,10 +249,13 @@ module mkDT_MMU_Cache (DT_MMU_Cache_IFC);
 `ifdef ISA_PRIV_S
    TLB_IFC    tlb   <- mkTLB (dmem_not_imem,
 			      fromInteger (verbosity_cache));
-   PTW_IFC    ptw   <- mkPTW (fromInteger (verbosity_ptw));
+			      
+   // PTW requests and responses
+   FIFOF #(PTW_Req) f_ptw_reqs <- mkFIFOF; // to D_MMU_Cache
+   FIFOF #(PTW_Rsp) f_ptw_rsps <- mkFIFOF; // From D_MMU_Cache
 
-   // Writebacks to mem of PTEs whose PTE.A and/or PTE.D have been modified
-   FIFOF #(Tuple2 #(PA, WordXL)) f_dmem_pte_writebacks <- mkFIFOF;
+   // Writebacks to mem of PTEs whose PTE.a and/or PTE.D have been modified
+   FIFOF #(Tuple2 #(PA, WordXL)) f_imem_pte_writebacks <- mkFIFOF;
 `endif
 
    // ----------------------------------------------------------------
@@ -287,49 +277,9 @@ module mkDT_MMU_Cache (DT_MMU_Cache_IFC);
    Reg #(Bit #(64)) crg_ld_val [2]       <- mkCRegU (2);  // Load-val for LOAD/LR/AMO, success/fail for SC
    Reg #(Bit #(64)) crg_final_st_val [2] <- mkCRegU (2);
 
-`ifdef WATCH_TOHOST
-   // See NOTE: "tohost" above.
-   // "tohost" addr on which to monitor writes, for standard ISA tests.
-   // These are set by the 'set_watch_tohost' method but are otherwise read-only.
-   Reg #(Bool)      rg_watch_tohost <- mkReg (False);
-   Reg #(Bit #(64)) rg_tohost_addr  <- mkReg ('h_8000_1000);
-   Reg #(Bit #(64)) rg_tohost_value <- mkReg (0);
-`endif
-
    // ****************************************************************
    // ****************************************************************
    // BEHAVIOR
-
-   // ----------------------------------------------------------------
-   // If WATCH_TOHOST is configured, this function monitors STOREs for
-   // writes to the "tohost" address.  This is used only in certain
-   // ISA and other tests, in simulation.
-
-`ifdef WATCH_TOHOST
-   Reg #(Bool) rg_pass_fail_msg_printed <- mkReg (False);
-`endif
-
-   function Action fa_watch_tohost (Bit #(64) addr, Bit #(64) final_st_val);
-      action
-`ifdef WATCH_TOHOST
-	 if (rg_watch_tohost
-	     && (addr == rg_tohost_addr)
-	     && (final_st_val != 0))
-	    begin
-	       rg_tohost_value <= final_st_val;
-
-	       if (! rg_pass_fail_msg_printed) begin
-		  let test_num = (final_st_val >> 1);
-		  $display ("%0d: %m.fa_watch_tohost", cur_cycle);
-		  if (test_num == 0) $write ("    PASS");
-		  else               $write ("    FAIL <test_%0d>", test_num);
-		  $display ("  (<tohost>  addr %0h  data %0h)", addr, final_st_val);
-		  rg_pass_fail_msg_printed <= True;
-	       end
-	    end
-`endif
-      endaction
-   endfunction
 
    // ================================================================
    // This rule is basically the body of method ma_req; decoupling
@@ -455,7 +405,7 @@ module mkDT_MMU_Cache (DT_MMU_Cache_IFC);
 	    $display ("    Start PTW; -> STATE_PTW_WAIT");
 
 	 let ptw_req = PTW_Req {va: mmu_cache_req.va, satp: mmu_cache_req.satp};
-	 ptw.dmem_server.request.put (ptw_req);
+	 f_ptw_reqs.enq (ptw_req);
 
 	 crg_valid [0] <= False;
 	 crg_state [0] <= STATE_PTW_WAIT;
@@ -672,179 +622,6 @@ module mkDT_MMU_Cache (DT_MMU_Cache_IFC);
 
    // ****************************************************************
    // ****************************************************************
-   // PTW (Page Table Walks) service PTW memory requests (which are reads, only)
-   // from the cache
-
-`ifdef ISA_PRIV_S
-   // Holds request between _A and _B rules
-   // TODO: if PTW had a SemiFIFOF interface instead of Get, we wouldn't need this reg.
-   Reg #(PTW_Mem_Req) rg_ptw_mem_req <- mkRegU;
-
-   // 1-element stack to remember crg_state [0], so that we can
-   // restore it after servicing the PTW-RD cache request.
-   Reg #(State) rg_state_stack_during_ptw_rd <- mkRegU;
-
-   Bool ok_to_do_DMem_PTW = (crg_state [0] == STATE_PTW_WAIT);
-   Bool ok_to_do_IMem_PTW = (   (crg_state [0] == STATE_MAIN)
-			     && (crg_mmu_cache_req_state [0] == REQ_STATE_EMPTY));
-
-   // Step A
-   rule rl_ptw_rd_A (ok_to_do_DMem_PTW || ok_to_do_IMem_PTW);
-      let ptw_mem_req <- ptw.mem_client.request.get;
-
-      if (verbosity >= 3) begin
-	 $display ("%0d: %m.rl_ptw_rd_A: ", cur_cycle);
-	 $display ("    cache.ma_request_va %0h -> STATE_PTE_RD_B", ptw_mem_req.pte_pa);
-      end
-
-      // Start the cache RAM probe with "va" (= pte_pa)
-      cache.ma_request_va (truncate (ptw_mem_req.pte_pa));
-      rg_ptw_mem_req               <= ptw_mem_req;
-      rg_state_stack_during_ptw_rd <= crg_state [0];
-      crg_state [0]                <= STATE_PTE_RD_B;
-   endrule
-   
-   // Step B
-   rule rl_ptw_rd_B (crg_state [0] == STATE_PTE_RD_B);
-      let req = MMU_Cache_Req {op:          CACHE_LD,
-			       f3:          ((xlen == 32) ? 3'b010 : 3'b011),
-			       va:          truncate (rg_ptw_mem_req.pte_pa),
-			       st_value:    ?,
-			       amo_funct7:  0,
-			       priv:        m_Priv_Mode,
-			       sstatus_SUM: 0,
-			       mstatus_MXR: 0,
-			       satp:        0};
-      if (verbosity >= 2) begin
-	 $display ("%0d: %m.rl_ptw_rd_B: cache request_B", cur_cycle);
-	 $display ("    ", fshow_MMU_Cache_Req (req));
-      end
-      
-      let cache_result <- cache.mav_request_pa (req, rg_ptw_mem_req.pte_pa);
-      if (verbosity >= 3)
-	 $display ("    rl_ptw_rd_B: ", fshow_Cache_Result (cache_result));
-      
-      // Assertion check: cannot be a WRITE_HIT
-      if (cache_result.outcome == CACHE_WRITE_HIT) begin
-	 $display ("%0d: %m.rl_ptw_rd_B", cur_cycle);
-	 $display ("    INTERNAL ERROR: cannot have CACHE_WRITE_HIT for PTW read-request to cache");
-	 $display ("    ", fshow_MMU_Cache_Req (req));
-	 $finish (1);
-      end
-
-      if (cache_result.outcome == CACHE_READ_HIT) begin
-	 let ptw_mem_rsp = PTW_Mem_Rsp {ok: True, pte: truncate (cache_result.final_ld_val)};
-	 ptw.mem_client.response.put (ptw_mem_rsp);
-	 crg_state [0] <= rg_state_stack_during_ptw_rd;
-	 if (verbosity >= 3)
-	    $display ("    rl_ptw_rd_B: -> ", fshow (rg_state_stack_during_ptw_rd));
-      end
-      else begin // Miss (CACHE_MISS only; CACHE_WRITE_HIT not possible in PTW)
-	 crg_state [0] <= STATE_PTE_RD_CACHE_WAIT;
-	 if (verbosity >= 3)
-	    $display ("    rl_ptw_rd_B: -> STATE_PTE_RD_CACHE_WAIT");
-      end
-   endrule
-   
-   // Wait for cache miss to be serviced
-   rule rl_ptw_rd_wait (crg_state [0] == STATE_PTE_RD_CACHE_WAIT);
-      if (verbosity >= 3)
-	 $display ("%0d: %m.rl_ptw_rd_wait", cur_cycle);
-
-      if (cache.mv_refill_ok)
-	 crg_state [0] <= STATE_PTE_RD_B;
-      else begin
-	 let ptw_mem_rsp = PTW_Mem_Rsp {ok: False, pte: ?};
-	 ptw.mem_client.response.put (ptw_mem_rsp);
-	 crg_state [0] <= STATE_MAIN;
-      end
-   endrule
-`endif
-
-   // ****************************************************************
-   // ****************************************************************
-   // Modified-PTE write-backs: Service PTE writebacks to the cache
-   // (PTE 'A' (accessed) and 'D' (dirty) bits can be modified)
-
-`ifdef ISA_PRIV_S
-   // ----------------
-   // Merge PTE writeback requests from IMem and DMem
-   // From I_MMU_Cache
-   FIFOF #(Tuple2 #(PA, WordXL)) f_imem_pte_writebacks <- mkFIFOF;
-   // Merged from I_MMU_Cache and D_MMU_Cache
-   FIFOF #(Tuple2 #(PA, WordXL)) f_pte_writebacks <- mkFIFOF;
-
-   mkConnection (toGet (f_imem_pte_writebacks), toPut (f_pte_writebacks));
-   mkConnection (toGet (f_dmem_pte_writebacks), toPut (f_pte_writebacks));
-
-   // ----------------
-
-   match { .pte_writeback_pa, .pte_writeback_pte } = f_pte_writebacks.first;
-
-   // Service PTE writeback requests
-   // The rules _VA and _PA are for the two-phase requests to the cache,
-   // normally with the VA followed by the PA, but in this case
-   // they're the same.
-
-   // Phase A
-   rule rl_pte_wb_req_A ((crg_state [0] == STATE_MAIN)
-			 && (crg_mmu_cache_req_state [0] == REQ_STATE_EMPTY));
-      if (verbosity >= 2)
-	 $display ("%0d: %m.rl_pte_wb_req_A: cache request pte_pa %0h pte %0h",
-		   cur_cycle, pte_writeback_pa, pte_writeback_pte);
-
-      // Start the cache probe
-      cache.ma_request_va (truncate (pte_writeback_pa));
-      crg_state [0] <= STATE_PTE_WR_B;
-   endrule
-   
-   // Phase B
-   rule rl_pte_wb_req_B (crg_state [0] == STATE_PTE_WR_B);
-      let req = MMU_Cache_Req {op:          CACHE_ST,
-			       f3:          ((xlen == 32) ? 3'b010 : 3'b011),
-			       va:          truncate (pte_writeback_pa),
-			       st_value:    zeroExtend (pte_writeback_pte),
-			       amo_funct7:  0,
-			       priv:        m_Priv_Mode,
-			       sstatus_SUM: 0,
-			       mstatus_MXR: 0,
-			       satp:        0};
-      if (verbosity >= 2) begin
-	 $display ("%0d: %m.rl_pte_wb_req_B: cache request", cur_cycle);
-	 $display ("    ", fshow_MMU_Cache_Req (req));
-      end
-      
-      let cache_result <- cache.mav_request_pa (req, pte_writeback_pa);
-      if (verbosity >= 3)
-	 $display ("    ", fshow_Cache_Result (cache_result));
-      
-      if (cache_result.outcome == CACHE_WRITE_HIT) begin
-	 crg_state [0] <= STATE_MAIN;    // No response expected for writes
-	 f_pte_writebacks.deq;
-      end
-      else // Miss
-	 crg_state [0] <= STATE_PTE_WR_CACHE_WAIT;
-   endrule
-   
-   // Wait for cache miss to be serviced
-   rule rl_pte_wb_cache_WAIT (crg_state [0] == STATE_PTE_WR_CACHE_WAIT);
-      if (verbosity >= 2)
-	 $display ("%0d: %m.rl_pte_wb_cache_WAIT", cur_cycle);
-
-      if (! cache.mv_refill_ok) begin
-	 // Assertion failure: we should never see a cache error response
-	 // (this PTE was read earlier successfully from the cache)
-	 $display ("%0d: %m.rl_pte_wb_req_cache_WAIT: ERROR: unexpected cache error response",
-		   cur_cycle);
-	 $display ("    pte_pa %0d  pa %0h", pte_writeback_pa, pte_writeback_pte);
-	 $finish (1);
-      end
-      crg_state [0] <= STATE_PTE_WR_B;
-   endrule
-`endif
-
-   // ****************************************************************
-   // ****************************************************************
    // INTERFACE
    // ****************************************************************
    // ****************************************************************
@@ -913,11 +690,8 @@ module mkDT_MMU_Cache (DT_MMU_Cache_IFC);
    // TLB flush
    method Action tlb_flush () = tlb.ma_flush;
 
-   // Service PTW requests from I_MMU_Cache
-   interface Server imem_ptw_server = ptw.imem_server;
-
-   // Service PTE-writeback requests from I_MMU_Cache
-   interface Put    imem_pte_writeback_p = toPut (f_imem_pte_writebacks);
+   interface Client ptw_client = toGPClient (f_ptw_reqs, f_ptw_rsps);
+   interface Get    pte_writeback_g = toGet (f_dtmem_pte_writebacks);
 `endif
 
    // ----------------
@@ -931,22 +705,6 @@ module mkDT_MMU_Cache (DT_MMU_Cache_IFC);
    // MMIO interface facing memory
 
    interface mmio_client = mmio.mmio_client;
-
-   // ----------------------------------------------------------------
-   // For ISA tests: watch memory writes to <tohost> addr (see NOTE: "tohost" above)
-
-`ifdef WATCH_TOHOST
-   method Action set_watch_tohost (Bool watch_tohost, Bit #(64) tohost_addr);
-      rg_watch_tohost <= watch_tohost;
-      rg_tohost_addr  <= tohost_addr;
-      $display ("%0d: %m.set_watch_tohost: watch %0d, addr %0h",
-		cur_cycle, watch_tohost, tohost_addr);
-   endmethod
-
-   method Bit #(64) mv_tohost_value;
-      return rg_tohost_value;
-   endmethod
-`endif
 
 endmodule: mkDT_MMU_Cache
 

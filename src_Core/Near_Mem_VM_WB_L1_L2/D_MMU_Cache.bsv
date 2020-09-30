@@ -129,6 +129,10 @@ interface D_MMU_Cache_IFC;
    // PTW and PTE-writeback requests from I_MMU_Cache are serviced by D_MMU_Cache
    interface Server #(PTW_Req, PTW_Rsp)  imem_ptw_server;
    interface Put #(Tuple2 #(PA, WordXL)) imem_pte_writeback_p;
+
+   // PTW and PTE-writeback requests from DT_MMU_Cache are also serviced by D_MMU_Cache //rgollap1
+   interface Server #(PTW_Req, PTW_Rsp)  dtmem_ptw_server;
+   interface Put #(Tuple2 #(PA, WordXL)) dtmem_pte_writeback_p;
 `endif
 
    // ----------------
@@ -763,13 +767,18 @@ module mkD_MMU_Cache (D_MMU_Cache_IFC);
 
 `ifdef ISA_PRIV_S
    // ----------------
-   // Merge PTE writeback requests from IMem and DMem
+   // Merge PTE writeback requests from IMem, DTMem and DMem
    // From I_MMU_Cache
    FIFOF #(Tuple2 #(PA, WordXL)) f_imem_pte_writebacks <- mkFIFOF;
-   // Merged from I_MMU_Cache and D_MMU_Cache
+
+   // From DT_MMU_Cache
+   FIFOF #(Tuple2 #(PA, WordXL)) f_dtmem_pte_writebacks <- mkFIFOF;
+
+   // Merged from I_MMU_Cache DT_MMU_Cacheand D_MMU_Cache
    FIFOF #(Tuple2 #(PA, WordXL)) f_pte_writebacks <- mkFIFOF;
 
    mkConnection (toGet (f_imem_pte_writebacks), toPut (f_pte_writebacks));
+   mkConnection (toGet (f_dtmem_pte_writebacks), toPut (f_pte_writebacks));
    mkConnection (toGet (f_dmem_pte_writebacks), toPut (f_pte_writebacks));
 
    // ----------------
@@ -913,6 +922,13 @@ module mkD_MMU_Cache (D_MMU_Cache_IFC);
 
    // Service PTE-writeback requests from I_MMU_Cache
    interface Put    imem_pte_writeback_p = toPut (f_imem_pte_writebacks);
+
+   // Service PTW requests from DT_MMU_Cache
+   interface Server dtmem_ptw_server = ptw.dtmem_server;
+
+   // Service PTE-writeback requests from DT_MMU_Cache
+   interface Put    dtmem_pte_writeback_p = toPut (f_dtmem_pte_writebacks);
+
 `endif
 
    // ----------------

@@ -101,6 +101,18 @@ interface Near_Mem_IFC;
    // Fabric side
    interface Near_Mem_Fabric_IFC  mem_master;
 
+    // ----------------
+   // DTMem
+
+   // CPU side
+   interface DTMem_IFC  dtmem;
+
+   // Fabric side is not needed cause the the mem_master is not just for dmem
+   // mem_master interface is connected to llc interface which services all 3 caches
+   // imem, dmem and dtmem , the naming here is confusing and is used cause in the version
+   // that does not have llc mem_master interface connects dmem to memory and since these 2 versions
+   // share a lot of the same files like Core CPU etc, the names are left as is and are a bit confusing when u look at it.
+
    // ----------------------------------------------------------------
    // Optional AXI4-Lite DMem slave interface
 

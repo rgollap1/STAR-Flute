@@ -420,7 +420,7 @@ endmodule
 
 (* synthesize *)
 module mkMMIO_AXI4_Adapter_2 #(parameter Bit #(3) verbosity)
-                             (MMIO_AXI4_Adapter_IFC #(2));
+                             (MMIO_AXI4_Adapter_IFC #(3));
    let ifc <- mkMMIO_AXI4_Adapter (verbosity);
    return ifc;
 endmodule

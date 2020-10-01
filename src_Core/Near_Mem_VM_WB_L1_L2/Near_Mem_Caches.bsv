@@ -57,6 +57,7 @@ import PTW :: *;
 
 import D_MMU_Cache :: *;
 import I_MMU_Cache :: *;
+import DT_MMU_Cache :: *;
 
 import LLCache_Aux   :: *;
 import CacheUtils    :: *;
@@ -84,6 +85,7 @@ export mkNear_Mem;
 // 0-1: quiet; 2 show L1-to-L2 and L2-to-L1 messages
 Integer verbosity_I_L1_L2 = 0;    // for I-Cache
 Integer verbosity_D_L1_L2 = 0;    // for D-Cache
+Integer verbosity_DT_L1_L2 = 0;    // for DT-Cache
 
 // 0=quiet, 1 = rule firings
 Integer verbosity_mmio_axi4_adapter = 0;
@@ -236,6 +238,7 @@ module mkNear_Mem (Near_Mem_IFC);
 
    I_MMU_Cache_IFC  i_mmu_cache <- mkI_MMU_Cache;
    D_MMU_Cache_IFC  d_mmu_cache <- mkD_MMU_Cache;
+   DT_MMU_Cache_IFC  dt_mmu_cache <- mkDT_MMU_Cache;
 
    // last level cache
    LLCache llc <- mkLLCache;
@@ -250,7 +253,7 @@ module mkNear_Mem (Near_Mem_IFC);
    LLC_AXI4_Adapter_IFC  llc_axi4_adapter <- mkLLC_AXi4_Adapter (llc.to_mem);
 
    // Adapter for MMIO interfaces of i_mmu_cache and d_mmu_cache to AXI4
-   MMIO_AXI4_Adapter_IFC #(2)
+   MMIO_AXI4_Adapter_IFC #(3)
        mmio_axi4_adapter <- mkMMIO_AXI4_Adapter_2 (fromInteger (verbosity_mmio_axi4_adapter));
 
    // ----------------
@@ -259,6 +262,9 @@ module mkNear_Mem (Near_Mem_IFC);
 `ifdef ISA_PRIV_S
    mkConnection (i_mmu_cache.ptw_client,      d_mmu_cache.imem_ptw_server);
    mkConnection (i_mmu_cache.pte_writeback_g, d_mmu_cache.imem_pte_writeback_p);
+   
+   mkConnection (dt_mmu_cache.ptw_client,      d_mmu_cache.dtmem_ptw_server);
+   mkConnection (dt_mmu_cache.pte_writeback_g, d_mmu_cache.dtmem_pte_writeback_p);
 `endif
 
    // ----------------
@@ -275,6 +281,11 @@ module mkNear_Mem (Near_Mem_IFC);
 				     d_mmu_cache.l1_to_l2_client,
 				     d_mmu_cache.l2_to_l1_server);
    l1 [1] = ifc_D_L1;
+   let ifc_DT_L1 <- mkL1_IFC_Adapter (verbosity_DT_L1_L2,
+				     2,
+				     dt_mmu_cache.l1_to_l2_client,
+				     dt_mmu_cache.l2_to_l1_server);
+   l1 [2] = ifc_DT_L1;
    mkL1LLConnect (llc.to_child, l1);
 
    // ----------------
@@ -282,6 +293,7 @@ module mkNear_Mem (Near_Mem_IFC);
 
    mkConnection (i_mmu_cache.mmio_client, mmio_axi4_adapter.v_mmio_server [0]);
    mkConnection (d_mmu_cache.mmio_client, mmio_axi4_adapter.v_mmio_server [1]);
+   mkConnection (dt_mmu_cache.mmio_client, mmio_axi4_adapter.v_mmio_server [2]);
 
    // ----------------------------------------------------------------
    // BEHAVIOR
@@ -380,6 +392,36 @@ module mkNear_Mem (Near_Mem_IFC);
       method Exc_Code   exc_code   = d_mmu_cache.exc_code;
    endinterface
 
+   // DTMem
+   interface DTMem_IFC dtmem;
+      // CPU side: DTMem request
+      method Action  req (CacheOp op,
+			  Bit #(3) f3,
+`ifdef ISA_A
+			  Bit #(7) amo_funct7,
+`endif
+			  WordXL addr,
+			  Bit #(64) store_value,
+			  // The following  args for VM
+			  Priv_Mode  priv,
+			  Bit #(1)   sstatus_SUM,
+			  Bit #(1)   mstatus_MXR,
+			  WordXL     satp);    // { VM_Mode, ASID, PPN_for_page_table }
+	 dt_mmu_cache.ma_req (op, f3,
+`ifdef ISA_A
+			     amo_funct7,
+`endif
+			     addr, store_value, priv, sstatus_SUM, mstatus_MXR, satp);
+      endmethod
+
+      // CPU side: DTMem response
+      method Bool       valid      = dt_mmu_cache.valid;
+      method Bit #(64)  word64     = dt_mmu_cache.word64;
+      method Bit #(64)  st_amo_val = dt_mmu_cache.st_amo_val;
+      method Bool       exc        = dt_mmu_cache.exc;
+      method Exc_Code   exc_code   = dt_mmu_cache.exc_code;
+   endinterface
+
    // FENCE.I (potentially flush both IMem and DMem)
    interface Server server_fence_i;
       interface Put request;
@@ -423,6 +465,7 @@ module mkNear_Mem (Near_Mem_IFC);
 	 method Action put (Token t);
 	    i_mmu_cache.tlb_flush;
 	    d_mmu_cache.tlb_flush;
+	    dt_mmu_cache.tlb_flush;
 	 endmethod
       endinterface
       interface Get response;

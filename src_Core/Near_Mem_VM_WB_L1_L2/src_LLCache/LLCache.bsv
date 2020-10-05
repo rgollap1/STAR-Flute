@@ -85,7 +85,7 @@ typedef Bit#(TLog#(LLWayNum)) LLWay;
 
 `ifdef USE_LLC_MSHR_SECURE_MODEL
 `ifndef DISABLE_SECURE_BW
-typedef TDiv#(DramMaxReqs, 2) LLCRqNum; // SECURITY: limit MSHR size <= DRAM bandwidth
+typedef TDiv#(DramMaxReqs, 3) LLCRqNum; // SECURITY: limit MSHR size <= DRAM bandwidth
 `else // DISABLE_SECURE_BW
 typedef LLWayNum LLCRqNum; // ignore DRAM bandwidth contention, keep using the old mshr size
 `endif // DISABLE_SECURE_BW

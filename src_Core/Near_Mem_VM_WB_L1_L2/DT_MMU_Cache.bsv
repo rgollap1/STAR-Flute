@@ -574,6 +574,13 @@ module mkDT_MMU_Cache (DT_MMU_Cache_IFC);
 	 if (verbosity >= 3)
 	    $display ("    ok; retry -> STATE_MAIN");
       end
+      else if (ptw_rsp.result == PTW_DCACHE_FAULT) begin
+      	 crg_valid [0] <= True;
+	 crg_exc   [0] <= False;
+	 crg_mmu_cache_req_state [0] <= REQ_STATE_EMPTY;
+	 crg_state [0]              <= STATE_MAIN;
+         $display ("DT:  Dcache Fault");
+      end
       else begin
 	 crg_valid [0] <= True;
 	 crg_exc   [0] <= True;
@@ -690,7 +697,7 @@ module mkDT_MMU_Cache (DT_MMU_Cache_IFC);
    // TLB flush
    method Action tlb_flush () = tlb.ma_flush;
 
-   interface Client ptw_client = toGPClient (f_ptw_reqs, f_ptw_rsps);
+   interface Client ptw_client      = toGPClient (f_ptw_reqs, f_ptw_rsps);
    interface Get    pte_writeback_g = toGet (f_dtmem_pte_writebacks);
 `endif
 

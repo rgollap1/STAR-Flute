@@ -255,7 +255,7 @@ module mkDT_MMU_Cache (DT_MMU_Cache_IFC);
    FIFOF #(PTW_Rsp) f_ptw_rsps <- mkFIFOF; // From D_MMU_Cache
 
    // Writebacks to mem of PTEs whose PTE.a and/or PTE.D have been modified
-   FIFOF #(Tuple2 #(PA, WordXL)) f_imem_pte_writebacks <- mkFIFOF;
+   FIFOF #(Tuple2 #(PA, WordXL)) f_dtmem_pte_writebacks <- mkFIFOF;
 `endif
 
    // ----------------------------------------------------------------
@@ -440,7 +440,7 @@ module mkDT_MMU_Cache (DT_MMU_Cache_IFC);
 			   vm_xlate_result.pte_pa);
 	    // Writeback the modified PTE to memory
 	    // Enqueue it to be written back to memory
-	    f_dmem_pte_writebacks.enq (tuple2 (vm_xlate_result.pte_pa, vm_xlate_result.pte));
+	    f_dtmem_pte_writebacks.enq (tuple2 (vm_xlate_result.pte_pa, vm_xlate_result.pte));
 	    if (verbosity >= 3)
 	       $display ("    Writeback updated PTE: pa %0h pte %0h",
 			 vm_xlate_result.pte_pa,
@@ -496,8 +496,6 @@ module mkDT_MMU_Cache (DT_MMU_Cache_IFC);
 	       $display ("    MMIO started; -> STATE_MAIN_MMIO_WAIT");
 	 end
 
-	 // ISA tests: monitor 'tohost' address for test completion
-	 fa_watch_tohost (zeroExtend (vm_xlate_result.pa), mmu_cache_req.st_value);
       end
    endrule: rl_CPU_req_B
 
@@ -561,7 +559,7 @@ module mkDT_MMU_Cache (DT_MMU_Cache_IFC);
       if (verbosity >= 2)
 	 $display ("%0d: %m.rl_PTW_wait", cur_cycle);
 
-      let ptw_rsp <- ptw.dmem_server.response.get;
+      let ptw_rsp <- pop (f_ptw_rsps);
 
       if (ptw_rsp.result == PTW_OK) begin
 	 // Insert into TLB

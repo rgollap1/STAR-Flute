@@ -1,6 +1,6 @@
 // Copyright (c) 2016-2020 Bluespec, Inc. All Rights Reserved.
 
-package Cache;
+package ICache;
 
 // ================================================================
 // Organization: in-order, blocking, "write-back" policy:
@@ -44,8 +44,8 @@ import MMU_Cache_Common :: *;
 // ================================================================
 
 export  Cache_Result_Type (..), Cache_Result (..), fshow_Cache_Result;
-export  Cache_IFC (..);
-export  mkCache;
+export  ICache_IFC (..);
+export  mkICache;
 
 // ================================================================
 // MODULE INTERFACE
@@ -70,7 +70,7 @@ endfunction
 
 // ----------------
 
-interface Cache_IFC;
+interface ICache_IFC;
    // This starts a new request (with virt addr)
    // while the virt addr is being translated to a phys addr
    (* always_ready *)
@@ -283,7 +283,7 @@ endfunction: fn_update_cset_cword
 // MODULE IMPLEMENTATION
 
 (* synthesize *)
-module mkCache #(parameter Bool      dcache_not_icache,
+module mkICache #(parameter Bool      dcache_not_icache,
 		 parameter Bit #(3)  verbosity)
                (Cache_IFC);
 

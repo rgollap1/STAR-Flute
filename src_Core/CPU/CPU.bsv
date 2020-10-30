@@ -296,11 +296,11 @@ module mkCPU (CPU_IFC);
    // ================================================================
    // Debugging: print instruction trace info
 
-   function Action fa_emit_instr_trace (Bit #(64) instret, WordXL pc, Instr instr, Priv_Mode priv);
+   function Action fa_emit_instr_trace (Bit #(64) instret, WordXL pc, Instr instr, Priv_Mode priv, Bit #(64) tag);
       action
 	 if ((cur_verbosity >= 1) || ((instret & 'h_F_FFFF) == 0))
-	    $display ("instret:%0d  PC:0x%0h  instr:0x%0h  priv:%0d",
-		      instret, pc, instr, priv);
+	    $display ("instret:%0d  PC:0x%0h  instr:0x%0h  priv:%0d tag:0x%0h",
+		      instret, pc, instr, priv, tag);
       endaction
    endfunction
 
@@ -653,7 +653,7 @@ module mkCPU (CPU_IFC);
 	 // Note: this instr cannot be a CSRRx updating INSTRET, since
 	 // CSRRx is done off-pipe
 	 csr_regfile.csr_minstret_incr;
-	 fa_emit_instr_trace (minstret, stage2.out.data_to_stage3.pc, stage2.out.data_to_stage3.instr, rg_cur_priv);
+	 fa_emit_instr_trace (minstret, stage2.out.data_to_stage3.pc, stage2.out.data_to_stage3.instr, rg_cur_priv, stage2.out.data_to_stage3.tag);
       end
 
       // ----------------
@@ -859,7 +859,7 @@ module mkCPU (CPU_IFC);
       end
 `endif
 
-      fa_emit_instr_trace (minstret, epc, instr, rg_cur_priv);
+      fa_emit_instr_trace (minstret, epc, instr, rg_cur_priv, stage1.out.data_to_stage2.tag);
 
       // Debug
       if (cur_verbosity != 0)
@@ -973,7 +973,7 @@ module mkCPU (CPU_IFC);
 `endif
 
 	 // Debug
-	 fa_emit_instr_trace (minstret, rg_csr_pc, instr, rg_cur_priv);
+	 fa_emit_instr_trace (minstret, rg_csr_pc, instr, rg_cur_priv, stage1.out.data_to_stage2.tag);
 	 if (cur_verbosity > 1) begin
 	    $display ("    S1: write CSRRW/CSRRWI Rs1 %0d Rs1_val 0x%0h csr 0x%0h csr_val 0x%0h Rd %0d",
 		      rs1, rs1_val, csr_addr, csr_val, rd);
@@ -1093,7 +1093,7 @@ module mkCPU (CPU_IFC);
 `endif
 
 	 // Debug
-	 fa_emit_instr_trace (minstret, rg_csr_pc, instr, rg_cur_priv);
+	 fa_emit_instr_trace (minstret, rg_csr_pc, instr, rg_cur_priv, stage1.out.data_to_stage2.tag);
 	 if (cur_verbosity > 1) begin
 	    $display ("    S1: write CSRR_S_or_C: Rs1 %0d Rs1_val 0x%0h csr 0x%0h csr_val 0x%0h Rd %0d",
 		      rs1, rs1_val, csr_addr, csr_val, rd);
@@ -1158,7 +1158,7 @@ module mkCPU (CPU_IFC);
 `endif
 
       // Debug
-      fa_emit_instr_trace (minstret, stage1.out.data_to_stage2.pc, stage1.out.data_to_stage2.instr, rg_cur_priv);
+      fa_emit_instr_trace (minstret, stage1.out.data_to_stage2.pc, stage1.out.data_to_stage2.instr, rg_cur_priv, stage1.out.data_to_stage2.tag);
       if (cur_verbosity != 0)
 	 $display ("    xRET: next_pc:0x%0h  new mstatus:0x%0h  new priv:%0d", next_pc, new_mstatus, new_priv);
    endrule: rl_stage1_xRET
@@ -1196,7 +1196,8 @@ module mkCPU (CPU_IFC);
       fa_emit_instr_trace (minstret,
 			   stage1.out.data_to_stage2.pc,
 			   stage1.out.data_to_stage2.instr,
-			   rg_cur_priv);
+			   rg_cur_priv,
+			   stage1.out.data_to_stage2.tag);
 `ifdef INCLUDE_TANDEM_VERIF
       let trace_data = stage1.out.data_to_stage2.trace_data;
       f_trace_data.enq (trace_data);
@@ -1238,7 +1239,8 @@ module mkCPU (CPU_IFC);
       // Debug
       fa_emit_instr_trace (minstret, stage1.out.data_to_stage2.pc,
 			   stage1.out.data_to_stage2.instr,
-			   rg_cur_priv);
+                           rg_cur_priv,
+			   stage1.out.data_to_stage2.tag);
 `ifdef INCLUDE_TANDEM_VERIF
       // Trace data
       let trace_data = stage1.out.data_to_stage2.trace_data;
@@ -1292,7 +1294,8 @@ module mkCPU (CPU_IFC);
       fa_emit_instr_trace (minstret,
 			   stage1.out.data_to_stage2.pc,
 			   stage1.out.data_to_stage2.instr,
-			   rg_cur_priv);
+			   rg_cur_priv,
+			   stage1.out.data_to_stage2.tag);
 `ifdef INCLUDE_TANDEM_VERIF
       // Trace data
       let trace_data = stage1.out.data_to_stage2.trace_data;
@@ -1333,7 +1336,7 @@ module mkCPU (CPU_IFC);
 `endif
 
       // Debug
-      fa_emit_instr_trace (minstret, stage1.out.data_to_stage2.pc, stage1.out.data_to_stage2.instr, rg_cur_priv);
+      fa_emit_instr_trace (minstret, stage1.out.data_to_stage2.pc, stage1.out.data_to_stage2.instr, rg_cur_priv, stage1.out.data_to_stage2.tag);
       if (cur_verbosity > 1)
 	 $display ("    CPU.rl_stage1_WFI");
    endrule: rl_stage1_WFI

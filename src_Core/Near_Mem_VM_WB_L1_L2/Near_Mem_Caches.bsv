@@ -357,6 +357,7 @@ module mkNear_Mem (Near_Mem_IFC);
       method Bool     is_i32_not_i16 = True;
       method WordXL   pc             = i_mmu_cache.addr;
       method Instr    instr          = truncate (i_mmu_cache.word64);
+      method Bit #(64) tag	     = truncate (i_mmu_cache.tag64);
       method Bool     exc            = i_mmu_cache.exc;
       method Exc_Code exc_code       = i_mmu_cache.exc_code;
       method WordXL   tval           = i_mmu_cache.addr;

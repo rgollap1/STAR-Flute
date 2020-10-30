@@ -181,6 +181,7 @@ interface IMem_IFC;
    (* always_ready *)  method Bool     is_i32_not_i16;
    (* always_ready *)  method WordXL   pc;
    (* always_ready *)  method Instr    instr;
+   (* always_ready *)  method Bit #(64)    tag;
    (* always_ready *)  method Bool     exc;
    (* always_ready *)  method Exc_Code exc_code;
    (* always_ready *)  method WordXL   tval;        // can be different from PC

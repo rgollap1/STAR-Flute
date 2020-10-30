@@ -111,6 +111,7 @@ module mkCPU_StageD #(Bit #(4)  verbosity, MISA misa)
 							       exc_code:       rg_data.exc_code,
 							       tval:           rg_data.tval,
 							       instr:          instr,
+  							       tag:	       rg_data.tag,
 `ifdef ISA_C
 							       instr_C:        instr_C,
 `endif

@@ -241,6 +241,7 @@ module mkCPU_Fetch_C #(IMem_IFC  imem32) (IMem_IFC);
 
    method WordXL   pc       = rg_pc;
    method Instr    instr    = fn_instr_out ();
+   method Bit #(64) tag     = imem32.tag;
    method Bool     exc      = imem32.exc;
    method Exc_Code exc_code = imem32.exc_code;
    method WordXL   tval     = rg_tval;        // Can be different from rg_pc

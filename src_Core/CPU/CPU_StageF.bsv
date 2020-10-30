@@ -106,6 +106,7 @@ module mkCPU_StageF #(Bit #(4)  verbosity,
 				     exc_code:        imem.exc_code,
 				     tval:            imem.tval,
 				     instr:           imem.instr,
+                                     tag:	      imem.tag,
 				     pred_pc:         pred_pc};
 
       let ostatus = (  (! rg_full) ? OSTATUS_EMPTY

@@ -72,7 +72,7 @@ import TLB :: *;
 import PTW :: *;
 `endif
 
-import Cache :: *;
+import ICache :: *;
 import MMIO  :: *;
 
 // ================================================================
@@ -96,6 +96,7 @@ interface I_MMU_Cache_IFC;
    (* always_ready *)  method Bool       valid;
    (* always_ready *)  method WordXL     addr;        // req addr for which this is a response
    (* always_ready *)  method Bit #(64)  word64;      // rd_val (instruction)
+   (* always_ready *)  method Bit #(64)  tag64;      // rd_tag (instruction)
    (* always_ready *)  method Bool       exc;
    (* always_ready *)  method Exc_Code   exc_code;
 
@@ -202,7 +203,7 @@ module mkI_MMU_Cache (I_MMU_Cache_IFC);
    SoC_Map_IFC soc_map <- mkSoC_Map;
 
    Bool dmem_not_imem = True;
-   Cache_IFC  cache <- mkCache ((! dmem_not_imem),
+   ICache_IFC  cache <- mkICache ((! dmem_not_imem),
 				fromInteger (verbosity_cache));
 
    MMIO_IFC   mmio  <- mkMMIO (fromInteger (verbosity_mmio));
@@ -235,7 +236,7 @@ module mkI_MMU_Cache (I_MMU_Cache_IFC);
    Reg #(Bool)      crg_exc [2]          <- mkCRegU (2);
    Reg #(Exc_Code)  crg_exc_code [2]     <- mkCRegU (2);
    Reg #(Bit #(64)) crg_ld_val [2]       <- mkCRegU (2);  // Load-val (instruction)
-
+   Reg #(Bit #(64)) crg_ld_tag [2]       <- mkCRegU (2); 
    // ****************************************************************
    // ****************************************************************
    // BEHAVIOR
@@ -287,6 +288,12 @@ module mkI_MMU_Cache (I_MMU_Cache_IFC);
 
 	 // Start cache probe with VA
 	 cache.ma_request_va (mmu_cache_req.va);
+ 
+	 let tag_va = mmu_cache_req.va;
+         tag_va[3:0] = 0;
+
+         //$display ("    REQUEST: va %0h tag_va %0h", mmu_cache_req.va, tag_va);
+
 	 crg_mmu_cache_req_state [1] <= REQ_STATE_FULL_B;
       end
    endrule
@@ -422,6 +429,7 @@ module mkI_MMU_Cache (I_MMU_Cache_IFC);
 	    else begin    // Cache hit
 	       crg_exc [0]          <= False;
 	       crg_ld_val [0]       <= cache_result.final_ld_val;
+               crg_ld_tag [0]       <= cache_result.final_tag_val;
 
 	       if (cache_result.outcome == CACHE_READ_HIT) begin
 		  // Consume request and drive response immediately
@@ -496,6 +504,7 @@ module mkI_MMU_Cache (I_MMU_Cache_IFC);
 
       crg_valid [0]               <= True;
       crg_ld_val [0]              <= ld_val;
+      crg_ld_tag [0]              <= 0;
       crg_exc [0]                 <= err;
       crg_exc_code [0]            <= fv_exc_code_access_fault (crg_mmu_cache_req [0]);
       crg_mmu_cache_req_state [0] <= REQ_STATE_EMPTY;
@@ -612,6 +621,10 @@ module mkI_MMU_Cache (I_MMU_Cache_IFC);
 
    method Bit #(64)  word64;
       return crg_ld_val [0];
+   endmethod
+
+   method Bit #(64)  tag64;
+      return crg_ld_tag [0];
    endmethod
 
    method Bool  exc;

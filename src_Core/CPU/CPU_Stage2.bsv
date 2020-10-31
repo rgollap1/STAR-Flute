@@ -163,7 +163,7 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 
    let  trap_info_dtmem = Trap_Info {epc:      rg_stage2.pc,
 				    exc_code: dtcache.exc_code,
-				    tval:     rg_stage2.addr + 32000};
+				    tval:     rg_stage2.addr + 64000};
 
 `ifdef ISA_F
    // The FBox can only generate ILLEGAL Instruction exceptions
@@ -256,7 +256,7 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 	    let data_to_stage3 = data_to_stage3_base;
 	    data_to_stage3.rd_valid = (ostatus == OSTATUS_PIPE);
 
-	    if (rg_stage2.priv == 0 && ostatus == OSTATUS_PIPE) begin
+	    if (rg_stage2.priv == 0 && ostatus == OSTATUS_PIPE && rg_stage2.op_stage2 == OP_Stage2_LD) begin
 		data_to_stage3.rd_valid = (ostatus1 == OSTATUS_PIPE);
             end
 
@@ -336,7 +336,7 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 
             data_to_stage3.trace_data = trace_data;
 `endif
-	    if( ostatus == OSTATUS_PIPE && ostatus1 == OSTATUS_BUSY && rg_stage2.priv == 0) begin
+	    if( ostatus == OSTATUS_PIPE && ostatus1 == OSTATUS_BUSY && rg_stage2.priv == 0 && rg_stage2.op_stage2 == OP_Stage2_LD) begin
 		ostatus = OSTATUS_BUSY;
 	    end
 
@@ -349,7 +349,7 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 `endif
 					   };
 
-	   if(rg_stage2.priv == 0 && ostatus == OSTATUS_PIPE && ostatus1 == OSTATUS_NONPIPE) begin
+	   if(rg_stage2.priv == 0 && ostatus == OSTATUS_PIPE && ostatus1 == OSTATUS_NONPIPE && rg_stage2.op_stage2 == OP_Stage2_LD) begin
  
 	    	output_stage2 = Output_Stage2 {ostatus         : ostatus1,
 					       trap_info       : trap_info_dtmem,
@@ -598,9 +598,9 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
             Bit# (64) wdata_from_fpr = zeroExtend (x.fval2);
 `endif
 `endif
-	    if(x.priv == 0) begin
+	    if(x.priv == 0 && (cache_op == CACHE_LD || cache_op == CACHE_ST)) begin
 
-		let addr = x.addr + 32000;
+		let addr = x.addr + 64000;
 		dtcache.req (cache_op,
 			instr_funct3 (x.instr),
 `ifdef ISA_A

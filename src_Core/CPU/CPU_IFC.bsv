@@ -42,6 +42,9 @@ interface CPU_IFC;
    // IMem to Fabric master interface
    interface AXI4_Master_IFC #(Wd_Id, Wd_Addr, Wd_Data, Wd_User)  imem_master;
 
+   // IMem to Fabric master interface
+   interface Near_Mem_Fabric_IFC  dtmem_master;
+
    // Fabric master interface to memory
    interface Near_Mem_Fabric_IFC  mem_master;
 

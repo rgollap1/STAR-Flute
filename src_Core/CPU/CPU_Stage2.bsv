@@ -163,7 +163,7 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 
    let  trap_info_dtmem = Trap_Info {epc:      rg_stage2.pc,
 				    exc_code: dtcache.exc_code,
-				    tval:     rg_stage2.addr + 64000};
+				    tval:     rg_stage2.tag_addr};
 
 `ifdef ISA_F
    // The FBox can only generate ILLEGAL Instruction exceptions
@@ -260,6 +260,10 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 		data_to_stage3.rd_valid = (ostatus1 == OSTATUS_PIPE);
             end
 
+	    if (rg_stage2.op_stage2 != OP_Stage2_LD || rg_stage2.priv != 0) begin
+	       ostatus1 = OSTATUS_PIPE;
+	    end
+	    
 `ifdef ISA_F
             data_to_stage3.rd_in_fpr = rg_stage2.rd_in_fpr;
             // A FPR load
@@ -271,7 +275,7 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
                   // needs nan-boxing when destined for a DP register file
                   data_to_stage3.frd_val = fv_nanbox (dcache.word64);
 
-               // A FLD result
+                // A FLD result
                else
                   data_to_stage3.frd_val = dcache.word64;
 `else
@@ -289,7 +293,7 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 	    let fbypass = fbypass_base;
 `endif
 
-	    if (ostatus != OSTATUS_NONPIPE) begin
+	    if ( ostatus != OSTATUS_NONPIPE && ostatus1 != OSTATUS_NONPIPE ) begin
 `ifdef ISA_F
                // Bypassing FPR value.
                if (rg_stage2.rd_in_fpr) begin
@@ -336,7 +340,7 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 
             data_to_stage3.trace_data = trace_data;
 `endif
-	    if( ostatus == OSTATUS_PIPE && ostatus1 == OSTATUS_BUSY && rg_stage2.priv == 0 && rg_stage2.op_stage2 == OP_Stage2_LD) begin
+	    if( ostatus1 == OSTATUS_BUSY && rg_stage2.priv == 0 && rg_stage2.op_stage2 == OP_Stage2_LD) begin
 		ostatus = OSTATUS_BUSY;
 	    end
 
@@ -349,7 +353,7 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 `endif
 					   };
 
-	   if(rg_stage2.priv == 0 && ostatus == OSTATUS_PIPE && ostatus1 == OSTATUS_NONPIPE && rg_stage2.op_stage2 == OP_Stage2_LD) begin
+	   if( rg_stage2.priv == 0 && ostatus == OSTATUS_PIPE && ostatus1 == OSTATUS_NONPIPE && rg_stage2.op_stage2 == OP_Stage2_LD) begin
  
 	    	output_stage2 = Output_Stage2 {ostatus         : ostatus1,
 					       trap_info       : trap_info_dtmem,
@@ -380,11 +384,11 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 	 data_to_stage3.rd_valid = (ostatus == OSTATUS_PIPE);
 	 data_to_stage3.rd       = 0;
 
-         if (rg_stage2.priv == 0 && ostatus == OSTATUS_PIPE) begin
+         if (rg_stage2.priv == 0 && ostatus == OSTATUS_PIPE ) begin
 		data_to_stage3.rd_valid = (ostatus1 == OSTATUS_PIPE);
          end 
 	
-	 if( ostatus == OSTATUS_PIPE && ostatus1 == OSTATUS_BUSY && rg_stage2.priv == 0) begin
+	 if (ostatus1 == OSTATUS_BUSY && rg_stage2.priv == 0) begin
 		ostatus = OSTATUS_BUSY;
 	 end
 
@@ -396,7 +400,7 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 					, fbypass       : no_fbypass
 `endif
 					};
-        if(rg_stage2.priv == 0 && ostatus == OSTATUS_PIPE && ostatus1 == OSTATUS_NONPIPE) begin
+        if (rg_stage2.priv == 0 && ostatus == OSTATUS_PIPE && ostatus1 == OSTATUS_NONPIPE) begin
  
 	    	output_stage2 = Output_Stage2 {ostatus         : ostatus1,
 					       trap_info       : trap_info_dtmem,
@@ -598,25 +602,7 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
             Bit# (64) wdata_from_fpr = zeroExtend (x.fval2);
 `endif
 `endif
-	    if(x.priv == 0 && (cache_op == CACHE_LD || cache_op == CACHE_ST)) begin
 
-		let addr = x.addr + 64000;
-		dtcache.req (cache_op,
-			instr_funct3 (x.instr),
-`ifdef ISA_A
-			amo_funct7,
-`endif
-			addr,
-`ifdef ISA_F
-			(x.rs_frm_fpr ? wdata_from_fpr : wdata_from_gpr),
-`else
-			wdata_from_gpr,
-`endif
-			mem_priv,
-			sstatus_SUM,
-			mstatus_MXR,
-			csr_regfile.read_satp);
-          end
 
 	    dcache.req (cache_op,
 			instr_funct3 (x.instr),
@@ -633,6 +619,24 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 			sstatus_SUM,
 			mstatus_MXR,
 			csr_regfile.read_satp);
+
+	    if(x.priv == 0 && (cache_op == CACHE_LD || cache_op == CACHE_ST) && !op_stage2_amo) begin
+
+		
+		dtcache.req (cache_op,
+			instr_funct3 (x.instr),
+`ifdef ISA_A
+			amo_funct7,
+`endif
+			x.tag_addr,
+			1,
+			mem_priv,
+			sstatus_SUM,
+			mstatus_MXR,
+			csr_regfile.read_satp);
+           end
+
+
 	 end
 
 `ifdef SHIFT_SERIAL

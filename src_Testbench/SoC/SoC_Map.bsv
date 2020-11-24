@@ -29,6 +29,7 @@ export  SoC_Map_IFC (..), mkSoC_Map;
 export  Num_Masters;
 export  imem_master_num;
 export  dmem_master_num;
+export  dtmem_master_num;
 export  accel0_master_num;
 
 export  Num_Slaves;
@@ -284,15 +285,16 @@ endmodule
 
 Integer imem_master_num   = 0;
 Integer dmem_master_num   = 1;
-Integer accel0_master_num = 2;
+Integer dtmem_master_num   = 2;
+Integer accel0_master_num = 3;
 
 `ifdef INCLUDE_ACCEL0
 
-typedef 3 Num_Masters;
+typedef 4 Num_Masters;
 
 `else
 
-typedef 2 Num_Masters;
+typedef 3 Num_Masters;
 
 `endif
 

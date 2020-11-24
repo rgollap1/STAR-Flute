@@ -183,6 +183,9 @@ module mkSoC_Top (SoC_Top_IFC);
    // CPU IMem master to fabric
    mkConnection (core.cpu_imem_master,  fabric.v_from_masters [imem_master_num]);
 
+   // CPU DTMem master to fabric
+   mkConnection (core.cpu_dtmem_master,  fabric.v_from_masters [dtmem_master_num]);
+
    // CPU DMem master to fabric
    mkConnection (core.core_mem_master,  fabric.v_from_masters [dmem_master_num]);
 

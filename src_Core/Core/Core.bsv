@@ -312,6 +312,7 @@ module mkCore (Core_IFC #(N_External_Interrupt_Sources));
 
    // Masters on the local 2x3 fabric
    mkConnection (cpu.mem_master,  fabric_2x3.v_from_masters [cpu_dmem_master_num]);
+  // mkConnection (cpu.dtmem_master,  fabric_2x3.v_from_masters [cpu_dtmem_master_num]);
    mkConnection (dm_master_local, fabric_2x3.v_from_masters [debug_module_sba_master_num]);
 
    // Slaves on the local 2x3 fabric
@@ -358,6 +359,9 @@ module mkCore (Core_IFC #(N_External_Interrupt_Sources));
 
    // IMem to Fabric master interface
    interface AXI4_Master_IFC  cpu_imem_master = cpu.imem_master;
+
+   // DTMem to Fabric master interface
+   interface AXI4_Master_IFC  cpu_dtmem_master = cpu.dtmem_master;
 
    // DMem to Fabric master interface
    interface AXI4_Master_IFC  core_mem_master = fabric_2x3.v_to_slaves [default_slave_num];

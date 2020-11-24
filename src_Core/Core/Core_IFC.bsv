@@ -60,6 +60,9 @@ interface Core_IFC #(numeric type t_n_interrupt_sources);
    // CPU IMem to Fabric master interface
    interface AXI4_Master_IFC #(Wd_Id, Wd_Addr, Wd_Data, Wd_User) cpu_imem_master;
 
+   // CPU DTMem to Fabric master interface
+   interface Near_Mem_Fabric_IFC  cpu_dtmem_master;
+
    // Fabric master interface to memory
    interface Near_Mem_Fabric_IFC  core_mem_master;
 

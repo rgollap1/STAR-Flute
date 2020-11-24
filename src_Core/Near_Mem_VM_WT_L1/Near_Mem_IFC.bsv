@@ -109,6 +109,15 @@ interface Near_Mem_IFC;
 `endif
 
    // ----------------
+   // DTMem
+
+   // CPU side
+   interface DTMem_IFC  dtmem;
+
+   // Fabric side
+   interface Near_Mem_Fabric_IFC  dtmem_master;
+
+   // ----------------
    // Fences
 
    interface Server #(Token, Token) server_fence_i;
@@ -169,6 +178,7 @@ interface IMem_IFC;
    (* always_ready *)  method Bool     is_i32_not_i16;
    (* always_ready *)  method WordXL   pc;
    (* always_ready *)  method Instr    instr;
+   (* always_ready *)  method Bit #(64)  tag;      
    (* always_ready *)  method Bool     exc;
    (* always_ready *)  method Exc_Code exc_code;
    (* always_ready *)  method WordXL   tval;        // can be different from PC
@@ -194,6 +204,33 @@ interface DMem_IFC;
 		       WordXL     satp);    // { VM_Mode, ASID, PPN_for_page_table }
 
    // CPU side: DMem response
+   (* always_ready *)  method Bool       valid;
+   (* always_ready *)  method Bit #(64)  word64;      // Load-value
+   (* always_ready *)  method Bit #(64)  st_amo_val;  // Final store-value for ST, SC, AMO
+   (* always_ready *)  method Bool       exc;
+   (* always_ready *)  method Exc_Code   exc_code;
+endinterface
+
+// ================================================================
+// DTMem interface
+
+interface DTMem_IFC;
+   // CPU side: DTMem request
+   (* always_ready *)
+   method Action  req (CacheOp op,
+		       Bit #(3) f3,
+`ifdef ISA_A
+		       Bit #(7) amo_funct7,
+`endif
+		       WordXL addr,
+		       Bit #(64) store_value,
+		       // The following  args for VM
+		       Priv_Mode  priv,
+		       Bit #(1)   sstatus_SUM,
+		       Bit #(1)   mstatus_MXR,
+		       WordXL     satp);    // { VM_Mode, ASID, PPN_for_page_table }
+
+   // CPU side: DTMem response
    (* always_ready *)  method Bool       valid;
    (* always_ready *)  method Bit #(64)  word64;      // Load-value
    (* always_ready *)  method Bit #(64)  st_amo_val;  // Final store-value for ST, SC, AMO

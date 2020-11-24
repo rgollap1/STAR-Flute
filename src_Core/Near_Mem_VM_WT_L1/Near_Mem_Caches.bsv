@@ -41,6 +41,8 @@ import ISA_Decls        :: *;
 import Near_Mem_IFC     :: *;
 import MMU_Cache_Common :: *;
 import MMU_Cache        :: *;
+import MMU_DTCache        :: *;
+import MMU_ICache        :: *;
 import AXI4_Types       :: *;
 import Fabric_Defs      :: *;
 
@@ -77,8 +79,10 @@ module mkNear_Mem (Near_Mem_IFC);
    // Reset response queue
    FIFOF #(Token) f_reset_rsps <- mkFIFOF;
 
-   MMU_Cache_IFC  icache <- mkMMU_Cache (False);
+   MMU_ICache_IFC  icache <- mkMMU_ICache (False);
    MMU_Cache_IFC  dcache <- mkMMU_Cache (True);
+   MMU_DTCache_IFC  dtcache <- mkMMU_DTCache (True);
+
 `ifdef INCLUDE_DMEM_SLAVE
    MMU_Cache_Arbiter_IFC #(2) dcache_arbiter <- mkMMU_Cache_Arbiter (dcache);
    dcache = dcache_arbiter.v_from_masters [0];
@@ -96,6 +100,7 @@ module mkNear_Mem (Near_Mem_IFC);
    rule rl_reset (rg_state == STATE_RESET);
       icache.server_reset.request.put (?);
       dcache.server_reset.request.put (?);
+      dtcache.server_reset.request.put (?);
       rg_state <= STATE_RESETTING;
 
       if (cfg_verbosity > 1)
@@ -105,6 +110,7 @@ module mkNear_Mem (Near_Mem_IFC);
    rule rl_reset_complete (rg_state == STATE_RESETTING);
       let _dummy1 <- icache.server_reset.response.get;
       let _dummy2 <- dcache.server_reset.response.get;
+      let _dummy3 <- dtcache.server_reset.response.get;
 
       f_reset_rsps.enq (?);
       rg_state <= STATE_READY;
@@ -124,6 +130,7 @@ module mkNear_Mem (Near_Mem_IFC);
       let tok <- pop (f_sfence_vma_reqs);
       icache.tlb_flush;
       dcache.tlb_flush;
+      dtcache.tlb_flush;
       f_sfence_vma_rsps.enq (tok);
    endrule
 `endif
@@ -174,6 +181,7 @@ module mkNear_Mem (Near_Mem_IFC);
       method Bool     is_i32_not_i16 = True;
       method WordXL   pc             = icache.addr;
       method Instr    instr          = truncate (icache.cword);
+      method Bit #(64)  tag          = truncate (icache.ctag);
       method Bool     exc            = icache.exc;
       method Exc_Code exc_code       = icache.exc_code;
       method WordXL   tval           = icache.addr;
@@ -223,6 +231,45 @@ module mkNear_Mem (Near_Mem_IFC);
 `ifdef INCLUDE_DMEM_SLAVE
    interface dmem_slave = dmem_slave_adapter.from_master;
 `endif
+ 
+   // ----------------
+   // DTMem
+
+   // CPU side
+   interface DTMem_IFC dtmem;
+      // CPU side: DMem request
+      method Action  req (CacheOp op,
+			  Bit #(3) f3,
+`ifdef ISA_A
+			  Bit #(7) amo_funct7,
+`endif
+			  WordXL addr,
+			  Bit #(64) store_value,
+			  // The following  args for VM
+			  Priv_Mode  priv,
+			  Bit #(1)   sstatus_SUM,
+			  Bit #(1)   mstatus_MXR,
+			  WordXL     satp);    // { VM_Mode, ASID, PPN_for_page_table }
+	 dtcache.req (op, f3,
+`ifdef ISA_A
+		     amo_funct7,
+`endif
+		     addr, store_value, priv, sstatus_SUM, mstatus_MXR, satp);
+      endmethod
+      
+      // CPU side: DMem response
+      method Bool       valid      = dtcache.valid;
+      method Bit #(64)  word64     = dtcache.cword;
+`ifdef ISA_A
+      method Bit #(64)  st_amo_val = dtcache.st_amo_val;
+`endif
+      method Bool       exc        = dtcache.exc;
+      method Exc_Code   exc_code   = dtcache.exc_code;
+   endinterface
+
+   // Fabric side
+   interface Near_Mem_Fabric_IFC dtmem_master = dtcache.mem_master;
+
 
    // ----------------
    // FENCE.I: flush both ICache and DCache
@@ -232,12 +279,14 @@ module mkNear_Mem (Near_Mem_IFC);
 	 method Action put (Token t);
 	    icache.server_flush.request.put (?);
 	    dcache.server_flush.request.put (?);
+	    dtcache.server_flush.request.put (?);
 	 endmethod
       endinterface
       interface Get response;
 	 method ActionValue #(Token) get;
 	    let ti <- icache.server_flush.response.get;
 	    let td <- dcache.server_flush.response.get;
+            let tdt <- dtcache.server_flush.response.get;
 	    return ?;
 	 endmethod
       endinterface
@@ -250,11 +299,13 @@ module mkNear_Mem (Near_Mem_IFC);
       interface Put request;
 	 method Action put (Fence_Ordering t);
 	    dcache.server_flush.request.put (?);
+	    dtcache.server_flush.request.put (?);
 	 endmethod
       endinterface
       interface Get response;
 	 method ActionValue #(Token) get;
 	    let td <- dcache.server_flush.response.get;
+            let tdt <- dtcache.server_flush.response.get;
 	    return ?;
 	 endmethod
       endinterface
@@ -291,6 +342,7 @@ module mkNear_Mem (Near_Mem_IFC);
    method Action ma_ddr4_ready;
       icache.ma_ddr4_ready;
       dcache.ma_ddr4_ready;
+      dtcache.ma_ddr4_ready;
    endmethod
 
    // Misc. status; 0 = running, no error

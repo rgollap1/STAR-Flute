@@ -78,6 +78,9 @@ interface P2_Core_IFC;
    // CPU DMem (incl. I/O) to Fabric master interface
    interface AXI4_Master_IFC #(Wd_Id, Wd_Addr, Wd_Data, Wd_User) master1;
 
+   // CPU DTMem to Fabric master interface
+   interface AXI4_Master_IFC #(Wd_Id, Wd_Addr, Wd_Data, Wd_User) master2;
+
    // External interrupt sources
    (* always_ready, always_enabled, prefix="" *)
    method  Action interrupt_reqs ((* port="cpu_external_interrupt_req" *) Bit #(N_External_Interrupt_Sources)  reqs);
@@ -245,6 +248,9 @@ module mkP2_Core (P2_Core_IFC);
 
    // CPU IMem to Fabric master interface
    interface AXI4_Master_IFC master0 = core.cpu_imem_master;
+
+   // CPU DTMem to Fabric master interface
+   interface AXI4_Master_IFC master2 = core.cpu_dtmem_master;
 
    // CPU DMem to Fabric master interface
    interface AXI4_Master_IFC master1 = core.core_mem_master;

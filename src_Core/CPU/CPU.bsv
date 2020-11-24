@@ -165,7 +165,7 @@ module mkCPU (CPU_IFC);
    // For debugging
 
    // Verbosity: 0=quiet; 1=instruction trace; 2=more detail
-   Reg #(Bit #(4))  cfg_verbosity <- mkConfigReg (0);
+   Reg #(Bit #(4))  cfg_verbosity <- mkConfigReg (2);
 
    // Verbosity is 0 as long as # of instrs retired is <= cfg_logdelay
    Reg #(Bit #(64))  cfg_logdelay <- mkConfigReg (0);
@@ -1687,6 +1687,9 @@ module mkCPU (CPU_IFC);
 
    // IMem to fabric master interface
    interface  imem_master = near_mem.imem_master;
+
+   // DTMem to fabric master interface
+   interface Near_Mem_Fabric_IFC dtmem_master = near_mem.dtmem_master;
 
    // DMem to fabric master interface
    interface Near_Mem_Fabric_IFC  mem_master = near_mem.mem_master;

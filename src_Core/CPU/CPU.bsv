@@ -227,7 +227,7 @@ module mkCPU (CPU_IFC);
 
    CPU_StageD_IFC  stageD <- mkCPU_StageD (cur_verbosity, misa);
 
-   CPU_StageF_IFC  stageF <- mkCPU_StageF (cur_verbosity, imem);
+   CPU_StageF_IFC  stageF <- mkCPU_StageF (cur_verbosity, imem, rg_cur_priv); //rgollap1
 
    // ----------------
    // Interrupt pending based on current priv, mstatus.ie, mie and mip registers

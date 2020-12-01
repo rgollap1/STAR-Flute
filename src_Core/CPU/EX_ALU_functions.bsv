@@ -155,6 +155,10 @@ function Addr fall_through_pc (ALU_Inputs  inputs);
    if (! inputs.is_i32_not_i16)
       next_pc = inputs.pc + 2;
 `endif
+
+   if (inputs.cur_priv == u_Priv_Mode && next_pc[3:0] == 0)
+      next_pc = next_pc + 4;
+
    return next_pc;
 endfunction
 

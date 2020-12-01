@@ -69,7 +69,8 @@ endinterface
 // Implementation module
 
 module mkCPU_StageF #(Bit #(4)  verbosity,
-		      IMem_IFC  imem)
+		      IMem_IFC  imem,
+		      Priv_Mode cur_priv) //rgollap1
                     (CPU_StageF_IFC);
 
    FIFOF #(Token)  f_reset_reqs <- mkFIFOF;
@@ -97,7 +98,7 @@ module mkCPU_StageF #(Bit #(4)  verbosity,
    // Combinational output function
 
    function Output_StageF fv_out;
-      let pred_pc = branch_predictor.predict_rsp (imem.is_i32_not_i16, imem.instr);
+      let pred_pc = branch_predictor.predict_rsp (imem.is_i32_not_i16, imem.instr, cur_priv);
       let d = Data_StageF_to_StageD {pc:              imem.pc,
 				     epoch:           rg_epoch,
 				     priv:            rg_priv,

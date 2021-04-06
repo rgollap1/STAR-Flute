@@ -62,7 +62,7 @@ import CreditCounter :: *;
 import ISA_Decls        :: *;
 import Near_Mem_IFC     :: *;
 import MMU_Cache_Common :: *;
-import Cache_Decls      :: *;
+import ICache_Decls      :: *;
 
 `ifdef ISA_PRIV_S
 import TLB :: *;
@@ -72,7 +72,7 @@ import TLB :: *;
 `ifdef RV32
 import Cache_Decls_RV32 :: *;
 `elsif RV64
-import Cache_Decls_RV64 :: *;
+import ICache_Decls_RV64 :: *;
 `endif
 */
 

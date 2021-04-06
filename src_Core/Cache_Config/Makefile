@@ -17,7 +17,8 @@ help:
 .PHONY: all
 all: RV32_4KB_1way RV32_8KB_2way RV32_Sv32_4KB_1way RV32_Sv32_8KB_2way \
 	RV64_4KB_1way RV64_8KB_2way RV64_Sv39_4KB_1way RV64_Sv39_8KB_2way \
-	RV64_8KB_4way RV64_Sv39_8KB_4way RV64_16KB_4way RV64_Sv39_16KB_4way
+	RV64_8KB_4way RV64_Sv39_8KB_4way RV64_16KB_4way RV64_Sv39_16KB_4way \
+	RV64_Sv39_8KB_2way_128 RV64_8KB_2way_128
 
 # ================================================================
 # For RV32
@@ -56,6 +57,14 @@ RV64_8KB_2way:
 .PHONY: RV64_Sv39_8KB_2way
 RV64_Sv39_8KB_2way:
 	./Gen_BSV_Cache_Decls.py  --yaml_file  RV64_Sv39_8KB_2way_args.yaml
+
+.PHONY: RV64_8KB_2way_128
+RV64_8KB_2way_128:
+	./Gen_BSV_Cache_Decls.py  --yaml_file  RV64_8KB_2way_128_args.yaml
+
+.PHONY: RV64_Sv39_8KB_2way_128
+RV64_Sv39_8KB_2way_128:
+	./Gen_BSV_Cache_Decls.py  --yaml_file  RV64_Sv39_8KB_2way_128_args.yaml
 
 .PHONY: RV64_8KB_4way
 RV64_8KB_4way:

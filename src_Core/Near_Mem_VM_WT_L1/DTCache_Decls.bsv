@@ -21,11 +21,11 @@ export Cache_Decls_RV32_8KB_2way :: *;
 
 `ifdef RV64
 `ifdef SV39
-import Cache_Decls_RV64_Sv39_8KB_4way :: *;
-export Cache_Decls_RV64_Sv39_8KB_4way :: *;
+import Cache_Decls_RV64_Sv39_8KB_2way_128 :: *;
+export Cache_Decls_RV64_Sv39_8KB_2way_128 :: *;
 `else
-import Cache_Decls_RV64_8KB_4way :: *;
-export Cache_Decls_RV64_8KB_4way :: *;
+import Cache_Decls_RV64_8KB_2way_128 :: *;
+export Cache_Decls_RV64_8KB_2way_128 :: *;
 `endif
 `endif
 

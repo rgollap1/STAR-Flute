@@ -96,7 +96,7 @@ interface I_MMU_Cache_IFC;
    (* always_ready *)  method Bool       valid;
    (* always_ready *)  method WordXL     addr;        // req addr for which this is a response
    (* always_ready *)  method Bit #(64)  word64;      // rd_val (instruction)
-   (* always_ready *)  method Bit #(8)   tag;         // rd_tag (instruction) -- rgollap1 Adding a method to return the tag from cache to CPU
+   (* always_ready *)  method Bit #(8)   tag8;         // rd_tag (instruction) -- rgollap1 Adding a method to return the tag from cache to CPU
    (* always_ready *)  method Bool       exc;
    (* always_ready *)  method Exc_Code   exc_code;
 

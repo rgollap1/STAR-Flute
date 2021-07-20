@@ -72,7 +72,7 @@ import TLB :: *;
 import PTW :: *;
 `endif
 
-import Cache :: *;
+import ICache :: *;
 import MMIO  :: *;
 
 // ================================================================
@@ -202,7 +202,7 @@ module mkI_MMU_Cache (I_MMU_Cache_IFC);
    SoC_Map_IFC soc_map <- mkSoC_Map;
 
    Bool dmem_not_imem = True;
-   Cache_IFC  cache <- mkCache ((! dmem_not_imem),
+   ICache_IFC  cache <- mkICache ((! dmem_not_imem),
 				fromInteger (verbosity_cache));
 
    MMIO_IFC   mmio  <- mkMMIO (fromInteger (verbosity_mmio));

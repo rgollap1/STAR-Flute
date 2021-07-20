@@ -72,7 +72,7 @@ import TLB :: *;
 import PTW :: *;
 `endif
 
-import ICache :: *;
+import ICache :: *;  // rgollap1 -- Changed Cache to ICache
 import MMIO  :: *;
 
 // ================================================================
@@ -96,6 +96,7 @@ interface I_MMU_Cache_IFC;
    (* always_ready *)  method Bool       valid;
    (* always_ready *)  method WordXL     addr;        // req addr for which this is a response
    (* always_ready *)  method Bit #(64)  word64;      // rd_val (instruction)
+   (* always_ready *)  method Bit #(8)   tag;         // rd_tag (instruction) -- rgollap1 Adding a method to return the tag from cache to CPU
    (* always_ready *)  method Bool       exc;
    (* always_ready *)  method Exc_Code   exc_code;
 
@@ -191,7 +192,7 @@ module mkI_MMU_Cache (I_MMU_Cache_IFC);
    // For debugging
    Integer verbosity       = 0;    // 1: Requests and responses; 2: rules; 3: detail
    Integer verbosity_tlb   = 0;    // 2: rules; 3: detail
-   Integer verbosity_cache = 0;    // 1: rules; 2: more detail
+   Integer verbosity_cache = 1;    // 1: rules; 2: more detail // rgollap1 -- changing verbosity to print more details
    Integer verbosity_mmio  = 0;    // 1: rules
 
    // ----------------------------------------------------------------
@@ -203,7 +204,7 @@ module mkI_MMU_Cache (I_MMU_Cache_IFC);
 
    Bool dmem_not_imem = True;
    ICache_IFC  cache <- mkICache ((! dmem_not_imem),
-				fromInteger (verbosity_cache));
+				fromInteger (verbosity_cache));   // rgollap1 -- Changed Cache to ICache
 
    MMIO_IFC   mmio  <- mkMMIO (fromInteger (verbosity_mmio));
 
@@ -235,6 +236,8 @@ module mkI_MMU_Cache (I_MMU_Cache_IFC);
    Reg #(Bool)      crg_exc [2]          <- mkCRegU (2);
    Reg #(Exc_Code)  crg_exc_code [2]     <- mkCRegU (2);
    Reg #(Bit #(64)) crg_ld_val [2]       <- mkCRegU (2);  // Load-val (instruction)
+
+   Reg #(Bit #(8))  crg_ld_tag [2]       <- mkCRegU (2); // rgollap1 -- Adding a register to hold the instruction tag
 
    // ****************************************************************
    // ****************************************************************
@@ -422,14 +425,15 @@ module mkI_MMU_Cache (I_MMU_Cache_IFC);
 	    else begin    // Cache hit
 	       crg_exc [0]          <= False;
 	       crg_ld_val [0]       <= cache_result.final_ld_val;
+	       crg_ld_tag [0]       <= cache_result.final_ld_tag; // rgollap1
 
 	       if (cache_result.outcome == CACHE_READ_HIT) begin
 		  // Consume request and drive response immediately
 		  crg_valid [0]               <= True;
 		  crg_mmu_cache_req_state [0] <= REQ_STATE_EMPTY;
 		  if (verbosity >= 3)
-		     $display ("    Cache Read-hit: final_ld_val %0h; remain in STATE_MAIN",
-			       cache_result.final_ld_val);
+		     $display ("    Cache Read-hit: final_ld_val %0h final_ld_tag %0h; remain in STATE_MAIN",
+			       cache_result.final_ld_val, cache_result.final_ld_tag); //rgollap1
 	       end
 	       else if (cache_result.outcome == CACHE_WRITE_HIT) begin
 		  $display ("%0d: %m.rl_CPU_req_B", cur_cycle);
@@ -496,6 +500,7 @@ module mkI_MMU_Cache (I_MMU_Cache_IFC);
 
       crg_valid [0]               <= True;
       crg_ld_val [0]              <= ld_val;
+      crg_ld_tag [0]              <= 0; //rgollap1
       crg_exc [0]                 <= err;
       crg_exc_code [0]            <= fv_exc_code_access_fault (crg_mmu_cache_req [0]);
       crg_mmu_cache_req_state [0] <= REQ_STATE_EMPTY;
@@ -612,6 +617,10 @@ module mkI_MMU_Cache (I_MMU_Cache_IFC);
 
    method Bit #(64)  word64;
       return crg_ld_val [0];
+   endmethod
+
+   method Bit #(8)  tag8;
+      return crg_ld_tag [0];
    endmethod
 
    method Bool  exc;

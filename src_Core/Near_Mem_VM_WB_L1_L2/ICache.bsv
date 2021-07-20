@@ -57,6 +57,7 @@ typedef struct {
    Cache_Result_Type  outcome;
    Bit #(64)          final_ld_val;
    Bit #(64)          final_st_val;
+   Bit #(8)          final_ld_tag;
    } Cache_Result
 deriving (Bits, FShow);
 
@@ -225,6 +226,7 @@ typedef struct {
    Bit #(2)     num_valids;     // # of hits in set (should be 0 or 1; error if > 1)
    Meta_State   valid_state;    // M, E, S, I
    Bit #(64)    data;           // if valid
+   Bit #(64)    tag;            // instruction tag -- rgollap1
    Way_in_CSet  way;            // if valid (for subsequent updates)
    } Valid_Info
 deriving (Bits, Eq, FShow);
@@ -383,6 +385,8 @@ module mkICache #(parameter Bool      dcache_not_icache,
    let ram_A_cset_meta  = ram_cset_meta.a.read;
    let ram_A_cset_cword = ram_cset_cword.a.read;
 
+   let ram_B_cset_ctag  = ram_cset_cword.b.read;  // rgollap1 -- Using port B to read inline tag
+
    // ----------------
    // Valid_Info is a pure combinational function of the A-outputs of
    // the RAMs (current cache set) and the phys addr (tag-match)
@@ -394,6 +398,7 @@ module mkICache #(parameter Bool      dcache_not_icache,
       Meta_State   valid_state = META_INVALID;    // M, E, S, I
       Way_in_CSet  way_hit     = 0;
       Bit #(64)    cword       = 0;
+      Bit #(64)    ctag        = 0;  //rgollap1 -- tag read at the same time as the instruction
 
       CTag  pa_ctag = fn_PA_to_CTag (pa);
 
@@ -408,11 +413,15 @@ module mkICache #(parameter Bool      dcache_not_icache,
 
 	 let cword_at_way = ram_A_cset_cword [way];
 	 cword  = (cword | (cword_at_way & pack (replicate (hit_at_way))));
+
+         let ctag_at_way = ram_B_cset_ctag [way];  // rgollap1 -- reading the right set in the cache
+         ctag  = (ctag | (ctag_at_way & pack (replicate (hit_at_way)))); //rgollap1
       end
 
       return Valid_Info {num_valids:  num_valids,
 			 valid_state: valid_state,
 			 data:        cword,
+			 tag:	      ctag,  //rgollap1
 			 way:         way_hit};    // For possible subsequent update
    endfunction
 
@@ -430,6 +439,14 @@ module mkICache #(parameter Bool      dcache_not_icache,
 	 // Request data RAM
 	 let cset_cword_in_cache = fn_Addr_to_CSet_CWord_in_Cache (va);
 	 ram_cset_cword.a.put (bram_cmd_read, cset_cword_in_cache, ?);
+
+         let va_tag = va; //rgollap1 -- since inline tags are always at the beginning of a cache line the last 4 bits of the address woould be 0
+	 va_tag[3:0] = 0; // rgollap1
+
+	 if(rg_fsm_state != FSM_UPGRADE_REFILL) begin //rgollap1 only use the second port to read when we are fecthing an instruction , if the cache is trying to refill the cache line from lower caches
+	 	let cset_ctag_in_cache = fn_Addr_to_CSet_CWord_in_Cache (va_tag);  // we have to use it as a write port
+	 	ram_cset_cword.b.put (bram_cmd_read, cset_ctag_in_cache, ?);
+         end
 
 	 if (verbosity >= 2) begin
 	    if (dcache_not_icache) $write ("    dmem");
@@ -1174,6 +1191,30 @@ module mkICache #(parameter Bool      dcache_not_icache,
 	 let data       = fv_from_byte_lanes (zeroExtend (req.va), req.f3 [1:0], valid_info.data);
 	 data = fv_extend (req.f3, data);
 
+      	 let tag_va = req.va;   //rgollap1
+	 tag_va[3:0] = 0;       //rgollap1
+
+	 let tag	= fv_from_byte_lanes (zeroExtend (tag_va), req.f3 [1:0], valid_info.tag); //rgollap1
+	 tag = fv_extend (req.f3, tag); //rgollap1
+
+	 if (req.va == 4) begin // rgollap1 extracting the tag of the specific instruction from the inline tag instruction
+
+	    tag = tag[30:23];
+	    
+	 end
+
+	 else if (req.va == 8) begin
+
+            tag = tag[22:15];
+
+	 end
+
+	 else begin
+
+            tag = tag[14:7];
+
+	 end // rgollap1
+
 	 if (valid_info.num_valids > 1) begin
 	    // Assertion failure: # cannot match more than 1 item in a set
 	    $display ("    INTERNAL ERROR ", fshow (req.op), " va %0h pa %0h", req.va, pa);
@@ -1187,10 +1228,13 @@ module mkICache #(parameter Bool      dcache_not_icache,
 	 // Load-hit
 	 if (valid && (req.op == CACHE_LD)) begin
 	    if (verbosity >= 1)
-	       $display ("    LOAD-HIT: va %0h pa %0h data %0h", req.va, pa, data);
+	       $display ("    LOAD-HIT: va %0h pa %0h data %0h tag %0h", req.va, pa, data, tag); // rgollap1 -- printing the inline tag along with data
+ 
+
 	    result = Cache_Result {outcome:      CACHE_READ_HIT,
 				   final_ld_val: data,
-				   final_st_val: ?};
+				   final_st_val: ?,
+				   final_ld_tag: tag}; //rgollap1 - passing the inline tag to ICache
 	 end
 
 	 // Store-hit
@@ -1200,7 +1244,8 @@ module mkICache #(parameter Bool      dcache_not_icache,
 	    fa_write (pa, req.f3, req.st_value);
 	    result = Cache_Result {outcome:      CACHE_WRITE_HIT,
 				   final_ld_val: 0,
-				   final_st_val: req.st_value};
+				   final_st_val: req.st_value,
+				   final_ld_tag: 0}; // rgollap1 -- updating the cache result on other memory actions
 
 	    // Cancel LR/SC reservation if this store is for this addr
 	    // TODO: should we cancel it on ANY store?
@@ -1212,13 +1257,14 @@ module mkICache #(parameter Bool      dcache_not_icache,
 	 // AMO LR-hit
 	 else if (valid && fv_is_AMO_LR (req)) begin
 	    if (verbosity >= 1)
-	       $display ("    LR-HIT: va %0h pa %0h data %0h", req.va, pa, data);
+	       $display ("    LR-HIT: va %0h pa %0h data %0h tag %0h", req.va, pa, data, tag);
 	    rg_lrsc_valid <= True;
 	    rg_lrsc_pa    <= pa;
 	    rg_lrsc_size  <= req.f3 [1:0];
 	    result = Cache_Result {outcome:      CACHE_READ_HIT,
 				   final_ld_val: data,
-				   final_st_val: ?};
+				   final_st_val: ?,
+				   final_ld_tag: tag};
 	 end
 
 	 // AMO SC-hit
@@ -1231,7 +1277,8 @@ module mkICache #(parameter Bool      dcache_not_icache,
 	       fa_write (pa, req.f3, req.st_value);
 	       result = Cache_Result {outcome:      CACHE_WRITE_HIT,
 				      final_ld_val: 0,    // SC success
-				      final_st_val: req.st_value};
+				      final_st_val: req.st_value,
+				      final_ld_tag: 0};
 	    end
 	    else begin
 	       if (verbosity >= 1)
@@ -1239,7 +1286,8 @@ module mkICache #(parameter Bool      dcache_not_icache,
 			    req.va, pa, req.st_value);
 	       result = Cache_Result {outcome:      CACHE_READ_HIT,
 				      final_ld_val: 1,    // SC fail
-				      final_st_val: 0};
+				      final_st_val: 0,
+				      final_ld_tag: 0};
 	    end
 	 end
 
@@ -1269,7 +1317,8 @@ module mkICache #(parameter Bool      dcache_not_icache,
 	    fa_write (pa, req.f3, new_st_val);
 	    result = Cache_Result {outcome:      CACHE_WRITE_HIT,
 				   final_ld_val: new_ld_val,
-				   final_st_val: new_st_val};
+				   final_st_val: new_st_val,
+				   final_ld_tag: 0};
 
 	    // Cancel LR/SC reservation if this store is for this addr
 	    if (rg_lrsc_pa == pa)
@@ -1311,7 +1360,8 @@ module mkICache #(parameter Bool      dcache_not_icache,
 	    end
 	    result = Cache_Result {outcome: CACHE_MISS,
 				   final_ld_val: ?,
-				   final_st_val: ?};
+				   final_st_val: ?,
+				   final_ld_tag: ?};
 `ifdef ISA_A
 	    // If the line being replaced/upgraded contains the LRSC reserved addr,
 	    // cancel the reservation.

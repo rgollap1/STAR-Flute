@@ -184,6 +184,7 @@ module mkCPU (CPU_IFC);
    Reg #(Trap_Info)  rg_trap_info       <- mkRegU;
    Reg #(Bool)       rg_trap_interrupt  <- mkRegU;
    Reg #(Instr)      rg_trap_instr      <- mkRegU;
+   Reg #(Bit #(8))   rg_trap_instr_tag  <- mkRegU; // rgollap1 adding a new register to hold the tag of the instrcuction that raised an exception
 `ifdef INCLUDE_TANDEM_VERIF
    Reg #(Trace_Data) rg_trap_trace_data <- mkRegU;
 `endif
@@ -304,11 +305,11 @@ module mkCPU (CPU_IFC);
    // ================================================================
    // Debugging: print instruction trace info
 
-   function Action fa_emit_instr_trace (Bit #(64) instret, WordXL pc, Instr instr, Priv_Mode priv);
+   function Action fa_emit_instr_trace (Bit #(64) instret, WordXL pc, Instr instr, Priv_Mode priv, Bit #(8) tag); // rgollap1 modified the trace/print function to print instruction tag
       action
 	 if ((cur_verbosity >= 1) || ((instret & 'h_F_FFFF) == 0))
-	    $display ("instret:%0d  PC:0x%0h  instr:0x%0h  priv:%0d",
-		      instret, pc, instr, priv);
+	    $display ("instret:%0d  PC:0x%0h  instr:0x%0h  priv:%0d instr_tag:0x%0h",
+		      instret, pc, instr, priv, tag);
 
 `ifdef INCLUDE_PC_TRACE
 	 let pc_trace = PC_Trace {cycle: mcycle,  instret: instret, pc: pc};
@@ -666,7 +667,7 @@ module mkCPU (CPU_IFC);
 	 // Note: this instr cannot be a CSRRx updating INSTRET, since
 	 // CSRRx is done off-pipe
 	 csr_regfile.csr_minstret_incr;
-	 fa_emit_instr_trace (minstret, stage2.out.data_to_stage3.pc, stage2.out.data_to_stage3.instr, rg_cur_priv);
+	 fa_emit_instr_trace (minstret, stage2.out.data_to_stage3.pc, stage2.out.data_to_stage3.instr, rg_cur_priv, stage2.out.data_to_stage3.tag); // rgollap1
       end
 
       // ----------------
@@ -762,6 +763,7 @@ module mkCPU (CPU_IFC);
       rg_trap_info       <= stage2.out.trap_info;
       rg_trap_interrupt  <= False;
       rg_trap_instr      <= stage2.out.data_to_stage3.instr;
+      rg_trap_instr_tag	 <= stage2.out.data_to_stage3.tag; // rgollap1
 `ifdef INCLUDE_TANDEM_VERIF
       rg_trap_trace_data <= stage2.out.data_to_stage3.trace_data;
 `endif
@@ -793,6 +795,7 @@ module mkCPU (CPU_IFC);
       rg_trap_info       <= stage1.out.trap_info;
       rg_trap_interrupt  <= False;
       rg_trap_instr      <= stage1.out.data_to_stage2.instr;
+      rg_trap_instr_tag  <= stage1.out.data_to_stage2.tag; //rgollap1 -- retrieving tag
 `ifdef INCLUDE_TANDEM_VERIF
       rg_trap_trace_data <= stage1.out.data_to_stage2.trace_data;
 `endif
@@ -809,6 +812,7 @@ module mkCPU (CPU_IFC);
       let exc_code     = rg_trap_info.exc_code;
       let tval         = rg_trap_info.tval;
       let instr        = rg_trap_instr;
+      let instr_tag    = rg_trap_instr_tag; //rgollap1 -- retrieving the tag
       let is_interrupt = rg_trap_interrupt;
 
       // Take trap, save trap information for next phase
@@ -872,7 +876,7 @@ module mkCPU (CPU_IFC);
       end
 `endif
 
-      fa_emit_instr_trace (minstret, epc, instr, rg_cur_priv);
+      fa_emit_instr_trace (minstret, epc, instr, rg_cur_priv, instr_tag); // rgollap1 - Adding tag to trace print
 
       // Debug
       if (cur_verbosity != 0)
@@ -910,6 +914,7 @@ module mkCPU (CPU_IFC);
                                       tval:     stage1.out.trap_info.tval};
       rg_trap_interrupt <= False;
       rg_trap_instr     <= stage1.out.data_to_stage2.instr;    // Also used in successful CSSRW
+      rg_trap_instr_tag <= stage1.out.data_to_stage2.tag;    // rgollap1 - retriving the instruction tag
 `ifdef INCLUDE_TANDEM_VERIF
       rg_trap_trace_data <= stage1.out.data_to_stage2.trace_data;
 `endif
@@ -923,6 +928,7 @@ module mkCPU (CPU_IFC);
       if (cur_verbosity > 1) $display ("%0d: %m.rl_stage1_CSRR_W_2", mcycle);
 
       let instr    = rg_trap_instr;
+      let tag      = rg_trap_instr_tag; // rgollap1
       let csr_addr = instr_csr    (instr);
       let rs1      = instr_rs1    (instr);
       let funct3   = instr_funct3 (instr);
@@ -986,7 +992,7 @@ module mkCPU (CPU_IFC);
 `endif
 
 	 // Debug
-	 fa_emit_instr_trace (minstret, rg_csr_pc, instr, rg_cur_priv);
+	 fa_emit_instr_trace (minstret, rg_csr_pc, instr, rg_cur_priv, tag); // rgollap1
 	 if (cur_verbosity > 1) begin
 	    $display ("    S1: write CSRRW/CSRRWI Rs1 %0d Rs1_val 0x%0h csr 0x%0h csr_val 0x%0h Rd %0d",
 		      rs1, rs1_val, csr_addr, csr_val, rd);
@@ -1024,6 +1030,7 @@ module mkCPU (CPU_IFC);
                                       tval:     stage1.out.trap_info.tval};
       rg_trap_interrupt <= False;
       rg_trap_instr     <= stage1.out.data_to_stage2.instr;    // TODO: this is also used for successful CSRRW
+      rg_trap_instr_tag	<= stage1.out.data_to_stage2.tag; // rgollap1
 `ifdef INCLUDE_TANDEM_VERIF
       rg_trap_trace_data <= stage1.out.data_to_stage2.trace_data;    // TODO: this is also used for successful CSRRW
 `endif
@@ -1037,6 +1044,7 @@ module mkCPU (CPU_IFC);
       if (cur_verbosity > 1) $display ("%0d: %m.rl_stage1_CSRR_S_or_C_2", mcycle);
 
       let instr    = rg_trap_instr;
+      let tag 	   = rg_trap_instr_tag; // rgollap1
       let csr_addr = instr_csr    (instr);
       let rs1      = instr_rs1    (instr);
       let funct3   = instr_funct3 (instr);
@@ -1106,7 +1114,7 @@ module mkCPU (CPU_IFC);
 `endif
 
 	 // Debug
-	 fa_emit_instr_trace (minstret, rg_csr_pc, instr, rg_cur_priv);
+	 fa_emit_instr_trace (minstret, rg_csr_pc, instr, rg_cur_priv, tag); //rgollap1
 	 if (cur_verbosity > 1) begin
 	    $display ("    S1: write CSRR_S_or_C: Rs1 %0d Rs1_val 0x%0h csr 0x%0h csr_val 0x%0h Rd %0d",
 		      rs1, rs1_val, csr_addr, csr_val, rd);
@@ -1171,7 +1179,7 @@ module mkCPU (CPU_IFC);
 `endif
 
       // Debug
-      fa_emit_instr_trace (minstret, stage1.out.data_to_stage2.pc, stage1.out.data_to_stage2.instr, rg_cur_priv);
+      fa_emit_instr_trace (minstret, stage1.out.data_to_stage2.pc, stage1.out.data_to_stage2.instr, rg_cur_priv, stage1.out.data_to_stage2.tag); // rgollap1
       if (cur_verbosity != 0)
 	 $display ("    xRET: next_pc:0x%0h  new mstatus:0x%0h  new priv:%0d", next_pc, new_mstatus, new_priv);
    endrule: rl_stage1_xRET
@@ -1209,7 +1217,8 @@ module mkCPU (CPU_IFC);
       fa_emit_instr_trace (minstret,
 			   stage1.out.data_to_stage2.pc,
 			   stage1.out.data_to_stage2.instr,
-			   rg_cur_priv);
+			   rg_cur_priv,
+			   stage1.out.data_to_stage2.tag); // rgollap1
 `ifdef INCLUDE_TANDEM_VERIF
       let trace_data = stage1.out.data_to_stage2.trace_data;
       f_trace_data.enq (trace_data);
@@ -1251,7 +1260,8 @@ module mkCPU (CPU_IFC);
       // Debug
       fa_emit_instr_trace (minstret, stage1.out.data_to_stage2.pc,
 			   stage1.out.data_to_stage2.instr,
-			   rg_cur_priv);
+			   rg_cur_priv,
+			   stage1.out.data_to_stage2.tag); // rgollap1
 `ifdef INCLUDE_TANDEM_VERIF
       // Trace data
       let trace_data = stage1.out.data_to_stage2.trace_data;
@@ -1305,7 +1315,8 @@ module mkCPU (CPU_IFC);
       fa_emit_instr_trace (minstret,
 			   stage1.out.data_to_stage2.pc,
 			   stage1.out.data_to_stage2.instr,
-			   rg_cur_priv);
+			   rg_cur_priv,
+			   stage1.out.data_to_stage2.tag); // rgollap1
 `ifdef INCLUDE_TANDEM_VERIF
       // Trace data
       let trace_data = stage1.out.data_to_stage2.trace_data;
@@ -1346,7 +1357,7 @@ module mkCPU (CPU_IFC);
 `endif
 
       // Debug
-      fa_emit_instr_trace (minstret, stage1.out.data_to_stage2.pc, stage1.out.data_to_stage2.instr, rg_cur_priv);
+      fa_emit_instr_trace (minstret, stage1.out.data_to_stage2.pc, stage1.out.data_to_stage2.instr, rg_cur_priv, stage1.out.data_to_stage2.tag); // rgollap1
       if (cur_verbosity > 1)
 	 $display ("    CPU.rl_stage1_WFI");
    endrule: rl_stage1_WFI
@@ -1466,6 +1477,7 @@ module mkCPU (CPU_IFC);
 				       tval:     0};
       rg_trap_interrupt  <= True;
       rg_trap_instr      <= stage1.out.data_to_stage2.instr;
+      rg_trap_instr_tag  <= stage1.out.data_to_stage2.tag; //rgollap1
 
 `ifdef INCLUDE_TANDEM_VERIF
       // rg_trap_trace_data <= ?;    // Will be filled in in rl_trap

@@ -245,6 +245,7 @@ typedef struct {
    Exc_Code   exc_code;
    WordXL     tval;               // Trap value; can be different from PC, with 'C' extension
    Instr      instr;              // Valid if no exception
+   Bit #(8)   tag;		  // rgollap1 -- Adding a tag field in the data_struct 
    WordXL     pred_pc;            // Predicted next pc
    } Data_StageF_to_StageD
 deriving (Bits);
@@ -304,6 +305,7 @@ typedef struct {
 
    Instr          instr;              // Valid if no exception
    Instr_C        instr_C;            // Valid if no exception; original compressed instruction
+   Bit #(8)       tag;                // rgollap1 -- Adding a tag field in the data_struct
    WordXL         pred_pc;            // Predicted next pc
    Decoded_Instr  decoded_instr;
    } Data_StageD_to_Stage1
@@ -422,6 +424,7 @@ typedef struct {
    Addr       pc;
    Instr      instr;             // For debugging. Just funct3, funct7 are
                                  // enough for functionality.
+   Bit #(8)   tag;               //rgollap1 -- Adding a tag field in the data_struct
    Op_Stage2  op_stage2;
    RegName    rd;
    Addr       addr;              // Branch, jump: newPC
@@ -505,6 +508,7 @@ endinstance
 typedef struct {
    Addr      pc;            // For debugging only
    Instr     instr;         // For debugging only
+   Bit #(8)   tag;          // rgollap1 -- Adding a tag field in the data_struct
    Priv_Mode priv;
 
    Bool      rd_valid;

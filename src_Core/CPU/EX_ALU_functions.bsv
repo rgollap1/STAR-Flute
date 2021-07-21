@@ -39,6 +39,7 @@ typedef struct {
    Addr           pc;
    Bool           is_i32_not_i16;
    Instr          instr;
+   Bit #(8)	  tag;
 `ifdef ISA_C
    Instr_C        instr_C;
 `endif

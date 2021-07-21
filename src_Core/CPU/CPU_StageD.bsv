@@ -74,6 +74,7 @@ module mkCPU_StageD #(Bit #(4)  verbosity, MISA misa)
    Bit #(2) xl = ((xlen == 32) ? misa_mxl_32 : misa_mxl_64);
 
    Instr instr = rg_data.instr;
+   Bit #(8) tag = rg_data.tag;
 `ifdef ISA_C
    Instr_C instr_C = instr [15:0];
    if (! rg_data.is_i32_not_i16)
@@ -111,6 +112,7 @@ module mkCPU_StageD #(Bit #(4)  verbosity, MISA misa)
 							       exc_code:       rg_data.exc_code,
 							       tval:           rg_data.tval,
 							       instr:          instr,
+							       tag:	       tag,
 `ifdef ISA_C
 							       instr_C:        instr_C,
 `endif

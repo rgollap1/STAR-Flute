@@ -153,6 +153,7 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
 				pc             : rg_stage_input.pc,
 				is_i32_not_i16 : rg_stage_input.is_i32_not_i16,
 				instr          : rg_stage_input.instr,
+				tag	       : rg_stage_input.tag,				
 `ifdef ISA_C
 				instr_C        : rg_stage_input.instr_C,
 `endif
@@ -175,6 +176,7 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
 
    let data_to_stage2 = Data_Stage1_to_Stage2 {pc            : rg_stage_input.pc,
 					       instr         : rg_stage_input.instr,
+					       tag	     : rg_stage_input.tag,
 					       op_stage2     : alu_outputs.op_stage2,
 					       rd            : alu_outputs.rd,
 					       addr          : alu_outputs.addr,
@@ -213,6 +215,7 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
 	 // For debugging only
 	 let data_to_stage2 = Data_Stage1_to_Stage2 {pc:        rg_stage_input.pc,
 						     instr:     rg_stage_input.instr,
+						     tag:	rg_stage_input.tag,
 						     op_stage2: OP_Stage2_ALU,
 						     rd:        0,
 						     addr:      ?,

@@ -50,7 +50,7 @@ interface Branch_Predictor_IFC;
    // fall-through PC if no prediction.
 
    (* always_ready *)
-   method WordXL  predict_rsp (Bool is_i32_not_i16, Instr instr);
+   method WordXL  predict_rsp (Bool is_i32_not_i16, Instr instr, Priv_Mode cur_priv); //rgollap1
 
    // ----------------
    // Train BTB and RAS.
@@ -267,7 +267,7 @@ module mkBranch_Predictor (Branch_Predictor_IFC);
    // and are used to choose RAS actions if any, and size of
    // fall-through PC if no prediction.
 
-   method WordXL  predict_rsp (Bool is_i32_not_i16, Instr instr);
+   method WordXL  predict_rsp (Bool is_i32_not_i16, Instr instr, Priv_Mode cur_priv); //rgollap1
       WordXL pred_pc   = bogus_PC;    // default: no prediction, invalid PC
       let    btb_entry = btb_bramcore2.a.read;
 
@@ -284,9 +284,13 @@ module mkBranch_Predictor (Branch_Predictor_IFC);
       end
 
       // Default prediction: fallthrough
-      if (pred_pc == bogus_PC)
-	 pred_pc = rg_pc + (is_i32_not_i16 ? 4 : 2);
+      if (pred_pc == bogus_PC) begin //rgollap1
 
+      	 pred_pc = rg_pc + (is_i32_not_i16 ? 4 : 2);
+
+	 if (cur_priv == 0 && pred_pc[3:0] == 0)
+	    pred_pc = pred_pc + 4;
+      end
       return pred_pc;
    endmethod
 

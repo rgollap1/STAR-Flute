@@ -69,8 +69,9 @@ endinterface
 // Implementation module
 
 module mkCPU_StageF #(Bit #(4)  verbosity,
-		      IMem_IFC  imem)
-                    (CPU_StageF_IFC);
+		      IMem_IFC  imem,
+		      Priv_Mode cur_priv) 
+                    (CPU_StageF_IFC); // rgollap1 -- adding priv to fetch stage call
 
    FIFOF #(Token)  f_reset_reqs <- mkFIFOF;
    FIFOF #(Token)  f_reset_rsps <- mkFIFOF;
@@ -97,7 +98,7 @@ module mkCPU_StageF #(Bit #(4)  verbosity,
    // Combinational output function
 
    function Output_StageF fv_out;
-      let pred_pc = branch_predictor.predict_rsp (imem.is_i32_not_i16, imem.instr);
+      let pred_pc = branch_predictor.predict_rsp (imem.is_i32_not_i16, imem.instr, cur_priv); // rgollap1 -- passing the current privilage mode to branch predictor
       let d = Data_StageF_to_StageD {pc:              imem.pc,
 				     epoch:           rg_epoch,
 				     priv:            rg_priv,

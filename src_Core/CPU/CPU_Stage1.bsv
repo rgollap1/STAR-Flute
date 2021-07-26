@@ -292,9 +292,9 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
 
 	 let fall_through_pc = rg_stage_input.pc + (rg_stage_input.is_i32_not_i16 ? 4 : 2);
 
-	 if (fall_through_pc[3:0] == 0 && cur_priv == 0)
-	    fall_through_pc = fall_through_pc + 4;
-
+/*	 if (fall_through_pc[3:0] == 0 && cur_priv == 0)
+	    fall_through_pc = fall_through_pc + 4; // rgollap1
+*/
 	 let next_pc = ((alu_outputs.control == CONTROL_BRANCH)
 			? alu_outputs.addr
 			: fall_through_pc);

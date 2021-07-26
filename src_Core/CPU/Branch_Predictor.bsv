@@ -284,13 +284,13 @@ module mkBranch_Predictor (Branch_Predictor_IFC);
       end
 
       // Default prediction: fallthrough
-      if (pred_pc == bogus_PC) begin //rgollap1
+      if (pred_pc == bogus_PC) // begin //rgollap1
 
       	 pred_pc = rg_pc + (is_i32_not_i16 ? 4 : 2);
 
-	 if (cur_priv == 0 && pred_pc[3:0] == 0)
+/*	 if (cur_priv == 0 && pred_pc[3:0] == 0)
 	    pred_pc = pred_pc + 4;
-      end
+      end */
       return pred_pc;
    endmethod
 

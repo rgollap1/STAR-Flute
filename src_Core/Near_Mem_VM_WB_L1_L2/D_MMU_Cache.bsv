@@ -440,7 +440,7 @@ module mkD_MMU_Cache (D_MMU_Cache_IFC);
 
       if (! fn_is_aligned (mmu_cache_req.f3 [1:0], mmu_cache_req.va)) begin
 	 // Misaligned accesses not supported
-	 if (ptw.dt_ptw_count) begin \\ rgollap1
+	 if (ptw.dt_ptw_count) begin // rgollap1
                 ptw.dt_ptw_flush;
                 dequeue_dtmem_ptw <= True;
          end
@@ -472,7 +472,7 @@ module mkD_MMU_Cache (D_MMU_Cache_IFC);
 	 if (verbosity >= 3)
 	    $display ("    VM_XLATE_EXCEPTION");
 
-         if (ptw.dt_ptw_count) begin \\ rgollap1
+         if (ptw.dt_ptw_count) begin  // rgollap1
 		 ptw.dt_ptw_flush;
 		 dequeue_dtmem_ptw <= True;
 	 end
@@ -486,7 +486,7 @@ module mkD_MMU_Cache (D_MMU_Cache_IFC);
 
       // ---- TLB success
       else begin
-      	 if (ptw.dt_ptw_count) begin \\ rgollap1
+      	 if (ptw.dt_ptw_count) begin // rgollap1
 		 ptw.dt_ptw_walk;
 	 end
 	 dynamicAssert ((vm_xlate_result.outcome == VM_XLATE_OK), "FAIL: unknown vm_xlate result");
@@ -783,7 +783,7 @@ module mkD_MMU_Cache (D_MMU_Cache_IFC);
       end
    endrule
       
-   rule rl_ptw_deq_dt (dequeue_dtmem_ptw);  \\ rgollap1
+   rule rl_ptw_deq_dt (dequeue_dtmem_ptw);  // rgollap1
 	ptw.dt_ptw_rsp_enq;
 	dequeue_dtmem_ptw <= False;
    endrule

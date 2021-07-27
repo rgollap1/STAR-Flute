@@ -58,7 +58,7 @@ typedef enum {
    PTW_OK,
    PTW_ACCESS_FAULT,
    PTW_PAGE_FAULT,
-   PTW_DCACHE_FAULT \\ rgollap1
+   PTW_DCACHE_FAULT // rgollap1
    } PTW_Result
 deriving (Bits, Eq, FShow);
 
@@ -141,11 +141,11 @@ module mkPTW #(parameter Bit #(3) verbosity) (PTW_IFC);
    FIFOF #(PTW_Rsp) f_imem_rsps <- mkFIFOF;
 
    // Requests from DTMem, and responses
-   FIFOF #(PTW_Req) f_dtmem_reqs <- mkFIFOF; \\ rgollap1
-   FIFOF #(PTW_Rsp) f_dtmem_rsps <- mkFIFOF; \\ rgollap1
+   FIFOF #(PTW_Req) f_dtmem_reqs <- mkFIFOF; // rgollap1
+   FIFOF #(PTW_Rsp) f_dtmem_rsps <- mkFIFOF; // rgollap1
 
-   // Merged: 0: from DMem, 1: from IMem, 2: from DTMem \\ rgollap1
-   FIFOF #(Tuple2 #(Bit #(2), PTW_Req)) f_dmem_imem_reqs <- mkFIFOF; \\ rgollap1
+   // Merged: 0: from DMem, 1: from IMem, 2: from DTMem // rgollap1
+   FIFOF #(Tuple2 #(Bit #(2), PTW_Req)) f_dmem_imem_reqs <- mkFIFOF; // rgollap1
 
    FIFOF #(PTW_Req) f_dmem_reqs <- mkFIFOF;
    FIFOF #(PTW_Rsp) f_dmem_rsps <- mkFIFOF;
@@ -166,13 +166,13 @@ module mkPTW #(parameter Bit #(3) verbosity) (PTW_IFC);
 
    rule rl_merge_dmem_reqs;
       let req <- pop (f_dmem_reqs);
-      f_dmem_imem_reqs.enq (tuple2 (0, req)); \\ rgollap1
+      f_dmem_imem_reqs.enq (tuple2 (0, req)); // rgollap1
 
       if (verbosity >= 1)
 	 $display ("%0d: %m.rl_merge_dmem_reqs:\n    ", cur_cycle, fshow (req));
    endrule
 
-   rule rl_merge_dtmem_reqs; \\ rgollap1
+   rule rl_merge_dtmem_reqs; // rgollap1
       let req <- pop (f_dtmem_reqs);
       f_dmem_imem_reqs.enq (tuple2 (1, req));
       dt_ptw <= 1;
@@ -180,7 +180,7 @@ module mkPTW #(parameter Bit #(3) verbosity) (PTW_IFC);
 	 $display ("%0d: %m.rl_merge_dtmem_reqs:\n    ", cur_cycle, fshow (req));
    endrule
    
-   (* descending_urgency = "rl_merge_imem_reqs, rl_merge_dtmem_reqs, rl_merge_dmem_reqs" *) \\ rgollap1
+   (* descending_urgency = "rl_merge_imem_reqs, rl_merge_dtmem_reqs, rl_merge_dmem_reqs" *) // rgollap1
    rule rl_merge_imem_reqs;
       let req <- pop (f_imem_reqs);
       f_dmem_imem_reqs.enq (tuple2 (2, req));
@@ -218,7 +218,7 @@ module mkPTW #(parameter Bit #(3) verbosity) (PTW_IFC);
 	 // Consume the request
 	 f_dmem_imem_reqs.deq;
 	 // Enq the response
-	 if (dmem_not_imem == 0) begin  \\ rgollap1
+	 if (dmem_not_imem == 0) begin  // rgollap1
 		f_dmem_rsps.enq (rsp);
 		if (dt_ptw == 1) begin
 			dt_tlb <= True;
@@ -237,12 +237,12 @@ module mkPTW #(parameter Bit #(3) verbosity) (PTW_IFC);
    // ================================================================
    // Start a PTW
 
-   rule rl_ptw_start (rg_state == FSM_IDLE && !dt_tlb); \\ rgollap1
+   rule rl_ptw_start (rg_state == FSM_IDLE && !dt_tlb); // rgollap1
       // RV32.Sv32: Page Table top is at Level 1
       if (verbosity >= 1) begin
 	 $display ("%0d: %m.rl_ptw_start:", cur_cycle);
 	 if (dmem_not_imem == 0) $write ("    for D_Mem:");
-	 else if (dmem_not_imem == 1) $write ("    for DT_Mem:"); \\ rgollap1
+	 else if (dmem_not_imem == 1) $write ("    for DT_Mem:"); // rgollap1
 	 else               $write ("    for I_Mem:");
 	 $display (" satp_pa %0h  va %0h", satp_pa, va);
       end
@@ -483,9 +483,9 @@ module mkPTW #(parameter Bit #(3) verbosity) (PTW_IFC);
    // INTERFACE
 
    // ----------------
-   // PTW requests from IMem, DTMem and DMem \\ rgollap1
+   // PTW requests from IMem, DTMem and DMem // rgollap1
    interface Server imem_server = toGPServer (f_imem_reqs, f_imem_rsps);
-   interface Server dtmem_server = toGPServer (f_dtmem_reqs, f_dtmem_rsps); \\ rgollap1
+   interface Server dtmem_server = toGPServer (f_dtmem_reqs, f_dtmem_rsps); // rgollap1
    interface Server dmem_server = toGPServer (f_dmem_reqs, f_dmem_rsps);
 
    // ----------------
@@ -494,7 +494,7 @@ module mkPTW #(parameter Bit #(3) verbosity) (PTW_IFC);
    interface Client mem_client = toGPClient (f_mem_reqs, f_mem_rsps);
 
 
-   method Action dt_ptw_rsp_enq; \\ rgollap1
+   method Action dt_ptw_rsp_enq; // rgollap1
 		match { .dtmem, .ptwdt_req } = f_dmem_imem_reqs.first;
 		let ptw_rsp = PTW_Rsp {result: PTW_DCACHE_FAULT, pte: 0, level: 2, pte_pa: ptwdt_req.va};
 		f_dmem_imem_reqs.deq;
@@ -503,15 +503,15 @@ module mkPTW #(parameter Bit #(3) verbosity) (PTW_IFC);
 		dt_tlb <= False;
    endmethod
 	
-   method Action dt_ptw_flush; \\ rgollap1
+   method Action dt_ptw_flush; // rgollap1
 	dt_tlb <= True;	
    endmethod
  	
-   method Action dt_ptw_walk; \\ rgollap1
+   method Action dt_ptw_walk; // rgollap1
 	dt_tlb <= False;	
    endmethod
 
-   method Bool dt_ptw_count; \\ rgollap1
+   method Bool dt_ptw_count; // rgollap1
 	if (dt_ptw > 0) begin
 		return True;	
 	end 

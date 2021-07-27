@@ -129,6 +129,11 @@ interface D_MMU_Cache_IFC;
    // PTW and PTE-writeback requests from I_MMU_Cache are serviced by D_MMU_Cache
    interface Server #(PTW_Req, PTW_Rsp)  imem_ptw_server;
    interface Put #(Tuple2 #(PA, WordXL)) imem_pte_writeback_p;
+
+   // PTW and PTE-writeback requests from DT_MMU_Cache are also serviced by D_MMU_Cache //rgollap1
+   interface Server #(PTW_Req, PTW_Rsp)  dtmem_ptw_server;
+   interface Put #(Tuple2 #(PA, WordXL)) dtmem_pte_writeback_p;
+
 `endif
 
    // ----------------
@@ -282,6 +287,8 @@ module mkD_MMU_Cache (D_MMU_Cache_IFC);
    Reg #(Bit #(64)) crg_ld_val [2]       <- mkCRegU (2);  // Load-val for LOAD/LR/AMO, success/fail for SC
    Reg #(Bit #(64)) crg_final_st_val [2] <- mkCRegU (2);
 
+   Reg #(Bool)      dequeue_dtmem_ptw <- mkReg (False); // rgollap1
+   
 `ifdef WATCH_TOHOST
    // See NOTE: "tohost" above.
    // "tohost" addr on which to monitor writes, for standard ISA tests.
@@ -433,6 +440,10 @@ module mkD_MMU_Cache (D_MMU_Cache_IFC);
 
       if (! fn_is_aligned (mmu_cache_req.f3 [1:0], mmu_cache_req.va)) begin
 	 // Misaligned accesses not supported
+	 if (ptw.dt_ptw_count) begin \\ rgollap1
+                ptw.dt_ptw_flush;
+                dequeue_dtmem_ptw <= True;
+         end
 	 crg_valid [0]               <= True;
 	 crg_exc [0]                 <= True;
 	 crg_exc_code [0]            <= fv_exc_code_misaligned (mmu_cache_req);
@@ -461,6 +472,11 @@ module mkD_MMU_Cache (D_MMU_Cache_IFC);
 	 if (verbosity >= 3)
 	    $display ("    VM_XLATE_EXCEPTION");
 
+         if (ptw.dt_ptw_count) begin \\ rgollap1
+		 ptw.dt_ptw_flush;
+		 dequeue_dtmem_ptw <= True;
+	 end
+
 	 crg_valid [0]               <= True;
 	 crg_exc [0]                 <= True;
 	 crg_exc_code [0]            <= vm_xlate_result.exc_code;
@@ -470,6 +486,9 @@ module mkD_MMU_Cache (D_MMU_Cache_IFC);
 
       // ---- TLB success
       else begin
+      	 if (ptw.dt_ptw_count) begin \\ rgollap1
+		 ptw.dt_ptw_walk;
+	 end
 	 dynamicAssert ((vm_xlate_result.outcome == VM_XLATE_OK), "FAIL: unknown vm_xlate result");
 
 `ifdef ISA_PRIV_S
@@ -565,6 +584,10 @@ module mkD_MMU_Cache (D_MMU_Cache_IFC);
 	 $display ("%0d: %m.rl_CPU_cache_wait: done -> STATE_MAIN", cur_cycle);
 
       if (! cache.mv_refill_ok) begin
+      	 if (ptw.dt_ptw_count) begin // rgollap1
+                ptw.dt_ptw_flush;
+                dequeue_dtmem_ptw <= True;
+         end
 	 crg_valid [0]               <= True;
 	 crg_exc [0]                 <= True;
 	 crg_exc_code [0]            <= fv_exc_code_access_fault (crg_mmu_cache_req [0]);
@@ -620,6 +643,10 @@ module mkD_MMU_Cache (D_MMU_Cache_IFC);
 	    $display ("    ok; retry -> STATE_MAIN");
       end
       else begin
+         if (ptw.dt_ptw_count) begin  // rgollap1
+		 ptw.dt_ptw_flush;
+		 dequeue_dtmem_ptw <= True;
+	 end
 	 crg_valid [0] <= True;
 	 crg_exc   [0] <= True;
 	 if (ptw_rsp.result == PTW_ACCESS_FAULT) begin
@@ -685,7 +712,7 @@ module mkD_MMU_Cache (D_MMU_Cache_IFC);
 
    // Step A
    rule rl_ptw_rd_A (cache.mv_is_idle
-		     && (ok_to_do_DMem_PTW || ok_to_do_IMem_PTW));
+		     && (ok_to_do_DMem_PTW || ok_to_do_IMem_PTW) && !dequeue_dtmem_ptw); // rgollap1
       let ptw_mem_req <- ptw.mem_client.request.get;
 
       if (verbosity >= 3) begin
@@ -755,6 +782,11 @@ module mkD_MMU_Cache (D_MMU_Cache_IFC);
 	 crg_state [0] <= STATE_MAIN;
       end
    endrule
+      
+   rule rl_ptw_deq_dt (dequeue_dtmem_ptw);  \\ rgollap1
+	ptw.dt_ptw_rsp_enq;
+	dequeue_dtmem_ptw <= False;
+   endrule
 `endif
 
    // ****************************************************************
@@ -764,13 +796,18 @@ module mkD_MMU_Cache (D_MMU_Cache_IFC);
 
 `ifdef ISA_PRIV_S
    // ----------------
-   // Merge PTE writeback requests from IMem and DMem
+   // Merge PTE writeback requests from IMem, DTMem and DMem
    // From I_MMU_Cache
    FIFOF #(Tuple2 #(PA, WordXL)) f_imem_pte_writebacks <- mkFIFOF;
-   // Merged from I_MMU_Cache and D_MMU_Cache
+
+   // From DT_MMU_Cache
+   FIFOF #(Tuple2 #(PA, WordXL)) f_dtmem_pte_writebacks <- mkFIFOF;
+
+   // Merged from I_MMU_Cache DT_MMU_Cacheand D_MMU_Cache
    FIFOF #(Tuple2 #(PA, WordXL)) f_pte_writebacks <- mkFIFOF;
 
    mkConnection (toGet (f_imem_pte_writebacks), toPut (f_pte_writebacks));
+   mkConnection (toGet (f_dtmem_pte_writebacks), toPut (f_pte_writebacks));
    mkConnection (toGet (f_dmem_pte_writebacks), toPut (f_pte_writebacks));
 
    // ----------------
@@ -915,6 +952,13 @@ module mkD_MMU_Cache (D_MMU_Cache_IFC);
 
    // Service PTE-writeback requests from I_MMU_Cache
    interface Put    imem_pte_writeback_p = toPut (f_imem_pte_writebacks);
+
+   // Service PTW requests from DT_MMU_Cache    // rgollap1
+   interface Server dtmem_ptw_server = ptw.dtmem_server; // rgollap1
+
+   // Service PTE-writeback requests from DT_MMU_Cache // rgollap1
+   interface Put    dtmem_pte_writeback_p = toPut (f_dtmem_pte_writebacks); // rgollap1
+
 `endif
 
    // ----------------

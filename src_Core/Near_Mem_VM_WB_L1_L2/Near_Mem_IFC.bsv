@@ -203,6 +203,34 @@ interface DMem_IFC;
 endinterface
 
 // ================================================================
+// DTMem interface   \\ rgollap1
+
+interface DTMem_IFC;
+   // CPU side: DTMem request
+   (* always_ready *)
+   method Action  req (CacheOp op,
+		       Bit #(3) f3,
+`ifdef ISA_A
+		       Bit #(7) amo_funct7,
+`endif
+		       WordXL addr,
+		       Bit #(64) store_value,
+		       // The following  args for VM
+		       Priv_Mode  priv,
+		       Bit #(1)   sstatus_SUM,
+		       Bit #(1)   mstatus_MXR,
+		       WordXL     satp);    // { VM_Mode, ASID, PPN_for_page_table }
+
+   // CPU side: DMem response
+   (* always_ready *)  method Bool       valid;
+   (* always_ready *)  method Bit #(64)  word64;      // Load-value
+   (* always_ready *)  method Bit #(64)  st_amo_val;  // Final store-value for ST, SC, AMO
+   (* always_ready *)  method Bool       exc;
+   (* always_ready *)  method Exc_Code   exc_code;
+endinterface   \\ rgollap1
+
+
+// ================================================================
 // Extract bytes from raw word read from near-mem.
 // The bytes of interest are offset according to LSBs of addr.
 // Arguments:

@@ -52,12 +52,12 @@ import Near_Mem_IFC :: *;    // For Wd_Id_Dma
 
 `ifdef OPTION_DMA_CACHE
 // When device's coherent port comes from DMA_Cache
-typedef TAdd #(TMul#(CoreNum, 2), 1) L1Num;    // per core (I-Cache, D-Cache) and DMA-Cache
+typedef TAdd #(TMul#(CoreNum, 3), 1) L1Num;    // per core (I-Cache, D-Cache, DTCache) and DMA-Cache // rgollap1
 `endif
 
 `ifdef OPTION_L2_COHERENT_DMA_PORT
 // When device's coherent port connects directly to LLC.dma
-typedef TMul#(CoreNum, 2) L1Num;    // per core (I-Cache, D-Cache)
+typedef TMul#(CoreNum, 3) L1Num;    // per core (I-Cache, D-Cache) //rgollap1
 `endif
 
 typedef `LOG_L1_WAYS LgL1WayNum;

@@ -427,7 +427,7 @@ endmodule
 // Synthesized instance, fixing number of clients
 
 // typedef 2 Num_MMIO_L1_Clients;    // Using L2's direct DMA port
-typedef 4 Num_MMIO_L1_Clients;    // Using DMA_Cache + DTCache
+typedef 4 Num_MMIO_L1_Clients;    // Using DMA_Cache + DTCache // rgollap1
 
 (* synthesize *)
 module mkMMIO_AXI4_Adapter_2 #(parameter Bit #(3) verbosity)

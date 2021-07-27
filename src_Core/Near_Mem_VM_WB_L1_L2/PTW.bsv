@@ -494,7 +494,7 @@ module mkPTW #(parameter Bit #(3) verbosity) (PTW_IFC);
    interface Client mem_client = toGPClient (f_mem_reqs, f_mem_rsps);
 
 
-   method Action dt_ptw_rsp_enq;
+   method Action dt_ptw_rsp_enq; \\ rgollap1
 		match { .dtmem, .ptwdt_req } = f_dmem_imem_reqs.first;
 		let ptw_rsp = PTW_Rsp {result: PTW_DCACHE_FAULT, pte: 0, level: 2, pte_pa: ptwdt_req.va};
 		f_dmem_imem_reqs.deq;
@@ -503,15 +503,15 @@ module mkPTW #(parameter Bit #(3) verbosity) (PTW_IFC);
 		dt_tlb <= False;
    endmethod
 	
-   method Action dt_ptw_flush;
+   method Action dt_ptw_flush; \\ rgollap1
 	dt_tlb <= True;	
    endmethod
  	
-   method Action dt_ptw_walk;
+   method Action dt_ptw_walk; \\ rgollap1
 	dt_tlb <= False;	
    endmethod
 
-   method Bool dt_ptw_count;
+   method Bool dt_ptw_count; \\ rgollap1
 	if (dt_ptw > 0) begin
 		return True;	
 	end 

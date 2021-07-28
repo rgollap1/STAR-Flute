@@ -212,7 +212,7 @@ module mkCPU (CPU_IFC);
 `endif
 					  csr_regfile);
 
-   CPU_Stage2_IFC stage2 <- mkCPU_Stage2 (cur_verbosity, csr_regfile, near_mem.dmem);
+   CPU_Stage2_IFC stage2 <- mkCPU_Stage2 (cur_verbosity, csr_regfile, near_mem.dmem, near_mem.dtmem);
 
    CPU_Stage1_IFC  stage1 <- mkCPU_Stage1 (cur_verbosity,
 					   gpr_regfile,

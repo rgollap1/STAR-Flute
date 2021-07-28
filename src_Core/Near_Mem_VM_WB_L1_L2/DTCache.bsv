@@ -45,7 +45,7 @@ import MMU_Cache_Common :: *;
 
 export  Cache_Result_Type (..), Cache_Result (..), fshow_Cache_Result;
 export  DTCache_IFC (..);
-export  mkCache;
+export  mkDTCache;
 
 // ================================================================
 // MODULE INTERFACE

@@ -335,11 +335,11 @@ module mkNear_Mem (Near_Mem_IFC);
 				     d_mmu_cache.l2_to_l1_server);
    l1 [1] = ifc_D_L1;
 
-   let ifc_D_L1 <- mkL1_IFC_Adapter (verbosity_D_L1_L2, // rgollap1
+   let ifc_DT_L1 <- mkL1_IFC_Adapter (verbosity_D_L1_L2, // rgollap1
                                      2,
                                      dt_mmu_cache.l1_to_l2_client,
                                      dt_mmu_cache.l2_to_l1_server);
-   l1 [2] = ifc_D_L1; // rgollap1
+   l1 [2] = ifc_DT_L1; // rgollap1
 
 
 `ifdef OPTION_DMA_CACHE

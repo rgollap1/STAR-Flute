@@ -82,6 +82,7 @@ import MMU_Cache_Common :: *;
 
 `ifdef ISA_PRIV_S
 import TLB :: *;
+import PTW :: *;
 `endif
 
 import DTCache :: *;
@@ -99,7 +100,6 @@ interface DT_MMU_Cache_IFC;
    (* always_ready *)
    method Action  ma_req (CacheOp    op,
 			  Bit #(3)   f3,
-			  Bit #(2)   halfByte, \\ rgollap1 -- incase we need to just updated 4 bits of the tag, we need to read the other 4 bits, so as to not corrupt tags of adjoining data 
 `ifdef ISA_A
 			  Bit #(7)   amo_funct7,
 `endif
@@ -497,8 +497,6 @@ module mkDT_MMU_Cache (DT_MMU_Cache_IFC);
 	       $display ("    MMIO started; -> STATE_MAIN_MMIO_WAIT");
 	 end
 
-	 // ISA tests: monitor 'tohost' address for test completion
-	 fa_watch_tohost (zeroExtend (vm_xlate_result.pa), mmu_cache_req.st_value);
       end
    endrule: rl_CPU_req_B
 

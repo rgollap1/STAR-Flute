@@ -1197,7 +1197,7 @@ module mkICache #(parameter Bool      dcache_not_icache,
 	 let tag	= fv_from_byte_lanes (zeroExtend (tag_va), req.f3 [1:0], valid_info.tag); //rgollap1
 	 tag = fv_extend (req.f3, tag); //rgollap1
 
-         $display ("    Debug For Tag : va %0h pa %0h data %0h tag %0h", req.va, pa, data, tag);
+//         $display ("    Debug For Tag : va %0h pa %0h data %0h tag %0h", req.va, pa, data, tag);
 
 	 if (req.va[3:0] == 4) begin // rgollap1 extracting the tag of the specific instruction from the inline tag instruction
 

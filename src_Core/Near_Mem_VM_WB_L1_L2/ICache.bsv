@@ -1201,7 +1201,7 @@ module mkICache #(parameter Bool      dcache_not_icache,
 
 	 if (req.va[3:0] == 4) begin // rgollap1 extracting the tag of the specific instruction from the inline tag instruction
 
-	    tag = tag[30:23];
+	    tag = tag[14:7];
 	    
 	 end
 
@@ -1213,7 +1213,7 @@ module mkICache #(parameter Bool      dcache_not_icache,
 
 	 else begin
 
-            tag = tag[14:7];
+            tag = tag[30:23];
 
 	 end // rgollap1
 

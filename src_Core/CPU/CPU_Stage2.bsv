@@ -92,7 +92,8 @@ endinterface
 
 module mkCPU_Stage2 #(Bit #(4)         verbosity,
 		      CSR_RegFile_IFC  csr_regfile,    // for SATP and SSTATUS: TODO carry in Data_Stage1_to_Stage2
-		      DMem_IFC         dcache)
+		      DMem_IFC         dcache,
+		      DTMem_IFC	       dtcache)		// rgollap1
                     (CPU_Stage2_IFC);
 
    FIFOF #(Token) f_reset_reqs <- mkFIFOF;
@@ -159,6 +160,11 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
    let  trap_info_dmem = Trap_Info {epc:      rg_stage2.pc,
 				    exc_code: dcache.exc_code,
 				    tval:     rg_stage2.addr };
+
+   let  trap_info_dtmem = Trap_Info {epc:      rg_stage2.pc,
+				    exc_code: dtcache.exc_code,
+				    tval:     rg_stage2.addr +  64000};  // rgollap1
+
 
 `ifdef ISA_F
    // The FBox can only generate ILLEGAL Instruction exceptions
@@ -238,12 +244,28 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 			      ? OSTATUS_NONPIPE
 			      : OSTATUS_PIPE));
 
+            let ostatus1 = (  (! dtcache.valid)
+			   ? OSTATUS_BUSY
+			   : (  dtcache.exc
+			      ? OSTATUS_NONPIPE
+			      : OSTATUS_PIPE)); // rgollap1
+
+
 	    WordXL result = truncate (dcache.word64);
 
             let funct3 = instr_funct3 (rg_stage2.instr);
 
 	    let data_to_stage3 = data_to_stage3_base;
 	    data_to_stage3.rd_valid = (ostatus == OSTATUS_PIPE);
+
+	    if (rg_stage2.priv == 0 && ostatus == OSTATUS_PIPE && rg_stage2.op_stage2 == OP_Stage2_LD) begin // rgollap1
+		data_to_stage3.rd_valid = (ostatus1 == OSTATUS_PIPE);
+            end
+
+	    if (rg_stage2.op_stage2 != OP_Stage2_LD || rg_stage2.priv != 0) begin
+	       ostatus1 = OSTATUS_PIPE;
+	    end              // rgollap1
+                                                                        
 
 `ifdef ISA_F
             data_to_stage3.rd_in_fpr = rg_stage2.rd_in_fpr;
@@ -274,7 +296,7 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 	    let fbypass = fbypass_base;
 `endif
 
-	    if (ostatus != OSTATUS_NONPIPE) begin
+	    if ( ostatus != OSTATUS_NONPIPE && ostatus1 != OSTATUS_NONPIPE ) begin // rgollap1
 `ifdef ISA_F
                // Bypassing FPR value.
                if (rg_stage2.rd_in_fpr) begin
@@ -321,6 +343,9 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 
             data_to_stage3.trace_data = trace_data;
 `endif
+	    if( ostatus1 == OSTATUS_BUSY && rg_stage2.priv == 0 && rg_stage2.op_stage2 == OP_Stage2_LD) begin // rgollap1
+		ostatus = OSTATUS_BUSY;
+	    end
 
             output_stage2 = Output_Stage2 {ostatus         : ostatus,
 					   trap_info       : trap_info_dmem,
@@ -330,6 +355,19 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 					   , fbypass       : fbypass
 `endif
 					   };
+					   
+	    if( rg_stage2.priv == 0 && ostatus == OSTATUS_PIPE && ostatus1 == OSTATUS_NONPIPE && rg_stage2.op_stage2 == OP_Stage2_LD) begin // rgollap1
+ 
+	    	output_stage2 = Output_Stage2 {ostatus         : ostatus1,
+					       trap_info       : trap_info_dtmem,
+					       data_to_stage3  : data_to_stage3,
+					       bypass          : bypass
+`ifdef ISA_F
+	     				       , fbypass       : fbypass
+`endif
+					       };
+
+	    end
 	 end
 
       // This stage is doing a STORE
@@ -340,9 +378,25 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 				? OSTATUS_NONPIPE
 				: OSTATUS_PIPE));
 
+         let ostatus1 = (  (! dtcache.valid)
+			     ? OSTATUS_BUSY
+			     : (  dtcache.exc
+				? OSTATUS_NONPIPE
+				: OSTATUS_PIPE));   // rgollap1
+
+
 	 let data_to_stage3 = data_to_stage3_base;
 	 data_to_stage3.rd_valid = (ostatus == OSTATUS_PIPE);
 	 data_to_stage3.rd       = 0;
+
+         if (rg_stage2.priv == 0 && ostatus == OSTATUS_PIPE ) begin
+		data_to_stage3.rd_valid = (ostatus1 == OSTATUS_PIPE);
+         end // rgollap1
+	
+	 if (ostatus1 == OSTATUS_BUSY && rg_stage2.priv == 0) begin
+		ostatus = OSTATUS_BUSY;
+	 end // rgollap1
+
 
 	 output_stage2 = Output_Stage2 {ostatus         : ostatus,
 					trap_info       : trap_info_dmem,
@@ -352,6 +406,19 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 					, fbypass       : no_fbypass
 `endif
 					};
+
+         if (rg_stage2.priv == 0 && ostatus == OSTATUS_PIPE && ostatus1 == OSTATUS_NONPIPE) begin  // rgollap1
+ 
+	    	output_stage2 = Output_Stage2 {ostatus         : ostatus1,
+					       trap_info       : trap_info_dtmem,
+					       data_to_stage3  : data_to_stage3,
+					       bypass          : no_bypass
+`ifdef ISA_F
+	     				       , fbypass       : no_fbypass
+`endif
+					       };
+
+  	end   // rgollap1
       end
 
 `ifdef SHIFT_SERIAL
@@ -557,6 +624,25 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 			sstatus_SUM,
 			mstatus_MXR,
 			csr_regfile.read_satp);
+
+	    if(x.priv == 0 && (cache_op == CACHE_LD || cache_op == CACHE_ST) && !op_stage2_amo) begin // rgollap1
+
+		
+		dtcache.req (cache_op,
+			instr_funct3 (x.instr),
+`ifdef ISA_A
+			amo_funct7,
+`endif
+			x.addr + 64000,
+			1,
+			mem_priv,
+			sstatus_SUM,
+			mstatus_MXR,
+			csr_regfile.read_satp);
+           end
+
+
+
 	 end
 
 `ifdef SHIFT_SERIAL

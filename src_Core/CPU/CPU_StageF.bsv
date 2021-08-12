@@ -141,6 +141,11 @@ module mkCPU_StageF #(Bit #(4)  verbosity,
 		      Bit #(1)         sstatus_SUM,
 		      Bit #(1)         mstatus_MXR,
 		      WordXL           satp);
+      if (pc[3:0] == 0 && priv == 0 /*pc > 'h_2000*/) begin //rgollap1
+      	 pc = pc + 4;
+//	 $display("pc:0x%0h" , pc);
+      end
+      
       if (verbosity > 1) begin
 	 $write ("    %m.CPU_StageF.ma_enq:  pc:0x%0h  epoch:%0d  priv:%0d", pc, epoch, priv);
 	 $write ("  sstatus_SUM:%0d  mstatus_MXR:%0d  satp:0x%0h",

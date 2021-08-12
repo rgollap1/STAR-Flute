@@ -163,7 +163,11 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 
    let  trap_info_dtmem = Trap_Info {epc:      rg_stage2.pc,
 				    exc_code: dtcache.exc_code,
-				    tval:     rg_stage2.addr +  64000};  // rgollap1
+				    tval:     rg_stage2.tag_addr};  // rgollap1
+
+  /* let  trap_info_dtmem = Trap_Info {epc:      rg_stage2.pc,
+                                    exc_code: dtcache.exc_code,
+                                    tval:     rg_stage2.addr + 64000};*/  // rgollap1 -- to be used when testing ISA's on bluesim 
 
 
 `ifdef ISA_F
@@ -625,16 +629,20 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 			mstatus_MXR,
 			csr_regfile.read_satp);
 
-	    if(x.priv == 0 && (cache_op == CACHE_LD || cache_op == CACHE_ST) && !op_stage2_amo) begin // rgollap1
+	   if(x.priv == 0 && (cache_op == CACHE_LD || cache_op == CACHE_ST) && !op_stage2_amo /*&& x.addr < 'h_003c_0000_0000*/) begin // rgollap1
 
 		
 		dtcache.req (cache_op,
-			instr_funct3 (x.instr),
+			3'b000,
 `ifdef ISA_A
 			amo_funct7,
 `endif
-			x.addr + 64000,
-			1,
+			x.tag_addr, // rgollap1 -- change it to x.addr + 64000 when testing ISA's on bluesim
+`ifdef ISA_F
+                        (x.rs_frm_fpr ? wdata_from_fpr : wdata_from_gpr),
+`else
+                        wdata_from_gpr,
+`endif
 			mem_priv,
 			sstatus_SUM,
 			mstatus_MXR,

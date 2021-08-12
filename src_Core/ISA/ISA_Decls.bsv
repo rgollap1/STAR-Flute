@@ -414,6 +414,27 @@ Bit #(3) f3_SH  = 3'b001;
 Bit #(3) f3_SW  = 3'b010;
 Bit #(3) f3_SD  = 3'b011;
 
+// ---------------
+// Load Context Instructions
+
+Opcode op_LOAD_CONTEXT = 7'b01_010_10;
+
+Bit #(3) f3_LCB = 3'b000;
+Bit #(3) f3_LCD = 3'b011;
+
+// ---------------
+// Store Context Instructions
+
+Opcode op_STORE_CONTEXT = 7'b01_010_11;
+
+Bit #(3) f3_SCB = 3'b000;
+Bit #(3) f3_SCD	= 3'b011;
+
+// -------------
+// Tag Address
+
+Opcode op_TAG = 7'b00_010_11;
+
 // ================================================================
 // Memory Model
 

@@ -157,8 +157,8 @@ function Addr fall_through_pc (ALU_Inputs  inputs);
       next_pc = inputs.pc + 2;
 `endif
 
-/*   if (inputs.cur_priv == u_Priv_Mode && next_pc[3:0] == 0)
-      next_pc = next_pc + 4;*/ // rgollap1
+   if (inputs.cur_priv == u_Priv_Mode && next_pc[3:0] == 0 /*&& next_pc > 'h_2000*/)
+      next_pc = next_pc + 4; // rgollap1
       
    return next_pc;
 endfunction

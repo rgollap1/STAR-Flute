@@ -614,12 +614,12 @@ module mkD_MMU_Cache(CLK,
 
   // declarations used by system tasks
   // synopsys translate_off
-  reg [31 : 0] v__h7447;
-  reg [31 : 0] v__h8571;
+  reg [31 : 0] v__h7448;
+  reg [31 : 0] v__h8573;
   reg [31 : 0] v__h2477;
   reg [31 : 0] v__h2471;
-  reg [31 : 0] v__h7441;
-  reg [31 : 0] v__h8565;
+  reg [31 : 0] v__h7442;
+  reg [31 : 0] v__h8567;
   // synopsys translate_on
 
   // remaining internal signals
@@ -1023,7 +1023,7 @@ module mkD_MMU_Cache(CLK,
 
   // rule RL_rl_ptw_rd_A
   assign CAN_FIRE_RL_rl_ptw_rd_A =
-	     ptw$RDY_mem_client_request_get &&
+	     ptw$RDY_mem_client_request_get && cache$mv_is_idle &&
 	     (crg_state == 4'd5 ||
 	      crg_state == 4'd0 && crg_mmu_cache_req_state == 2'd0) ;
   assign WILL_FIRE_RL_rl_ptw_rd_A =
@@ -1059,6 +1059,7 @@ module mkD_MMU_Cache(CLK,
   // rule RL_rl_pte_wb_req_A
   assign CAN_FIRE_RL_rl_pte_wb_req_A =
 	     f_pte_writebacks$EMPTY_N && crg_state == 4'd0 &&
+	     cache$mv_is_idle &&
 	     crg_mmu_cache_req_state == 2'd0 ;
   assign WILL_FIRE_RL_rl_pte_wb_req_A =
 	     CAN_FIRE_RL_rl_pte_wb_req_A && !WILL_FIRE_RL_rl_ptw_rd_A &&
@@ -1772,13 +1773,13 @@ module mkD_MMU_Cache(CLK,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_ptw_rd_B && cache$mav_request_pa[129:128] == 2'd2)
 	begin
-	  v__h7447 = $stime;
+	  v__h7448 = $stime;
 	  #0;
 	end
-    v__h7441 = v__h7447 / 32'd10;
+    v__h7442 = v__h7448 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_ptw_rd_B && cache$mav_request_pa[129:128] == 2'd2)
-	$display("%0d: %m.rl_ptw_rd_B", v__h7441);
+	$display("%0d: %m.rl_ptw_rd_B", v__h7442);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_ptw_rd_B && cache$mav_request_pa[129:128] == 2'd2)
 	$display("    INTERNAL ERROR: cannot have CACHE_WRITE_HIT for PTW read-request to cache");
@@ -1813,14 +1814,14 @@ module mkD_MMU_Cache(CLK,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_pte_wb_cache_WAIT && !cache$mv_refill_ok)
 	begin
-	  v__h8571 = $stime;
+	  v__h8573 = $stime;
 	  #0;
 	end
-    v__h8565 = v__h8571 / 32'd10;
+    v__h8567 = v__h8573 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_pte_wb_cache_WAIT && !cache$mv_refill_ok)
 	$display("%0d: %m.rl_pte_wb_req_cache_WAIT: ERROR: unexpected cache error response",
-		 v__h8565);
+		 v__h8567);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_pte_wb_cache_WAIT && !cache$mv_refill_ok)
 	$display("    pte_pa %0d  pa %0h",

@@ -483,6 +483,7 @@ module mkCache(CLK,
 	       MUX_rg_fsm_state$write_1__VAL_8,
 	       MUX_rg_fsm_state$write_1__VAL_9;
   wire MUX_f_L1_to_L2_reqs$enq_1__SEL_1,
+       MUX_f_L1_to_L2_rsps$enq_1__SEL_1,
        MUX_f_L1_to_L2_rsps$enq_1__SEL_2,
        MUX_f_L1_to_L2_rsps$enq_1__SEL_3,
        MUX_f_L1_to_L2_rsps$enq_1__SEL_4,
@@ -490,6 +491,7 @@ module mkCache(CLK,
        MUX_ram_cset_cword$a_put_1__SEL_2,
        MUX_ram_cset_cword$a_put_1__SEL_3,
        MUX_ram_cset_cword$a_put_1__SEL_4,
+       MUX_ram_cset_cword$a_put_1__SEL_5,
        MUX_ram_cset_cword$a_put_1__SEL_6,
        MUX_ram_cset_cword$b_put_1__SEL_1,
        MUX_ram_cset_cword$b_put_1__SEL_2,
@@ -502,10 +504,8 @@ module mkCache(CLK,
        MUX_rg_cset_in_cache$write_1__SEL_5,
        MUX_rg_cword_in_cline$write_1__SEL_3,
        MUX_rg_cword_in_cline$write_1__SEL_4,
-       MUX_rg_fsm_state$write_1__SEL_1,
        MUX_rg_fsm_state$write_1__SEL_2,
        MUX_rg_fsm_state$write_1__SEL_3,
-       MUX_rg_fsm_state$write_1__SEL_4,
        MUX_rg_fsm_state$write_1__SEL_5,
        MUX_rg_way_in_cset$write_1__SEL_1,
        MUX_rg_way_in_cset$write_1__SEL_3,
@@ -515,203 +515,205 @@ module mkCache(CLK,
 
   // declarations used by system tasks
   // synopsys translate_off
-  reg [31 : 0] v__h35463;
-  reg [31 : 0] v__h50323;
-  reg [31 : 0] v__h52949;
-  reg [31 : 0] v__h55907;
-  reg [31 : 0] v__h35357;
+  reg [31 : 0] v__h36000;
+  reg [31 : 0] v__h50860;
+  reg [31 : 0] v__h53486;
+  reg [31 : 0] v__h56444;
+  reg [31 : 0] v__h35136;
   reg [31 : 0] v__h2923;
   reg [31 : 0] v__h4325;
   reg [31 : 0] v__h4798;
   reg [31 : 0] v__h6040;
   reg [31 : 0] v__h6961;
   reg [31 : 0] v__h10317;
-  reg [31 : 0] v__h11382;
-  reg [31 : 0] v__h12363;
-  reg [31 : 0] v__h12897;
-  reg [31 : 0] v__h15517;
-  reg [31 : 0] v__h16816;
-  reg [31 : 0] v__h16886;
-  reg [31 : 0] v__h17190;
-  reg [31 : 0] v__h18345;
-  reg [31 : 0] v__h33137;
-  reg [31 : 0] v__h34418;
-  reg [31 : 0] v__h34518;
+  reg [31 : 0] v__h11457;
+  reg [31 : 0] v__h12513;
+  reg [31 : 0] v__h13047;
+  reg [31 : 0] v__h15742;
+  reg [31 : 0] v__h17116;
+  reg [31 : 0] v__h17186;
+  reg [31 : 0] v__h17490;
+  reg [31 : 0] v__h18783;
+  reg [31 : 0] v__h33575;
+  reg [31 : 0] v__h34854;
+  reg [31 : 0] v__h34954;
   reg [31 : 0] v__h2917;
   reg [31 : 0] v__h4319;
   reg [31 : 0] v__h4792;
   reg [31 : 0] v__h6034;
   reg [31 : 0] v__h6955;
   reg [31 : 0] v__h10311;
-  reg [31 : 0] v__h11376;
-  reg [31 : 0] v__h12357;
-  reg [31 : 0] v__h12891;
-  reg [31 : 0] v__h15511;
-  reg [31 : 0] v__h16810;
-  reg [31 : 0] v__h16880;
-  reg [31 : 0] v__h17184;
-  reg [31 : 0] v__h18339;
-  reg [31 : 0] v__h33131;
-  reg [31 : 0] v__h34412;
-  reg [31 : 0] v__h34512;
-  reg [31 : 0] v__h35351;
-  reg [31 : 0] v__h35457;
-  reg [31 : 0] v__h50317;
-  reg [31 : 0] v__h52943;
-  reg [31 : 0] v__h55901;
+  reg [31 : 0] v__h11451;
+  reg [31 : 0] v__h12507;
+  reg [31 : 0] v__h13041;
+  reg [31 : 0] v__h15736;
+  reg [31 : 0] v__h17110;
+  reg [31 : 0] v__h17180;
+  reg [31 : 0] v__h17484;
+  reg [31 : 0] v__h18777;
+  reg [31 : 0] v__h33569;
+  reg [31 : 0] v__h34848;
+  reg [31 : 0] v__h34948;
+  reg [31 : 0] v__h35130;
+  reg [31 : 0] v__h35994;
+  reg [31 : 0] v__h50854;
+  reg [31 : 0] v__h53480;
+  reg [31 : 0] v__h56438;
   // synopsys translate_on
 
   // remaining internal signals
   reg [63 : 0] CASE_mav_request_pa_pa_BITS_2_TO_0_0x0_old_cwo_ETC__q2,
 	       CASE_mav_request_pa_pa_BITS_2_TO_0_0x0_old_cwo_ETC__q5,
-	       IF_mav_request_pa_pa_BITS_2_TO_0_37_EQ_0x0_38__ETC___d1054,
-	       IF_mav_request_pa_pa_BITS_2_TO_0_37_EQ_0x0_38__ETC___d1063,
-	       IF_mav_request_pa_pa_BITS_2_TO_0_37_EQ_0x0_38__ETC___d977,
-	       IF_mav_request_pa_pa_BITS_2_TO_0_37_EQ_0x0_38__ETC___d987,
+	       IF_mav_request_pa_pa_BITS_2_TO_0_45_EQ_0x0_46__ETC___d1062,
+	       IF_mav_request_pa_pa_BITS_2_TO_0_45_EQ_0x0_46__ETC___d1071,
+	       IF_mav_request_pa_pa_BITS_2_TO_0_45_EQ_0x0_46__ETC___d985,
+	       IF_mav_request_pa_pa_BITS_2_TO_0_45_EQ_0x0_46__ETC___d995,
 	       SEL_ARR_ram_cset_cword_a_read_BITS_63_TO_0_0_r_ETC___d14,
-	       _theResult_____2__h55392,
-	       mask__h55322,
-	       n__h50650,
-	       n__h56213,
-	       old_cword__h50639,
-	       y__h49889;
+	       _theResult_____2__h55929,
+	       mask__h55859,
+	       n__h51187,
+	       n__h56750,
+	       old_cword__h51176,
+	       y__h50426;
   reg [51 : 0] CASE_NOT_ram_cset_metaDOA_BITS_107_TO_106_EQ__ETC__q6,
 	       ctag__h3208,
-	       new_meta_ctag__h13322,
+	       new_meta_ctag__h13472,
 	       tag__h5196;
-  reg [1 : 0] SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d303,
+  reg [1 : 0] SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d307,
 	      SEL_ARR_ram_cset_meta_a_read__8_BITS_53_TO_52__ETC___d125;
   reg CASE_mav_request_pa_req_BITS_204_TO_203_0b0_da_ETC__q1;
   wire [383 : 0] DONTCARE_CONCAT_IF_rg_cword_in_cline_EQ_0_0_TH_ETC___d250;
   wire [255 : 0] DONTCARE_CONCAT_IF_rg_cword_in_cline_EQ_0_0_TH_ETC___d243;
-  wire [129 : 0] IF_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO__ETC___d1186,
-		 IF_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO__ETC___d1187,
-		 IF_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO__ETC___d1188,
-		 IF_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO__ETC___d1189;
-  wire [127 : 0] IF_mav_request_pa_req_BITS_204_TO_203_86_EQ_0b_ETC___d1183;
-  wire [63 : 0] IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1073,
-		IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d999,
-		IF_mav_request_pa_req_BITS_204_TO_203_86_EQ_0b_ETC___d1008,
-		IF_mav_request_pa_req_BITS_204_TO_203_86_EQ_0b_ETC___d1010,
-		IF_ram_cset_meta_a_read__8_BITS_107_TO_106_12__ETC___d1002,
-		IF_ram_cset_meta_a_read__8_BITS_107_TO_106_12__ETC___d1074,
-		SEXT_ram_cset_cword_a_read_BITS_63_TO_0_0_AND__ETC___d1007,
-		cline_pa__h14161,
-		cline_pa__h32506,
+  wire [129 : 0] IF_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO__ETC___d1194,
+		 IF_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO__ETC___d1195,
+		 IF_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO__ETC___d1196,
+		 IF_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO__ETC___d1197;
+  wire [127 : 0] IF_mav_request_pa_req_BITS_204_TO_203_94_EQ_0b_ETC___d1191;
+  wire [63 : 0] IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1007,
+		IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1081,
+		IF_mav_request_pa_req_BITS_204_TO_203_94_EQ_0b_ETC___d1016,
+		IF_mav_request_pa_req_BITS_204_TO_203_94_EQ_0b_ETC___d1018,
+		IF_ram_cset_meta_a_read__8_BITS_107_TO_106_12__ETC___d1010,
+		IF_ram_cset_meta_a_read__8_BITS_107_TO_106_12__ETC___d1082,
+		SEXT_ram_cset_cword_a_read_BITS_63_TO_0_0_AND__ETC___d1015,
+		cline_pa__h14311,
+		cline_pa__h32944,
 		cword__h9986,
-		data1__h49613,
-		data__h49100,
-		data__h49101,
-		final_st_val__h55396,
-		final_st_val__h55486,
-		final_st_val__h55564,
-		final_st_val__h55568,
-		final_st_val__h55572,
-		final_st_val__h55576,
-		final_st_val__h55581,
-		final_st_val__h55587,
-		final_st_val__h55592,
+		data1__h50150,
+		data__h49637,
+		data__h49638,
+		final_st_val__h55933,
+		final_st_val__h56023,
+		final_st_val__h56101,
+		final_st_val__h56105,
+		final_st_val__h56109,
+		final_st_val__h56113,
+		final_st_val__h56118,
+		final_st_val__h56124,
+		final_st_val__h56129,
 		l1_to_l2_req_addr__h6372,
-		new_st_val__h55233,
-		pa__h13491,
-		pa__h13512,
-		pa__h13726,
-		pa__h13750,
-		pa__h18473,
-		pa__h18494,
-		pa__h35937,
-		pa__h35958,
-		result__h49877,
-		result__h49949,
-		valid_info_data__h18716,
-		valid_info_data__h36174,
+		new_st_val__h55770,
+		pa__h13641,
+		pa__h13662,
+		pa__h13876,
+		pa__h13900,
+		pa__h18911,
+		pa__h18932,
+		pa__h36474,
+		pa__h36495,
+		result__h50414,
+		result__h50486,
+		valid_info_data__h19154,
+		valid_info_data__h36711,
 		victim_cline_pa__h4977,
-		w1___1__h55455,
-		w1__h55385,
-		w2___1__h55456,
-		w2__h55387,
-		x__h18968,
-		x__h36425,
+		w1___1__h55992,
+		w1__h55922,
+		w2___1__h55993,
+		w2__h55924,
+		x__h19406,
+		x__h36962,
 		x_addr__h3203,
-		x_addr__h57985,
-		y__h18969,
-		y__h18986,
-		y__h25301,
-		y__h36426,
-		y__h36443,
-		y__h42758;
-  wire [53 : 0] IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d598,
-		IF_ram_cset_meta_a_read__8_BITS_107_TO_106_12__ETC___d601;
-  wire [51 : 0] IF_rg_way_in_cset_3_THEN_IF_rg_way_in_cset_3_T_ETC___d386,
-		IF_rg_way_in_cset_3_THEN_SEL_ARR_IF_rg_way_in__ETC___d402,
-		ctag__h13025,
-		ctag__h13030;
-  wire [31 : 0] data9100_BITS_31_TO_0__q3,
+		x_addr__h58522,
+		y__h19407,
+		y__h19424,
+		y__h25739,
+		y__h36963,
+		y__h36980,
+		y__h43295;
+  wire [53 : 0] IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d647,
+		IF_ram_cset_meta_a_read__8_BITS_107_TO_106_12__ETC___d650;
+  wire [51 : 0] IF_rg_way_in_cset_3_THEN_IF_rg_way_in_cset_3_T_ETC___d390,
+		IF_rg_way_in_cset_3_THEN_SEL_ARR_IF_rg_way_in__ETC___d406,
+		ctag__h13175,
+		ctag__h13180;
+  wire [31 : 0] data9637_BITS_31_TO_0__q3,
 		mav_request_pa_req_BITS_106_TO_75__q4;
-  wire [8 : 0] cset_cword_in_cache___1__h33828,
-	       cset_cword_in_cache__h32631,
+  wire [8 : 0] cset_cword_in_cache___1__h34264,
+	       cset_cword_in_cache__h33069,
 	       next_cset_cword_in_cache__h10277;
-  wire [5 : 0] next_cset_in_cache__h14806, shamt__h55276;
+  wire [5 : 0] next_cset_in_cache__h14956, shamt__h55813;
   wire [2 : 0] IF_rg_cache_op_68_EQ_1_69_OR_rg_cache_op_68_EQ_ETC___d178,
 	       cword_in_cline__h3170;
-  wire [1 : 0] IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d469,
-	       IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d786,
-	       IF_NOT_ram_cset_meta_a_read__8_BITS_53_TO_52_1_ETC___d464,
-	       IF_NOT_ram_cset_meta_a_read__8_BITS_53_TO_52_1_ETC___d782,
-	       IF_rg_way_in_cset_3_THEN_IF_rg_way_in_cset_3_T_ETC___d372,
-	       IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_97_B_ETC___d299,
-	       IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_97_B_ETC___d301,
-	       IF_rg_way_in_cset_3_THEN_rg_new_meta_state_05__ETC___d388,
-	       num_valids__h18871,
-	       num_valids__h36328,
+  wire [1 : 0] IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d518,
+	       IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d794,
+	       IF_NOT_ram_cset_meta_a_read__8_BITS_53_TO_52_1_ETC___d513,
+	       IF_NOT_ram_cset_meta_a_read__8_BITS_53_TO_52_1_ETC___d790,
+	       IF_rg_way_in_cset_3_THEN_IF_rg_way_in_cset_3_T_ETC___d376,
+	       IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_01_B_ETC___d303,
+	       IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_01_B_ETC___d305,
+	       IF_rg_way_in_cset_3_THEN_rg_new_meta_state_09__ETC___d392,
+	       num_valids__h19309,
+	       num_valids__h36865,
 	       tmp__h4960,
 	       tmp__h4961,
-	       valid_info_num_valids__h18714,
-	       valid_info_num_valids__h36172;
-  wire IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1097,
-       IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1102,
-       IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1103,
-       IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1108,
+	       valid_info_num_valids__h19152,
+	       valid_info_num_valids__h36709;
+  wire IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1105,
        IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1110,
+       IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1111,
+       IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1116,
        IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1118,
-       IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1122,
-       IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1124,
        IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1126,
-       IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1128,
        IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1130,
        IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1132,
        IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1134,
        IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1136,
        IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1138,
-       IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1139,
-       IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d473,
-       IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d914,
-       IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d920,
-       IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d929,
-       IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d931,
-       NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1087,
-       NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1094,
-       NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1099,
-       NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1145,
-       NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1146,
-       NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1172,
-       NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1175,
-       NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d582,
-       NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d867,
-       NOT_SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cs_ETC___d420,
-       NOT_mav_request_pa_req_BITS_207_TO_206_94_EQ_1_ETC___d1158,
-       NOT_mav_request_pa_req_BITS_207_TO_206_94_EQ_1_ETC___d1167,
-       NOT_mav_request_pa_req_BITS_207_TO_206_94_EQ_2_ETC___d1165,
+       IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1140,
+       IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1142,
+       IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1144,
+       IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1146,
+       IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1147,
+       IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d522,
+       IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d922,
+       IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d928,
+       IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d937,
+       IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d939,
+       NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1095,
+       NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1102,
+       NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1107,
+       NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1153,
+       NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1154,
+       NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1180,
+       NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1183,
+       NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d631,
+       NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d875,
+       NOT_SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cs_ETC___d424,
+       NOT_SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cs_ETC___d426,
+       NOT_SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cs_ETC___d428,
+       NOT_mav_request_pa_req_BITS_207_TO_206_02_EQ_1_ETC___d1166,
+       NOT_mav_request_pa_req_BITS_207_TO_206_02_EQ_1_ETC___d1175,
+       NOT_mav_request_pa_req_BITS_207_TO_206_02_EQ_2_ETC___d1173,
        NOT_verbosity_ULT_2_2___d23,
-       SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d306,
-       SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d314,
+       SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d310,
+       SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d318,
        _theResult___snd__h4875,
-       ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d778,
-       ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_rg_ETC___d460,
+       ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d786,
+       ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_rg_ETC___d509,
        rg_cword_in_cline_EQ_7_AND_NOT_verbosity_EQ_0__ETC___d92,
-       rg_lrsc_pa_22_EQ_mav_request_pa_pa___d923,
+       rg_lrsc_pa_30_EQ_mav_request_pa_pa___d931,
        victim_way__h4850,
-       x__h14811;
+       x__h14961;
 
   // action method ma_request_va
   assign CAN_FIRE_ma_request_va = 1'd1 ;
@@ -719,10 +721,10 @@ module mkCache(CLK,
 
   // actionvalue method mav_request_pa
   assign mav_request_pa =
-	     (valid_info_num_valids__h36172 == 2'd1 &&
+	     (valid_info_num_valids__h36709 == 2'd1 &&
 	      mav_request_pa_req[207:206] == 2'd0) ?
-	       { 2'd1, data__h49101, 64'hAAAAAAAAAAAAAAAA } :
-	       IF_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO__ETC___d1189 ;
+	       { 2'd1, data__h49638, 64'hAAAAAAAAAAAAAAAA } :
+	       IF_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO__ETC___d1197 ;
   assign RDY_mav_request_pa =
 	     rg_fsm_state == 4'd1 && !f_L2_to_L1_reqs$EMPTY_N &&
 	     !f_flush_reqs$EMPTY_N &&
@@ -940,9 +942,9 @@ module mkCache(CLK,
 
   // rule RL_rl_flush_loop
   assign CAN_FIRE_RL_rl_flush_loop =
-	     (SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d303 ==
+	     (SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d307 ==
 	      2'd3 ||
-	      SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d314) &&
+	      SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d318) &&
 	     rg_fsm_state == 4'd9 ;
   assign WILL_FIRE_RL_rl_flush_loop =
 	     CAN_FIRE_RL_rl_flush_loop && !EN_ma_request_va ;
@@ -968,7 +970,7 @@ module mkCache(CLK,
 
   // rule RL_rl_downgrade_req_from_L2_B
   assign CAN_FIRE_RL_rl_downgrade_req_from_L2_B =
-	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d473 &&
+	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d522 &&
 	     rg_fsm_state == 4'd7 ;
   assign WILL_FIRE_RL_rl_downgrade_req_from_L2_B =
 	     CAN_FIRE_RL_rl_downgrade_req_from_L2_B && !EN_ma_request_va ;
@@ -987,7 +989,9 @@ module mkCache(CLK,
   // inputs to muxes for submodule ports
   assign MUX_f_L1_to_L2_reqs$enq_1__SEL_1 =
 	     EN_mav_request_pa && mav_request_pa_req[207:206] != 2'd0 &&
-	     NOT_mav_request_pa_req_BITS_207_TO_206_94_EQ_1_ETC___d1158 ;
+	     NOT_mav_request_pa_req_BITS_207_TO_206_02_EQ_1_ETC___d1166 ;
+  assign MUX_f_L1_to_L2_rsps$enq_1__SEL_1 =
+	     WILL_FIRE_RL_rl_writeback_loop && rg_cword_in_cline == 3'd7 ;
   assign MUX_f_L1_to_L2_rsps$enq_1__SEL_2 =
 	     WILL_FIRE_RL_rl_replace &&
 	     SEL_ARR_ram_cset_meta_a_read__8_BITS_53_TO_52__ETC___d125 !=
@@ -996,13 +1000,13 @@ module mkCache(CLK,
 	     2'd0 ;
   assign MUX_f_L1_to_L2_rsps$enq_1__SEL_3 =
 	     WILL_FIRE_RL_rl_flush_loop &&
-	     SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d303 !=
+	     SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d307 !=
 	     2'd3 &&
-	     !SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d306 ;
+	     !SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d310 ;
   assign MUX_f_L1_to_L2_rsps$enq_1__SEL_4 =
 	     WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	     valid_info_num_valids__h18714 != 2'd0 &&
-	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d469 !=
+	     valid_info_num_valids__h19152 != 2'd0 &&
+	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d518 !=
 	     2'd3 ;
   assign MUX_ram_cset_cword$a_put_1__SEL_1 =
 	     WILL_FIRE_RL_rl_writeback_loop && rg_cword_in_cline != 3'd7 ;
@@ -1020,19 +1024,24 @@ module mkCache(CLK,
 	      (rg_cword_in_cline != 3'd0 || f_L2_to_L1_rsps$D_OUT[512]) ||
 	      (rg_cword_in_cline != 3'd0 || f_L2_to_L1_rsps$D_OUT[512]) &&
 	      rg_cword_in_cline != 3'd7) ;
+  assign MUX_ram_cset_cword$a_put_1__SEL_5 =
+	     WILL_FIRE_RL_rl_flush_loop &&
+	     (SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d307 ==
+	      2'd3 ||
+	      rg_cset_in_cache == 6'd63 && rg_way_in_cset) ;
   assign MUX_ram_cset_cword$a_put_1__SEL_6 =
 	     WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	     valid_info_num_valids__h18714 != 2'd0 &&
-	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d469 ==
+	     valid_info_num_valids__h19152 != 2'd0 &&
+	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d518 ==
 	     2'd3 ;
   assign MUX_ram_cset_cword$b_put_1__SEL_1 =
 	     WILL_FIRE_RL_rl_refill_loop &&
 	     (rg_cword_in_cline != 3'd0 || f_L2_to_L1_rsps$D_OUT[512]) ;
   assign MUX_ram_cset_cword$b_put_1__SEL_2 =
 	     EN_mav_request_pa &&
-	     (valid_info_num_valids__h36172 != 2'd1 ||
+	     (valid_info_num_valids__h36709 != 2'd1 ||
 	      mav_request_pa_req[207:206] != 2'd0) &&
-	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d931 ;
+	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d939 ;
   assign MUX_ram_cset_meta$a_put_1__SEL_1 =
 	     WILL_FIRE_RL_rl_flush_loop_writeback_sequel && rg_way_in_cset ;
   assign MUX_ram_cset_meta$a_put_1__SEL_2 =
@@ -1040,21 +1049,21 @@ module mkCache(CLK,
 	     rg_va[5:3] != 3'd7 ;
   assign MUX_ram_cset_meta$a_put_1__SEL_3 =
 	     WILL_FIRE_RL_rl_flush_loop &&
-	     SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d303 !=
+	     SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d307 !=
 	     2'd3 &&
 	     rg_way_in_cset ;
   assign MUX_ram_cset_meta$b_put_1__SEL_2 =
 	     WILL_FIRE_RL_rl_refill_loop && rg_cword_in_cline == 3'd0 ;
   assign MUX_ram_cset_meta$b_put_1__SEL_3 =
 	     WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	     valid_info_num_valids__h18714 != 2'd0 ;
+	     valid_info_num_valids__h19152 != 2'd0 ;
   assign MUX_rg_cset_in_cache$write_1__SEL_4 =
 	     WILL_FIRE_RL_rl_flush_loop_writeback_sequel &&
 	     rg_cset_in_cache != 6'd63 &&
 	     rg_way_in_cset ;
   assign MUX_rg_cset_in_cache$write_1__SEL_5 =
 	     WILL_FIRE_RL_rl_flush_loop &&
-	     SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d303 !=
+	     SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d307 !=
 	     2'd3 &&
 	     rg_cset_in_cache != 6'd63 &&
 	     rg_way_in_cset ;
@@ -1064,36 +1073,29 @@ module mkCache(CLK,
 	     rg_cword_in_cline != 3'd7 ;
   assign MUX_rg_cword_in_cline$write_1__SEL_4 =
 	     WILL_FIRE_RL_rl_flush_loop &&
-	     SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d303 ==
+	     SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d307 ==
 	     2'd3 ;
-  assign MUX_rg_fsm_state$write_1__SEL_1 =
-	     WILL_FIRE_RL_rl_writeback_loop && rg_cword_in_cline == 3'd7 ;
   assign MUX_rg_fsm_state$write_1__SEL_2 =
 	     WILL_FIRE_RL_rl_refill_loop &&
 	     (rg_cword_in_cline == 3'd0 && !f_L2_to_L1_rsps$D_OUT[512] ||
 	      rg_cword_in_cline == 3'd7) ;
   assign MUX_rg_fsm_state$write_1__SEL_3 =
 	     WILL_FIRE_RL_rl_initialize && rg_cset_in_cache == 6'd63 ;
-  assign MUX_rg_fsm_state$write_1__SEL_4 =
-	     WILL_FIRE_RL_rl_flush_loop &&
-	     (SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d303 ==
-	      2'd3 ||
-	      rg_cset_in_cache == 6'd63 && rg_way_in_cset) ;
   assign MUX_rg_fsm_state$write_1__SEL_5 =
 	     EN_mav_request_pa &&
-	     (valid_info_num_valids__h36172 != 2'd1 ||
+	     (valid_info_num_valids__h36709 != 2'd1 ||
 	      mav_request_pa_req[207:206] != 2'd0) &&
-	     NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1146 ;
+	     NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1154 ;
   assign MUX_rg_way_in_cset$write_1__SEL_1 =
 	     WILL_FIRE_RL_rl_flush_loop_writeback_sequel &&
 	     (rg_cset_in_cache != 6'd63 || !rg_way_in_cset) ;
   assign MUX_rg_way_in_cset$write_1__SEL_3 =
 	     WILL_FIRE_RL_rl_flush_loop &&
-	     SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d303 !=
+	     SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d307 !=
 	     2'd3 &&
 	     (rg_cset_in_cache != 6'd63 || !rg_way_in_cset) ;
   assign MUX_f_L1_to_L2_reqs$enq_1__VAL_1 =
-	     { x_addr__h57985, 4'd6, dcache_not_icache } ;
+	     { x_addr__h58522, 4'd6, dcache_not_icache } ;
   assign MUX_f_L1_to_L2_reqs$enq_1__VAL_2 =
 	     { l1_to_l2_req_addr__h6372,
 	       2'd0,
@@ -1108,7 +1110,7 @@ module mkCache(CLK,
 	     { victim_cline_pa__h4977,
 	       515'h0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA } ;
   assign MUX_f_L1_to_L2_rsps$enq_1__VAL_3 =
-	     { cline_pa__h14161,
+	     { cline_pa__h14311,
 	       rg_new_meta_state,
 	       513'h0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA } ;
   assign MUX_f_L1_to_L2_rsps$enq_1__VAL_4 =
@@ -1124,13 +1126,13 @@ module mkCache(CLK,
 	       rg_va[11:3] :
 	       next_cset_cword_in_cache__h10277 ;
   assign MUX_ram_cset_cword$a_put_2__VAL_5 =
-	     (SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d303 ==
+	     (SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d307 ==
 	      2'd3) ?
-	       cset_cword_in_cache__h32631 :
+	       cset_cword_in_cache__h33069 :
 	       rg_va[11:3] ;
   assign MUX_ram_cset_cword$a_put_2__VAL_9 =
 	     (rg_save_fsm_state == 4'd5) ?
-	       cset_cword_in_cache___1__h33828 :
+	       cset_cword_in_cache___1__h34264 :
 	       rg_save_va[11:3] ;
   assign MUX_ram_cset_cword$b_put_2__VAL_1 =
 	     { rg_va[11:6], rg_cword_in_cline } ;
@@ -1139,19 +1141,19 @@ module mkCache(CLK,
 	       { cword__h9986, ram_cset_cword$DOA[63:0] } :
 	       { ram_cset_cword$DOA[127:64], cword__h9986 } ;
   assign MUX_ram_cset_cword$b_put_3__VAL_2 =
-	     (valid_info_num_valids__h36172 == 2'd1 &&
+	     (valid_info_num_valids__h36709 == 2'd1 &&
 	      (mav_request_pa_req[207:206] == 2'd1 ||
 	       mav_request_pa_req[207:206] == 2'd2 &&
 	       mav_request_pa_req[74:70] == 5'b00011) &&
-	      !IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d914) ?
-	       { IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d999,
-		 IF_ram_cset_meta_a_read__8_BITS_107_TO_106_12__ETC___d1002 } :
-	       { IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1073,
-		 IF_ram_cset_meta_a_read__8_BITS_107_TO_106_12__ETC___d1074 } ;
+	      !IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d922) ?
+	       { IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1007,
+		 IF_ram_cset_meta_a_read__8_BITS_107_TO_106_12__ETC___d1010 } :
+	       { IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1081,
+		 IF_ram_cset_meta_a_read__8_BITS_107_TO_106_12__ETC___d1082 } ;
   assign MUX_ram_cset_meta$a_put_2__VAL_1 =
 	     (rg_cset_in_cache == 6'd63) ?
 	       rg_va[11:6] :
-	       next_cset_in_cache__h14806 ;
+	       next_cset_in_cache__h14956 ;
   assign MUX_ram_cset_meta$b_put_3__VAL_2 =
 	     rg_way_in_cset ?
 	       { f_L2_to_L1_rsps$D_OUT[514:513],
@@ -1161,23 +1163,23 @@ module mkCache(CLK,
 		 f_L2_to_L1_rsps$D_OUT[514:513],
 		 rg_pa[63:12] } ;
   assign MUX_ram_cset_meta$b_put_3__VAL_3 =
-	     { IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d598,
-	       IF_ram_cset_meta_a_read__8_BITS_107_TO_106_12__ETC___d601 } ;
+	     { IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d647,
+	       IF_ram_cset_meta_a_read__8_BITS_107_TO_106_12__ETC___d650 } ;
   assign MUX_ram_cset_meta$b_put_3__VAL_4 =
 	     rg_way_in_cset ?
 	       { rg_new_meta_state,
-		 new_meta_ctag__h13322,
+		 new_meta_ctag__h13472,
 		 rg_new_cset_meta[53:0] } :
 	       { ram_cset_meta$DOA[107:54],
 		 rg_new_meta_state,
-		 new_meta_ctag__h13322 } ;
+		 new_meta_ctag__h13472 } ;
   assign MUX_ram_cset_meta$b_put_3__VAL_5 =
 	     { (ram_cset_meta$DOA[107:106] != 2'd0 &&
-		ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d778) ?
+		ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d786) ?
 		 { 2'd3, mav_request_pa_pa[63:12] } :
 		 ram_cset_meta$DOA[107:54],
 	       (ram_cset_meta$DOA[107:106] == 2'd0 ||
-		!ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d778) ?
+		!ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d786) ?
 		 { 2'd3, mav_request_pa_pa[63:12] } :
 		 ram_cset_meta$DOA[53:0] } ;
   assign MUX_ram_cset_meta$b_put_3__VAL_6 =
@@ -1190,13 +1192,13 @@ module mkCache(CLK,
 	       4'd6 :
 	       4'd1 ;
   assign MUX_rg_fsm_state$write_1__VAL_4 =
-	     (SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d303 ==
+	     (SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d307 ==
 	      2'd3) ?
 	       4'd3 :
 	       4'd1 ;
   assign MUX_rg_fsm_state$write_1__VAL_5 =
-	     (valid_info_num_valids__h36172 == 2'd1 &&
-	      IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d786 ==
+	     (valid_info_num_valids__h36709 == 2'd1 &&
+	      IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d794 ==
 	      2'd1 &&
 	      (mav_request_pa_req[207:206] == 2'd1 ||
 	       mav_request_pa_req[207:206] == 2'd2)) ?
@@ -1210,19 +1212,19 @@ module mkCache(CLK,
   assign MUX_rg_fsm_state$write_1__VAL_8 =
 	     (rg_cset_in_cache == 6'd63 && rg_way_in_cset) ? 4'd1 : 4'd9 ;
   assign MUX_rg_fsm_state$write_1__VAL_9 =
-	     (valid_info_num_valids__h18714 == 2'd0) ?
+	     (valid_info_num_valids__h19152 == 2'd0) ?
 	       4'd8 :
-	       ((IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d469 ==
+	       ((IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d518 ==
 		 2'd3) ?
 		  4'd3 :
 		  4'd8) ;
-  assign MUX_rg_way_in_cset$write_1__VAL_1 = !rg_way_in_cset && x__h14811 ;
+  assign MUX_rg_way_in_cset$write_1__VAL_1 = !rg_way_in_cset && x__h14961 ;
   assign MUX_rg_way_in_cset$write_1__VAL_2 =
 	     ram_cset_meta$DOA[107:106] != 2'd0 &&
-	     ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_rg_ETC___d460 ;
+	     ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_rg_ETC___d509 ;
   assign MUX_rg_way_in_cset$write_1__VAL_4 =
 	     ram_cset_meta$DOA[107:106] != 2'd0 &&
-	     ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d778 ;
+	     ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d786 ;
 
   // register rg_amo_funct7
   assign rg_amo_funct7$D_IN = mav_request_pa_req[74:68] ;
@@ -1234,7 +1236,7 @@ module mkCache(CLK,
 
   // register rg_cset_in_cache
   always@(WILL_FIRE_RL_rl_initialize or
-	  next_cset_in_cache__h14806 or
+	  next_cset_in_cache__h14956 or
 	  WILL_FIRE_RL_rl_downgrade_req_from_L2_C or
 	  rg_save_cset_in_cache or
 	  WILL_FIRE_RL_rl_downgrade_req_from_L2_A or
@@ -1248,15 +1250,15 @@ module mkCache(CLK,
 	  ma_request_va_va or MUX_f_L1_to_L2_reqs$enq_1__SEL_1)
   case (1'b1)
     WILL_FIRE_RL_rl_initialize:
-	rg_cset_in_cache$D_IN = next_cset_in_cache__h14806;
+	rg_cset_in_cache$D_IN = next_cset_in_cache__h14956;
     WILL_FIRE_RL_rl_downgrade_req_from_L2_C:
 	rg_cset_in_cache$D_IN = rg_save_cset_in_cache;
     WILL_FIRE_RL_rl_downgrade_req_from_L2_A:
 	rg_cset_in_cache$D_IN = f_L2_to_L1_reqs$D_OUT[13:8];
     MUX_rg_cset_in_cache$write_1__SEL_4:
-	rg_cset_in_cache$D_IN = next_cset_in_cache__h14806;
+	rg_cset_in_cache$D_IN = next_cset_in_cache__h14956;
     MUX_rg_cset_in_cache$write_1__SEL_5:
-	rg_cset_in_cache$D_IN = next_cset_in_cache__h14806;
+	rg_cset_in_cache$D_IN = next_cset_in_cache__h14956;
     WILL_FIRE_RL_rl_flush_start: rg_cset_in_cache$D_IN = 6'd0;
     WILL_FIRE_RL_rl_replace: rg_cset_in_cache$D_IN = rg_va[11:6];
     EN_ma_request_va: rg_cset_in_cache$D_IN = ma_request_va_va[11:6];
@@ -1268,12 +1270,12 @@ module mkCache(CLK,
 	     rg_cset_in_cache != 6'd63 &&
 	     rg_way_in_cset ||
 	     WILL_FIRE_RL_rl_flush_loop &&
-	     SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d303 !=
+	     SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d307 !=
 	     2'd3 &&
 	     rg_cset_in_cache != 6'd63 &&
 	     rg_way_in_cset ||
 	     EN_mav_request_pa && mav_request_pa_req[207:206] != 2'd0 &&
-	     NOT_mav_request_pa_req_BITS_207_TO_206_94_EQ_1_ETC___d1158 ||
+	     NOT_mav_request_pa_req_BITS_207_TO_206_02_EQ_1_ETC___d1166 ||
 	     WILL_FIRE_RL_rl_replace ||
 	     WILL_FIRE_RL_rl_downgrade_req_from_L2_C ||
 	     WILL_FIRE_RL_rl_downgrade_req_from_L2_A ||
@@ -1317,14 +1319,14 @@ module mkCache(CLK,
 	     (rg_cword_in_cline != 3'd0 || f_L2_to_L1_rsps$D_OUT[512]) &&
 	     rg_cword_in_cline != 3'd7 ||
 	     WILL_FIRE_RL_rl_flush_loop &&
-	     SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d303 ==
+	     SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d307 ==
 	     2'd3 ||
 	     WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	     valid_info_num_valids__h18714 != 2'd0 &&
-	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d469 ==
+	     valid_info_num_valids__h19152 != 2'd0 &&
+	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d518 ==
 	     2'd3 ||
 	     EN_mav_request_pa && mav_request_pa_req[207:206] != 2'd0 &&
-	     NOT_mav_request_pa_req_BITS_207_TO_206_94_EQ_1_ETC___d1158 ||
+	     NOT_mav_request_pa_req_BITS_207_TO_206_02_EQ_1_ETC___d1166 ||
 	     WILL_FIRE_RL_rl_downgrade_req_from_L2_C ||
 	     WILL_FIRE_RL_rl_refill_start ;
 
@@ -1332,7 +1334,7 @@ module mkCache(CLK,
   assign rg_error_during_refill$D_IN = 1'd0 ;
   assign rg_error_during_refill$EN =
 	     EN_mav_request_pa && mav_request_pa_req[207:206] != 2'd0 &&
-	     NOT_mav_request_pa_req_BITS_207_TO_206_94_EQ_1_ETC___d1158 ||
+	     NOT_mav_request_pa_req_BITS_207_TO_206_02_EQ_1_ETC___d1166 ||
 	     WILL_FIRE_RL_rl_refill_start ;
 
   // register rg_f3
@@ -1340,13 +1342,13 @@ module mkCache(CLK,
   assign rg_f3$EN = EN_mav_request_pa ;
 
   // register rg_fsm_state
-  always@(MUX_rg_fsm_state$write_1__SEL_1 or
+  always@(MUX_f_L1_to_L2_rsps$enq_1__SEL_1 or
 	  rg_post_wb_fsm_state or
 	  WILL_FIRE_RL_rl_downgrade_req_from_L2_C or
 	  rg_save_fsm_state or
 	  MUX_rg_fsm_state$write_1__SEL_2 or
 	  MUX_rg_fsm_state$write_1__VAL_2 or
-	  MUX_rg_fsm_state$write_1__SEL_4 or
+	  MUX_ram_cset_cword$a_put_1__SEL_5 or
 	  MUX_rg_fsm_state$write_1__VAL_4 or
 	  MUX_rg_fsm_state$write_1__SEL_5 or
 	  MUX_rg_fsm_state$write_1__VAL_5 or
@@ -1363,13 +1365,13 @@ module mkCache(CLK,
 	  WILL_FIRE_RL_rl_flush_start)
   begin
     case (1'b1) // synopsys parallel_case
-      MUX_rg_fsm_state$write_1__SEL_1:
+      MUX_f_L1_to_L2_rsps$enq_1__SEL_1:
 	  rg_fsm_state$D_IN = rg_post_wb_fsm_state;
       WILL_FIRE_RL_rl_downgrade_req_from_L2_C:
 	  rg_fsm_state$D_IN = rg_save_fsm_state;
       MUX_rg_fsm_state$write_1__SEL_2:
 	  rg_fsm_state$D_IN = MUX_rg_fsm_state$write_1__VAL_2;
-      MUX_rg_fsm_state$write_1__SEL_4:
+      MUX_ram_cset_cword$a_put_1__SEL_5:
 	  rg_fsm_state$D_IN = MUX_rg_fsm_state$write_1__VAL_4;
       MUX_rg_fsm_state$write_1__SEL_5:
 	  rg_fsm_state$D_IN = MUX_rg_fsm_state$write_1__VAL_5;
@@ -1393,11 +1395,11 @@ module mkCache(CLK,
 	     (rg_cword_in_cline == 3'd0 && !f_L2_to_L1_rsps$D_OUT[512] ||
 	      rg_cword_in_cline == 3'd7) ||
 	     WILL_FIRE_RL_rl_initialize && rg_cset_in_cache == 6'd63 ||
-	     MUX_rg_fsm_state$write_1__SEL_4 ||
+	     MUX_ram_cset_cword$a_put_1__SEL_5 ||
 	     EN_mav_request_pa &&
-	     (valid_info_num_valids__h36172 != 2'd1 ||
+	     (valid_info_num_valids__h36709 != 2'd1 ||
 	      mav_request_pa_req[207:206] != 2'd0) &&
-	     NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1146 ||
+	     NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1154 ||
 	     WILL_FIRE_RL_rl_downgrade_req_from_L2_C ||
 	     WILL_FIRE_RL_rl_replace ||
 	     WILL_FIRE_RL_rl_flush_loop_writeback_sequel ||
@@ -1410,31 +1412,31 @@ module mkCache(CLK,
   // register rg_lrsc_pa
   assign rg_lrsc_pa$D_IN = mav_request_pa_pa ;
   assign rg_lrsc_pa$EN =
-	     EN_mav_request_pa && valid_info_num_valids__h36172 == 2'd1 &&
+	     EN_mav_request_pa && valid_info_num_valids__h36709 == 2'd1 &&
 	     mav_request_pa_req[207:206] == 2'd2 &&
 	     mav_request_pa_req[74:70] == 5'b00010 ;
 
   // register rg_lrsc_size
   assign rg_lrsc_size$D_IN = mav_request_pa_req[204:203] ;
   assign rg_lrsc_size$EN =
-	     EN_mav_request_pa && valid_info_num_valids__h36172 == 2'd1 &&
+	     EN_mav_request_pa && valid_info_num_valids__h36709 == 2'd1 &&
 	     mav_request_pa_req[207:206] == 2'd2 &&
 	     mav_request_pa_req[74:70] == 5'b00010 ;
 
   // register rg_lrsc_valid
   assign rg_lrsc_valid$D_IN =
-	     valid_info_num_valids__h36172 == 2'd1 &&
+	     valid_info_num_valids__h36709 == 2'd1 &&
 	     mav_request_pa_req[207:206] == 2'd2 &&
 	     mav_request_pa_req[74:70] == 5'b00010 ;
   assign rg_lrsc_valid$EN =
 	     EN_mav_request_pa &&
-	     (valid_info_num_valids__h36172 != 2'd1 ||
+	     (valid_info_num_valids__h36709 != 2'd1 ||
 	      mav_request_pa_req[207:206] != 2'd0) &&
-	     (valid_info_num_valids__h36172 == 2'd1 &&
+	     (valid_info_num_valids__h36709 == 2'd1 &&
 	      mav_request_pa_req[207:206] == 2'd1 &&
-	      !IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d914 &&
-	      rg_lrsc_pa_22_EQ_mav_request_pa_pa___d923 ||
-	      NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1099) ;
+	      !IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d922 &&
+	      rg_lrsc_pa_30_EQ_mav_request_pa_pa___d931 ||
+	      NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1107) ;
 
   // register rg_new_cset_meta
   assign rg_new_cset_meta$D_IN = MUX_ram_cset_meta$b_put_3__VAL_4 ;
@@ -1480,11 +1482,11 @@ module mkCache(CLK,
 	     SEL_ARR_ram_cset_meta_a_read__8_BITS_53_TO_52__ETC___d125 ==
 	     2'd3 ||
 	     WILL_FIRE_RL_rl_flush_loop &&
-	     SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d303 ==
+	     SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d307 ==
 	     2'd3 ||
 	     WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	     valid_info_num_valids__h18714 != 2'd0 &&
-	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d469 ==
+	     valid_info_num_valids__h19152 != 2'd0 &&
+	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d518 ==
 	     2'd3 ;
 
   // register rg_post_wb_meta_state
@@ -1507,11 +1509,11 @@ module mkCache(CLK,
 	     SEL_ARR_ram_cset_meta_a_read__8_BITS_53_TO_52__ETC___d125 ==
 	     2'd3 ||
 	     WILL_FIRE_RL_rl_flush_loop &&
-	     SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d303 ==
+	     SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d307 ==
 	     2'd3 ||
 	     WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	     valid_info_num_valids__h18714 != 2'd0 &&
-	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d469 ==
+	     valid_info_num_valids__h19152 != 2'd0 &&
+	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d518 ==
 	     2'd3 ;
 
   // register rg_read_cline_buf
@@ -1605,13 +1607,13 @@ module mkCache(CLK,
 	     WILL_FIRE_RL_rl_flush_loop_writeback_sequel &&
 	     (rg_cset_in_cache != 6'd63 || !rg_way_in_cset) ||
 	     WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	     valid_info_num_valids__h18714 != 2'd0 ||
+	     valid_info_num_valids__h19152 != 2'd0 ||
 	     WILL_FIRE_RL_rl_flush_loop &&
-	     SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d303 !=
+	     SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d307 !=
 	     2'd3 &&
 	     (rg_cset_in_cache != 6'd63 || !rg_way_in_cset) ||
 	     EN_mav_request_pa && mav_request_pa_req[207:206] != 2'd0 &&
-	     NOT_mav_request_pa_req_BITS_207_TO_206_94_EQ_1_ETC___d1158 ||
+	     NOT_mav_request_pa_req_BITS_207_TO_206_02_EQ_1_ETC___d1166 ||
 	     WILL_FIRE_RL_rl_replace ||
 	     WILL_FIRE_RL_rl_downgrade_req_from_L2_C ||
 	     WILL_FIRE_RL_rl_flush_start ;
@@ -1629,13 +1631,13 @@ module mkCache(CLK,
 	       MUX_f_L1_to_L2_reqs$enq_1__VAL_2 ;
   assign f_L1_to_L2_reqs$ENQ =
 	     EN_mav_request_pa && mav_request_pa_req[207:206] != 2'd0 &&
-	     NOT_mav_request_pa_req_BITS_207_TO_206_94_EQ_1_ETC___d1158 ||
+	     NOT_mav_request_pa_req_BITS_207_TO_206_02_EQ_1_ETC___d1166 ||
 	     WILL_FIRE_RL_rl_refill_start ;
   assign f_L1_to_L2_reqs$DEQ = EN_l1_to_l2_client_request_deq ;
   assign f_L1_to_L2_reqs$CLR = 1'b0 ;
 
   // submodule f_L1_to_L2_rsps
-  always@(MUX_rg_fsm_state$write_1__SEL_1 or
+  always@(MUX_f_L1_to_L2_rsps$enq_1__SEL_1 or
 	  MUX_f_L1_to_L2_rsps$enq_1__VAL_1 or
 	  MUX_f_L1_to_L2_rsps$enq_1__SEL_2 or
 	  MUX_f_L1_to_L2_rsps$enq_1__VAL_2 or
@@ -1645,7 +1647,7 @@ module mkCache(CLK,
 	  MUX_f_L1_to_L2_rsps$enq_1__VAL_4)
   begin
     case (1'b1) // synopsys parallel_case
-      MUX_rg_fsm_state$write_1__SEL_1:
+      MUX_f_L1_to_L2_rsps$enq_1__SEL_1:
 	  f_L1_to_L2_rsps$D_IN = MUX_f_L1_to_L2_rsps$enq_1__VAL_1;
       MUX_f_L1_to_L2_rsps$enq_1__SEL_2:
 	  f_L1_to_L2_rsps$D_IN = MUX_f_L1_to_L2_rsps$enq_1__VAL_2;
@@ -1665,12 +1667,12 @@ module mkCache(CLK,
 	     SEL_ARR_ram_cset_meta_a_read__8_BITS_53_TO_52__ETC___d125 !=
 	     2'd0 ||
 	     WILL_FIRE_RL_rl_flush_loop &&
-	     SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d303 !=
+	     SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d307 !=
 	     2'd3 &&
-	     !SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d306 ||
+	     !SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d310 ||
 	     WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	     valid_info_num_valids__h18714 != 2'd0 &&
-	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d469 !=
+	     valid_info_num_valids__h19152 != 2'd0 &&
+	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d518 !=
 	     2'd3 ;
   assign f_L1_to_L2_rsps$DEQ = EN_l2_to_l1_server_response_deq ;
   assign f_L1_to_L2_rsps$CLR = 1'b0 ;
@@ -1699,7 +1701,7 @@ module mkCache(CLK,
 	     rg_cset_in_cache == 6'd63 &&
 	     rg_way_in_cset ||
 	     WILL_FIRE_RL_rl_flush_loop &&
-	     SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d303 !=
+	     SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d307 !=
 	     2'd3 &&
 	     rg_cset_in_cache == 6'd63 &&
 	     rg_way_in_cset ;
@@ -1720,10 +1722,10 @@ module mkCache(CLK,
 	  MUX_ram_cset_cword$a_put_2__VAL_2 or
 	  MUX_ram_cset_cword$a_put_1__SEL_4 or
 	  MUX_ram_cset_cword$a_put_2__VAL_4 or
-	  MUX_rg_fsm_state$write_1__SEL_4 or
+	  MUX_ram_cset_cword$a_put_1__SEL_5 or
 	  MUX_ram_cset_cword$a_put_2__VAL_5 or
 	  MUX_ram_cset_cword$a_put_1__SEL_6 or
-	  cset_cword_in_cache__h32631 or
+	  cset_cword_in_cache__h33069 or
 	  WILL_FIRE_RL_rl_downgrade_req_from_L2_C or
 	  MUX_ram_cset_cword$a_put_2__VAL_9 or WILL_FIRE_RL_rl_refill_start)
   begin
@@ -1739,14 +1741,14 @@ module mkCache(CLK,
 	  ram_cset_cword$ADDRA = MUX_ram_cset_cword$a_put_2__VAL_2;
       MUX_ram_cset_cword$a_put_1__SEL_4:
 	  ram_cset_cword$ADDRA = MUX_ram_cset_cword$a_put_2__VAL_4;
-      MUX_rg_fsm_state$write_1__SEL_4:
+      MUX_ram_cset_cword$a_put_1__SEL_5:
 	  ram_cset_cword$ADDRA = MUX_ram_cset_cword$a_put_2__VAL_5;
       MUX_ram_cset_cword$a_put_1__SEL_6:
-	  ram_cset_cword$ADDRA = cset_cword_in_cache__h32631;
+	  ram_cset_cword$ADDRA = cset_cword_in_cache__h33069;
       WILL_FIRE_RL_rl_downgrade_req_from_L2_C:
 	  ram_cset_cword$ADDRA = MUX_ram_cset_cword$a_put_2__VAL_9;
       WILL_FIRE_RL_rl_refill_start:
-	  ram_cset_cword$ADDRA = cset_cword_in_cache__h32631;
+	  ram_cset_cword$ADDRA = cset_cword_in_cache__h33069;
       default: ram_cset_cword$ADDRA = 9'b010101010 /* unspecified value */ ;
     endcase
   end
@@ -1758,7 +1760,7 @@ module mkCache(CLK,
 	  MUX_ram_cset_cword$a_put_1__SEL_2 or
 	  MUX_ram_cset_cword$a_put_1__SEL_3 or
 	  MUX_ram_cset_cword$a_put_1__SEL_4 or
-	  MUX_rg_fsm_state$write_1__SEL_4 or
+	  MUX_ram_cset_cword$a_put_1__SEL_5 or
 	  MUX_ram_cset_cword$a_put_1__SEL_6 or
 	  WILL_FIRE_RL_rl_refill_loop_final or
 	  WILL_FIRE_RL_rl_downgrade_req_from_L2_A or
@@ -1778,7 +1780,7 @@ module mkCache(CLK,
       MUX_ram_cset_cword$a_put_1__SEL_4:
 	  ram_cset_cword$DIA =
 	      128'hAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA /* unspecified value */ ;
-      MUX_rg_fsm_state$write_1__SEL_4:
+      MUX_ram_cset_cword$a_put_1__SEL_5:
 	  ram_cset_cword$DIA =
 	      128'hAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA /* unspecified value */ ;
       MUX_ram_cset_cword$a_put_1__SEL_6:
@@ -1818,10 +1820,10 @@ module mkCache(CLK,
 	     rg_cset_in_cache == 6'd63 &&
 	     rg_way_in_cset ||
 	     MUX_ram_cset_cword$a_put_1__SEL_4 ||
-	     MUX_rg_fsm_state$write_1__SEL_4 ||
+	     MUX_ram_cset_cword$a_put_1__SEL_5 ||
 	     WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	     valid_info_num_valids__h18714 != 2'd0 &&
-	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d469 ==
+	     valid_info_num_valids__h19152 != 2'd0 &&
+	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d518 ==
 	     2'd3 ||
 	     WILL_FIRE_RL_rl_refill_loop_final ||
 	     WILL_FIRE_RL_rl_downgrade_req_from_L2_A ||
@@ -1832,9 +1834,9 @@ module mkCache(CLK,
 	     WILL_FIRE_RL_rl_refill_loop &&
 	     (rg_cword_in_cline != 3'd0 || f_L2_to_L1_rsps$D_OUT[512]) ||
 	     EN_mav_request_pa &&
-	     (valid_info_num_valids__h36172 != 2'd1 ||
+	     (valid_info_num_valids__h36709 != 2'd1 ||
 	      mav_request_pa_req[207:206] != 2'd0) &&
-	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d931 ;
+	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d939 ;
 
   // submodule ram_cset_meta
   always@(MUX_ram_cset_meta$a_put_1__SEL_2 or
@@ -1958,7 +1960,7 @@ module mkCache(CLK,
 	     WILL_FIRE_RL_rl_refill_loop && rg_cword_in_cline == 3'd7 &&
 	     rg_va[5:3] != 3'd7 ||
 	     WILL_FIRE_RL_rl_flush_loop &&
-	     SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d303 !=
+	     SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d307 !=
 	     2'd3 &&
 	     rg_way_in_cset ||
 	     WILL_FIRE_RL_rl_refill_loop_final ||
@@ -1971,15 +1973,15 @@ module mkCache(CLK,
 	     WILL_FIRE_RL_rl_flush_loop_writeback_sequel && rg_way_in_cset ||
 	     WILL_FIRE_RL_rl_refill_loop && rg_cword_in_cline == 3'd0 ||
 	     WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	     valid_info_num_valids__h18714 != 2'd0 ||
+	     valid_info_num_valids__h19152 != 2'd0 ||
 	     WILL_FIRE_RL_rl_flush_loop &&
-	     SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d303 !=
+	     SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d307 !=
 	     2'd3 &&
 	     rg_way_in_cset ||
 	     EN_mav_request_pa &&
-	     (valid_info_num_valids__h36172 != 2'd1 ||
+	     (valid_info_num_valids__h36709 != 2'd1 ||
 	      mav_request_pa_req[207:206] != 2'd0) &&
-	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d931 ||
+	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d939 ||
 	     WILL_FIRE_RL_rl_refill_start ;
 
   // remaining internal signals
@@ -2002,125 +2004,130 @@ module mkCache(CLK,
 	       (rg_cword_in_cline == 3'd0) ?
 		 f_L2_to_L1_rsps$D_OUT[255:192] :
 		 rg_read_cline_buf[255:192] } ;
-  assign IF_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO__ETC___d1186 =
-	     (valid_info_num_valids__h36172 == 2'd1 &&
+  assign IF_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO__ETC___d1194 =
+	     (valid_info_num_valids__h36709 == 2'd1 &&
 	      mav_request_pa_req[207:206] == 2'd2 &&
-	      !IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d914) ?
+	      !IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d922) ?
 	       { 2'd2,
-		 IF_mav_request_pa_req_BITS_204_TO_203_86_EQ_0b_ETC___d1183 } :
+		 IF_mav_request_pa_req_BITS_204_TO_203_94_EQ_0b_ETC___d1191 } :
 	       130'h0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA ;
-  assign IF_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO__ETC___d1187 =
-	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d920 ?
-	       ((rg_lrsc_valid && rg_lrsc_pa_22_EQ_mav_request_pa_pa___d923) ?
+  assign IF_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO__ETC___d1195 =
+	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d928 ?
+	       ((rg_lrsc_valid && rg_lrsc_pa_30_EQ_mav_request_pa_pa___d931) ?
 		  { 66'h20000000000000000, mav_request_pa_req[138:75] } :
 		  130'h100000000000000010000000000000000) :
-	       IF_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO__ETC___d1186 ;
-  assign IF_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO__ETC___d1188 =
-	     (valid_info_num_valids__h36172 == 2'd1 &&
+	       IF_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO__ETC___d1194 ;
+  assign IF_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO__ETC___d1196 =
+	     (valid_info_num_valids__h36709 == 2'd1 &&
 	      mav_request_pa_req[207:206] == 2'd2 &&
 	      mav_request_pa_req[74:70] == 5'b00010) ?
-	       { 2'd1, data__h49101, 64'hAAAAAAAAAAAAAAAA } :
-	       IF_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO__ETC___d1187 ;
-  assign IF_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO__ETC___d1189 =
-	     (valid_info_num_valids__h36172 == 2'd1 &&
+	       { 2'd1, data__h49638, 64'hAAAAAAAAAAAAAAAA } :
+	       IF_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO__ETC___d1195 ;
+  assign IF_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO__ETC___d1197 =
+	     (valid_info_num_valids__h36709 == 2'd1 &&
 	      mav_request_pa_req[207:206] == 2'd1 &&
-	      !IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d914) ?
+	      !IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d922) ?
 	       { 66'h20000000000000000, mav_request_pa_req[138:75] } :
-	       IF_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO__ETC___d1188 ;
-  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1073 =
+	       IF_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO__ETC___d1196 ;
+  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1007 =
 	     (ram_cset_meta$DOA[107:106] != 2'd0 &&
-	      ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d778) ?
-	       n__h56213 :
+	      ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d786) ?
+	       n__h51187 :
 	       ram_cset_cword$DOA[127:64] ;
-  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1097 =
-	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d920 &&
+  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1081 =
+	     (ram_cset_meta$DOA[107:106] != 2'd0 &&
+	      ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d786) ?
+	       n__h56750 :
+	       ram_cset_cword$DOA[127:64] ;
+  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1105 =
+	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d928 &&
 	     rg_lrsc_valid &&
-	     rg_lrsc_pa_22_EQ_mav_request_pa_pa___d923 ||
-	     NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1087 &&
-	     (valid_info_num_valids__h36172 == 2'd1 &&
+	     rg_lrsc_pa_30_EQ_mav_request_pa_pa___d931 ||
+	     NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1095 &&
+	     (valid_info_num_valids__h36709 == 2'd1 &&
 	      mav_request_pa_req[207:206] == 2'd2 &&
-	      !IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d914 &&
-	      rg_lrsc_pa_22_EQ_mav_request_pa_pa___d923 ||
-	      NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1094) ;
-  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1102 =
-	     valid_info_num_valids__h36172 == 2'd1 &&
-	     mav_request_pa_req[207:206] == 2'd1 &&
-	     !IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d914 &&
-	     verbosity != 3'd0 ;
-  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1103 =
-	     valid_info_num_valids__h36172 == 2'd1 &&
-	     mav_request_pa_req[207:206] == 2'd1 &&
-	     !IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d914 &&
-	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d786 ==
-	     2'd0 ;
-  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1108 =
-	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d920 &&
-	     rg_lrsc_valid &&
-	     rg_lrsc_pa_22_EQ_mav_request_pa_pa___d923 &&
-	     verbosity != 3'd0 ;
+	      !IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d922 &&
+	      rg_lrsc_pa_30_EQ_mav_request_pa_pa___d931 ||
+	      NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1102) ;
   assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1110 =
-	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d920 &&
-	     rg_lrsc_valid &&
-	     rg_lrsc_pa_22_EQ_mav_request_pa_pa___d923 &&
-	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d786 ==
-	     2'd0 ;
-  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1118 =
-	     valid_info_num_valids__h36172 == 2'd1 &&
-	     mav_request_pa_req[207:206] == 2'd2 &&
-	     !IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d914 &&
+	     valid_info_num_valids__h36709 == 2'd1 &&
+	     mav_request_pa_req[207:206] == 2'd1 &&
+	     !IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d922 &&
 	     verbosity != 3'd0 ;
-  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1122 =
-	     valid_info_num_valids__h36172 == 2'd1 &&
+  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1111 =
+	     valid_info_num_valids__h36709 == 2'd1 &&
+	     mav_request_pa_req[207:206] == 2'd1 &&
+	     !IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d922 &&
+	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d794 ==
+	     2'd0 ;
+  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1116 =
+	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d928 &&
+	     rg_lrsc_valid &&
+	     rg_lrsc_pa_30_EQ_mav_request_pa_pa___d931 &&
+	     verbosity != 3'd0 ;
+  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1118 =
+	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d928 &&
+	     rg_lrsc_valid &&
+	     rg_lrsc_pa_30_EQ_mav_request_pa_pa___d931 &&
+	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d794 ==
+	     2'd0 ;
+  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1126 =
+	     valid_info_num_valids__h36709 == 2'd1 &&
 	     mav_request_pa_req[207:206] == 2'd2 &&
-	     !IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d914 &&
+	     !IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d922 &&
+	     verbosity != 3'd0 ;
+  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1130 =
+	     valid_info_num_valids__h36709 == 2'd1 &&
+	     mav_request_pa_req[207:206] == 2'd2 &&
+	     !IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d922 &&
 	     verbosity != 3'd0 &&
 	     mav_request_pa_req[74:70] == 5'b0 ;
-  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1124 =
-	     valid_info_num_valids__h36172 == 2'd1 &&
+  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1132 =
+	     valid_info_num_valids__h36709 == 2'd1 &&
 	     mav_request_pa_req[207:206] == 2'd2 &&
-	     !IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d914 &&
+	     !IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d922 &&
 	     verbosity != 3'd0 &&
 	     mav_request_pa_req[74:70] == 5'b00001 ;
-  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1126 =
-	     valid_info_num_valids__h36172 == 2'd1 &&
+  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1134 =
+	     valid_info_num_valids__h36709 == 2'd1 &&
 	     mav_request_pa_req[207:206] == 2'd2 &&
-	     !IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d914 &&
+	     !IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d922 &&
 	     verbosity != 3'd0 &&
 	     mav_request_pa_req[74:70] == 5'b00100 ;
-  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1128 =
-	     valid_info_num_valids__h36172 == 2'd1 &&
+  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1136 =
+	     valid_info_num_valids__h36709 == 2'd1 &&
 	     mav_request_pa_req[207:206] == 2'd2 &&
-	     !IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d914 &&
+	     !IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d922 &&
 	     verbosity != 3'd0 &&
 	     mav_request_pa_req[74:70] == 5'b01100 ;
-  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1130 =
-	     valid_info_num_valids__h36172 == 2'd1 &&
+  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1138 =
+	     valid_info_num_valids__h36709 == 2'd1 &&
 	     mav_request_pa_req[207:206] == 2'd2 &&
-	     !IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d914 &&
+	     !IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d922 &&
 	     verbosity != 3'd0 &&
 	     mav_request_pa_req[74:70] == 5'b01000 ;
-  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1132 =
-	     valid_info_num_valids__h36172 == 2'd1 &&
+  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1140 =
+	     valid_info_num_valids__h36709 == 2'd1 &&
 	     mav_request_pa_req[207:206] == 2'd2 &&
-	     !IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d914 &&
+	     !IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d922 &&
 	     verbosity != 3'd0 &&
 	     mav_request_pa_req[74:70] == 5'b10000 ;
-  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1134 =
-	     valid_info_num_valids__h36172 == 2'd1 &&
+  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1142 =
+	     valid_info_num_valids__h36709 == 2'd1 &&
 	     mav_request_pa_req[207:206] == 2'd2 &&
-	     !IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d914 &&
+	     !IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d922 &&
 	     verbosity != 3'd0 &&
 	     mav_request_pa_req[74:70] == 5'b10100 ;
-  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1136 =
-	     valid_info_num_valids__h36172 == 2'd1 &&
+  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1144 =
+	     valid_info_num_valids__h36709 == 2'd1 &&
 	     mav_request_pa_req[207:206] == 2'd2 &&
-	     !IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d914 &&
+	     !IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d922 &&
 	     verbosity != 3'd0 &&
 	     mav_request_pa_req[74:70] == 5'b11000 ;
-  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1138 =
-	     valid_info_num_valids__h36172 == 2'd1 &&
+  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1146 =
+	     valid_info_num_valids__h36709 == 2'd1 &&
 	     mav_request_pa_req[207:206] == 2'd2 &&
-	     !IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d914 &&
+	     !IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d922 &&
 	     verbosity != 3'd0 &&
 	     mav_request_pa_req[74:70] != 5'b00010 &&
 	     mav_request_pa_req[74:70] != 5'b00011 &&
@@ -2132,105 +2139,100 @@ module mkCache(CLK,
 	     mav_request_pa_req[74:70] != 5'b10000 &&
 	     mav_request_pa_req[74:70] != 5'b10100 &&
 	     mav_request_pa_req[74:70] != 5'b11000 ;
-  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1139 =
-	     valid_info_num_valids__h36172 == 2'd1 &&
+  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1147 =
+	     valid_info_num_valids__h36709 == 2'd1 &&
 	     mav_request_pa_req[207:206] == 2'd2 &&
-	     !IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d914 &&
-	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d786 ==
+	     !IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d922 &&
+	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d794 ==
 	     2'd0 ;
-  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d469 =
+  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d518 =
 	     (ram_cset_meta$DOA[107:106] != 2'd0 &&
-	      ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_rg_ETC___d460) ?
+	      ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_rg_ETC___d509) ?
 	       ram_cset_meta$DOA[107:106] :
 	       ((ram_cset_meta$DOA[53:52] != 2'd0 &&
 		 ram_cset_meta$DOA[51:0] == rg_pa[63:12]) ?
 		  ram_cset_meta$DOA[53:52] :
 		  2'd0) ;
-  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d473 =
-	     valid_info_num_valids__h18714 == 2'd0 ||
+  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d522 =
+	     valid_info_num_valids__h19152 == 2'd0 ||
 	     f_L2_to_L1_reqs$EMPTY_N &&
-	     (IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d469 ==
+	     (IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d518 ==
 	      2'd3 ||
 	      f_L1_to_L2_rsps$FULL_N) ;
-  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d598 =
+  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d647 =
 	     (ram_cset_meta$DOA[107:106] != 2'd0 &&
-	      ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_rg_ETC___d460) ?
+	      ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_rg_ETC___d509) ?
 	       { f_L2_to_L1_reqs$D_OUT[1:0], rg_pa[63:12] } :
 	       ram_cset_meta$DOA[107:54] ;
-  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d786 =
+  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d794 =
 	     (ram_cset_meta$DOA[107:106] != 2'd0 &&
-	      ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d778) ?
+	      ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d786) ?
 	       ram_cset_meta$DOA[107:106] :
 	       ((ram_cset_meta$DOA[53:52] != 2'd0 &&
 		 ram_cset_meta$DOA[51:0] == mav_request_pa_pa[63:12]) ?
 		  ram_cset_meta$DOA[53:52] :
 		  2'd0) ;
-  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d914 =
-	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d786 <=
+  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d922 =
+	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d794 <=
 	     2'd1 ;
-  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d920 =
-	     valid_info_num_valids__h36172 == 2'd1 &&
+  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d928 =
+	     valid_info_num_valids__h36709 == 2'd1 &&
 	     mav_request_pa_req[207:206] == 2'd2 &&
 	     mav_request_pa_req[74:70] == 5'b00011 &&
-	     !IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d914 ;
-  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d929 =
-	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d920 &&
+	     !IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d922 ;
+  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d937 =
+	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d928 &&
 	     rg_lrsc_valid &&
-	     rg_lrsc_pa_22_EQ_mav_request_pa_pa___d923 ||
+	     rg_lrsc_pa_30_EQ_mav_request_pa_pa___d931 ||
 	     mav_request_pa_req[74:70] != 5'b00011 &&
-	     valid_info_num_valids__h36172 == 2'd1 &&
+	     valid_info_num_valids__h36709 == 2'd1 &&
 	     mav_request_pa_req[207:206] == 2'd2 &&
-	     !IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d914 ;
-  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d931 =
-	     valid_info_num_valids__h36172 == 2'd1 &&
+	     !IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d922 ;
+  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d939 =
+	     valid_info_num_valids__h36709 == 2'd1 &&
 	     mav_request_pa_req[207:206] == 2'd1 &&
-	     !IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d914 ||
-	     (valid_info_num_valids__h36172 != 2'd1 ||
+	     !IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d922 ||
+	     (valid_info_num_valids__h36709 != 2'd1 ||
 	      mav_request_pa_req[207:206] != 2'd2 ||
 	      mav_request_pa_req[74:70] != 5'b00010) &&
-	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d929 ;
-  assign IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d999 =
-	     (ram_cset_meta$DOA[107:106] != 2'd0 &&
-	      ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d778) ?
-	       n__h50650 :
-	       ram_cset_cword$DOA[127:64] ;
-  assign IF_NOT_ram_cset_meta_a_read__8_BITS_53_TO_52_1_ETC___d464 =
+	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d937 ;
+  assign IF_NOT_ram_cset_meta_a_read__8_BITS_53_TO_52_1_ETC___d513 =
 	     (ram_cset_meta$DOA[53:52] != 2'd0 &&
 	      ram_cset_meta$DOA[51:0] == rg_pa[63:12]) ?
 	       2'd1 :
 	       2'd0 ;
-  assign IF_NOT_ram_cset_meta_a_read__8_BITS_53_TO_52_1_ETC___d782 =
+  assign IF_NOT_ram_cset_meta_a_read__8_BITS_53_TO_52_1_ETC___d790 =
 	     (ram_cset_meta$DOA[53:52] != 2'd0 &&
 	      ram_cset_meta$DOA[51:0] == mav_request_pa_pa[63:12]) ?
 	       2'd1 :
 	       2'd0 ;
-  assign IF_mav_request_pa_req_BITS_204_TO_203_86_EQ_0b_ETC___d1008 =
+  assign IF_mav_request_pa_req_BITS_204_TO_203_94_EQ_0b_ETC___d1016 =
 	     (mav_request_pa_req[204:203] == 2'b10) ?
-	       SEXT_ram_cset_cword_a_read_BITS_63_TO_0_0_AND__ETC___d1007 :
-	       data__h49100 ;
-  assign IF_mav_request_pa_req_BITS_204_TO_203_86_EQ_0b_ETC___d1010 =
+	       SEXT_ram_cset_cword_a_read_BITS_63_TO_0_0_AND__ETC___d1015 :
+	       data__h49637 ;
+  assign IF_mav_request_pa_req_BITS_204_TO_203_94_EQ_0b_ETC___d1018 =
 	     (mav_request_pa_req[204:203] == 2'b10) ?
 	       { {32{mav_request_pa_req_BITS_106_TO_75__q4[31]}},
 		 mav_request_pa_req_BITS_106_TO_75__q4 } :
 	       mav_request_pa_req[138:75] ;
-  assign IF_mav_request_pa_req_BITS_204_TO_203_86_EQ_0b_ETC___d1183 =
+  assign IF_mav_request_pa_req_BITS_204_TO_203_94_EQ_0b_ETC___d1191 =
 	     (mav_request_pa_req[204:203] == 2'b10) ?
-	       { SEXT_ram_cset_cword_a_read_BITS_63_TO_0_0_AND__ETC___d1007,
-		 final_st_val__h55396 } :
-	       { data__h49100, _theResult_____2__h55392 } ;
-  assign IF_ram_cset_meta_a_read__8_BITS_107_TO_106_12__ETC___d1002 =
+	       { SEXT_ram_cset_cword_a_read_BITS_63_TO_0_0_AND__ETC___d1015,
+		 final_st_val__h55933 } :
+	       { data__h49637, _theResult_____2__h55929 } ;
+  assign IF_ram_cset_meta_a_read__8_BITS_107_TO_106_12__ETC___d1010 =
 	     (ram_cset_meta$DOA[107:106] == 2'd0 ||
-	      !ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d778) ?
-	       n__h50650 :
+	      !ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d786) ?
+	       n__h51187 :
 	       ram_cset_cword$DOA[63:0] ;
-  assign IF_ram_cset_meta_a_read__8_BITS_107_TO_106_12__ETC___d1074 =
+  assign IF_ram_cset_meta_a_read__8_BITS_107_TO_106_12__ETC___d1082 =
 	     (ram_cset_meta$DOA[107:106] == 2'd0 ||
-	      !ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d778) ?
-	       n__h56213 :
+	      !ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d786) ?
+	       n__h56750 :
 	       ram_cset_cword$DOA[63:0] ;
-  assign IF_ram_cset_meta_a_read__8_BITS_107_TO_106_12__ETC___d601 =
+  assign IF_ram_cset_meta_a_read__8_BITS_107_TO_106_12__ETC___d650 =
 	     (ram_cset_meta$DOA[107:106] == 2'd0 ||
-	      !ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_rg_ETC___d460) ?
+	      !ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_rg_ETC___d509) ?
 	       { f_L2_to_L1_reqs$D_OUT[1:0], rg_pa[63:12] } :
 	       ram_cset_meta$DOA[53:0] ;
   assign IF_rg_cache_op_68_EQ_1_69_OR_rg_cache_op_68_EQ_ETC___d178 =
@@ -2239,137 +2241,151 @@ module mkCache(CLK,
 		 2'd2 :
 		 2'd1,
 	       dcache_not_icache } ;
-  assign IF_rg_way_in_cset_3_THEN_IF_rg_way_in_cset_3_T_ETC___d372 =
+  assign IF_rg_way_in_cset_3_THEN_IF_rg_way_in_cset_3_T_ETC___d376 =
 	     rg_way_in_cset ?
-	       IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_97_B_ETC___d299 :
+	       IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_01_B_ETC___d303 :
 	       rg_new_meta_state ;
-  assign IF_rg_way_in_cset_3_THEN_IF_rg_way_in_cset_3_T_ETC___d386 =
-	     rg_way_in_cset ? ctag__h13025 : new_meta_ctag__h13322 ;
-  assign IF_rg_way_in_cset_3_THEN_SEL_ARR_IF_rg_way_in__ETC___d402 =
-	     rg_way_in_cset ? new_meta_ctag__h13322 : ctag__h13030 ;
-  assign IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_97_B_ETC___d299 =
+  assign IF_rg_way_in_cset_3_THEN_IF_rg_way_in_cset_3_T_ETC___d390 =
+	     rg_way_in_cset ? ctag__h13175 : new_meta_ctag__h13472 ;
+  assign IF_rg_way_in_cset_3_THEN_SEL_ARR_IF_rg_way_in__ETC___d406 =
+	     rg_way_in_cset ? new_meta_ctag__h13472 : ctag__h13180 ;
+  assign IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_01_B_ETC___d303 =
 	     rg_way_in_cset ?
 	       rg_new_cset_meta[53:52] :
 	       ram_cset_meta$DOA[53:52] ;
-  assign IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_97_B_ETC___d301 =
+  assign IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_01_B_ETC___d305 =
 	     rg_way_in_cset ?
 	       rg_new_cset_meta[107:106] :
 	       ram_cset_meta$DOA[107:106] ;
-  assign IF_rg_way_in_cset_3_THEN_rg_new_meta_state_05__ETC___d388 =
+  assign IF_rg_way_in_cset_3_THEN_rg_new_meta_state_09__ETC___d392 =
 	     rg_way_in_cset ?
 	       rg_new_meta_state :
-	       IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_97_B_ETC___d301 ;
-  assign NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1087 =
-	     valid_info_num_valids__h36172 != 2'd1 ||
+	       IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_01_B_ETC___d305 ;
+  assign NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1095 =
+	     valid_info_num_valids__h36709 != 2'd1 ||
 	     mav_request_pa_req[207:206] != 2'd2 ||
 	     mav_request_pa_req[74:70] != 5'b00011 ||
-	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d914 ;
-  assign NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1094 =
-	     (valid_info_num_valids__h36172 != 2'd1 ||
+	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d922 ;
+  assign NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1102 =
+	     (valid_info_num_valids__h36709 != 2'd1 ||
 	      mav_request_pa_req[207:206] != 2'd2 ||
-	      IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d914) &&
+	      IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d922) &&
 	     CASE_NOT_ram_cset_metaDOA_BITS_107_TO_106_EQ__ETC__q6 ==
 	     rg_lrsc_pa[63:12] ;
-  assign NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1099 =
-	     (valid_info_num_valids__h36172 != 2'd1 ||
+  assign NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1107 =
+	     (valid_info_num_valids__h36709 != 2'd1 ||
 	      mav_request_pa_req[207:206] != 2'd1 ||
-	      IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d914) &&
-	     (valid_info_num_valids__h36172 == 2'd1 &&
+	      IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d922) &&
+	     (valid_info_num_valids__h36709 == 2'd1 &&
 	      mav_request_pa_req[207:206] == 2'd2 &&
 	      mav_request_pa_req[74:70] == 5'b00010 ||
-	      IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1097) ;
-  assign NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1145 =
-	     (valid_info_num_valids__h36172 != 2'd1 ||
+	      IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1105) ;
+  assign NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1153 =
+	     (valid_info_num_valids__h36709 != 2'd1 ||
 	      mav_request_pa_req[207:206] != 2'd2 ||
 	      mav_request_pa_req[74:70] != 5'b00010) &&
-	     NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1087 &&
-	     (valid_info_num_valids__h36172 != 2'd1 ||
+	     NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1095 &&
+	     (valid_info_num_valids__h36709 != 2'd1 ||
 	      mav_request_pa_req[207:206] != 2'd2 ||
-	      IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d914) ;
-  assign NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1146 =
-	     (valid_info_num_valids__h36172 != 2'd1 ||
+	      IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d922) ;
+  assign NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1154 =
+	     (valid_info_num_valids__h36709 != 2'd1 ||
 	      mav_request_pa_req[207:206] != 2'd1 ||
-	      IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d914) &&
-	     NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1145 ;
-  assign NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1172 =
-	     (valid_info_num_valids__h36172 != 2'd1 ||
-	      IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d786 !=
+	      IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d922) &&
+	     NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1153 ;
+  assign NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1180 =
+	     (valid_info_num_valids__h36709 != 2'd1 ||
+	      IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d794 !=
 	      2'd1 ||
 	      mav_request_pa_req[207:206] != 2'd1 &&
 	      mav_request_pa_req[207:206] != 2'd2) &&
 	     verbosity != 3'd0 ;
-  assign NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1175 =
-	     (valid_info_num_valids__h36172 != 2'd1 ||
+  assign NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1183 =
+	     (valid_info_num_valids__h36709 != 2'd1 ||
 	      mav_request_pa_req[207:206] != 2'd2 ||
 	      mav_request_pa_req[74:70] != 5'b00010) &&
-	     NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1087 &&
-	     (valid_info_num_valids__h36172 != 2'd1 ||
+	     NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1095 &&
+	     (valid_info_num_valids__h36709 != 2'd1 ||
 	      mav_request_pa_req[207:206] != 2'd2 ||
-	      IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d914) &&
-	     NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1172 ;
-  assign NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d582 =
-	     valid_info_num_valids__h18714 > 2'd1 ;
-  assign NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d867 =
-	     valid_info_num_valids__h36172 > 2'd1 ;
-  assign NOT_SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cs_ETC___d420 =
-	     SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d303 !=
+	      IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d922) &&
+	     NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1180 ;
+  assign NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d631 =
+	     valid_info_num_valids__h19152 > 2'd1 ;
+  assign NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d875 =
+	     valid_info_num_valids__h36709 > 2'd1 ;
+  assign NOT_SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cs_ETC___d424 =
+	     SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d307 !=
+	     2'd3 &&
+	     rg_cset_in_cache == 6'd63 &&
+	     rg_way_in_cset &&
+	     NOT_verbosity_ULT_2_2___d23 &&
+	     dcache_not_icache ;
+  assign NOT_SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cs_ETC___d426 =
+	     SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d307 !=
+	     2'd3 &&
+	     rg_cset_in_cache == 6'd63 &&
+	     rg_way_in_cset &&
+	     NOT_verbosity_ULT_2_2___d23 &&
+	     !dcache_not_icache ;
+  assign NOT_SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cs_ETC___d428 =
+	     SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d307 !=
 	     2'd3 &&
 	     rg_cset_in_cache == 6'd63 &&
 	     rg_way_in_cset &&
 	     NOT_verbosity_ULT_2_2___d23 ;
-  assign NOT_mav_request_pa_req_BITS_207_TO_206_94_EQ_1_ETC___d1158 =
+  assign NOT_mav_request_pa_req_BITS_207_TO_206_02_EQ_1_ETC___d1166 =
 	     (mav_request_pa_req[207:206] != 2'd1 ||
-	      IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d914) &&
+	      IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d922) &&
 	     (mav_request_pa_req[207:206] != 2'd2 ||
 	      mav_request_pa_req[74:70] != 5'b00010) &&
 	     (mav_request_pa_req[207:206] != 2'd2 ||
-	      IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d914) &&
-	     valid_info_num_valids__h36172 == 2'd1 &&
-	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d786 ==
+	      IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d922) &&
+	     valid_info_num_valids__h36709 == 2'd1 &&
+	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d794 ==
 	     2'd1 &&
 	     (mav_request_pa_req[207:206] == 2'd1 ||
 	      mav_request_pa_req[207:206] == 2'd2) ;
-  assign NOT_mav_request_pa_req_BITS_207_TO_206_94_EQ_1_ETC___d1167 =
+  assign NOT_mav_request_pa_req_BITS_207_TO_206_02_EQ_1_ETC___d1175 =
 	     (mav_request_pa_req[207:206] != 2'd1 ||
-	      IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d914) &&
+	      IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d922) &&
 	     (mav_request_pa_req[207:206] != 2'd2 ||
 	      mav_request_pa_req[74:70] != 5'b00010) &&
-	     NOT_mav_request_pa_req_BITS_207_TO_206_94_EQ_2_ETC___d1165 ;
-  assign NOT_mav_request_pa_req_BITS_207_TO_206_94_EQ_2_ETC___d1165 =
+	     NOT_mav_request_pa_req_BITS_207_TO_206_02_EQ_2_ETC___d1173 ;
+  assign NOT_mav_request_pa_req_BITS_207_TO_206_02_EQ_2_ETC___d1173 =
 	     (mav_request_pa_req[207:206] != 2'd2 ||
-	      IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d914) &&
-	     valid_info_num_valids__h36172 == 2'd1 &&
-	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d786 ==
+	      IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d922) &&
+	     valid_info_num_valids__h36709 == 2'd1 &&
+	     IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d794 ==
 	     2'd1 &&
 	     (mav_request_pa_req[207:206] == 2'd1 ||
 	      mav_request_pa_req[207:206] == 2'd2) &&
 	     verbosity != 3'd0 ;
   assign NOT_verbosity_ULT_2_2___d23 = verbosity >= 3'd2 ;
-  assign SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d306 =
-	     SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d303 <=
+  assign SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d310 =
+	     SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d307 <=
 	     rg_new_meta_state ;
-  assign SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d314 =
-	     (SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d306 ||
+  assign SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d318 =
+	     (SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d310 ||
 	      f_L1_to_L2_rsps$FULL_N) &&
 	     (rg_cset_in_cache != 6'd63 || !rg_way_in_cset ||
 	      f_flush_rsps$FULL_N) ;
-  assign SEXT_ram_cset_cword_a_read_BITS_63_TO_0_0_AND__ETC___d1007 =
-	     { {32{data9100_BITS_31_TO_0__q3[31]}},
-	       data9100_BITS_31_TO_0__q3 } ;
+  assign SEXT_ram_cset_cword_a_read_BITS_63_TO_0_0_AND__ETC___d1015 =
+	     { {32{data9637_BITS_31_TO_0__q3[31]}},
+	       data9637_BITS_31_TO_0__q3 } ;
   assign _theResult___snd__h4875 =
 	     ram_cset_meta$DOA[53:52] != 2'd0 &&
 	     ram_cset_meta$DOA[107:106] == 2'd0 ;
-  assign cline_pa__h14161 =
-	     { new_meta_ctag__h13322, rg_cset_in_cache, 6'd0 } ;
-  assign cline_pa__h32506 = { rg_pa[63:12], rg_cset_in_cache, 6'd0 } ;
-  assign cset_cword_in_cache___1__h33828 =
+  assign cline_pa__h14311 =
+	     { new_meta_ctag__h13472, rg_cset_in_cache, 6'd0 } ;
+  assign cline_pa__h32944 = { rg_pa[63:12], rg_cset_in_cache, 6'd0 } ;
+  assign cset_cword_in_cache___1__h34264 =
 	     { rg_save_cset_in_cache, rg_save_cword_in_cline } ;
-  assign cset_cword_in_cache__h32631 = { rg_cset_in_cache, 3'd0 } ;
-  assign ctag__h13025 =
+  assign cset_cword_in_cache__h33069 = { rg_cset_in_cache, 3'd0 } ;
+  assign ctag__h13175 =
 	     rg_way_in_cset ?
 	       rg_new_cset_meta[51:0] :
 	       ram_cset_meta$DOA[51:0] ;
-  assign ctag__h13030 =
+  assign ctag__h13180 =
 	     rg_way_in_cset ?
 	       rg_new_cset_meta[105:54] :
 	       ram_cset_meta$DOA[105:54] ;
@@ -2378,74 +2394,74 @@ module mkCache(CLK,
 	       f_L2_to_L1_rsps$D_OUT[63:0] :
 	       rg_read_cline_buf[63:0] ;
   assign cword_in_cline__h3170 = rg_cword_in_cline + 3'd1 ;
-  assign data1__h49613 = valid_info_data__h36174 >> shamt__h55276 ;
-  assign data9100_BITS_31_TO_0__q3 = data__h49100[31:0] ;
-  assign data__h49100 = data1__h49613 & mask__h55322 ;
-  assign data__h49101 =
+  assign data1__h50150 = valid_info_data__h36711 >> shamt__h55813 ;
+  assign data9637_BITS_31_TO_0__q3 = data__h49637[31:0] ;
+  assign data__h49637 = data1__h50150 & mask__h55859 ;
+  assign data__h49638 =
 	     (!mav_request_pa_req[205] &&
 	      CASE_mav_request_pa_req_BITS_204_TO_203_0b0_da_ETC__q1) ?
-	       result__h49877 :
-	       result__h49949 ;
-  assign final_st_val__h55396 = { 32'd0, _theResult_____2__h55392[31:0] } ;
-  assign final_st_val__h55486 =
-	     IF_mav_request_pa_req_BITS_204_TO_203_86_EQ_0b_ETC___d1008 +
-	     IF_mav_request_pa_req_BITS_204_TO_203_86_EQ_0b_ETC___d1010 ;
-  assign final_st_val__h55564 = w1__h55385 ^ w2__h55387 ;
-  assign final_st_val__h55568 = w1__h55385 & w2__h55387 ;
-  assign final_st_val__h55572 = w1__h55385 | w2__h55387 ;
-  assign final_st_val__h55576 =
-	     (w1__h55385 < w2__h55387) ? w1__h55385 : w2__h55387 ;
-  assign final_st_val__h55581 =
-	     (w1__h55385 <= w2__h55387) ? w2__h55387 : w1__h55385 ;
-  assign final_st_val__h55587 =
-	     ((IF_mav_request_pa_req_BITS_204_TO_203_86_EQ_0b_ETC___d1008 ^
+	       result__h50414 :
+	       result__h50486 ;
+  assign final_st_val__h55933 = { 32'd0, _theResult_____2__h55929[31:0] } ;
+  assign final_st_val__h56023 =
+	     IF_mav_request_pa_req_BITS_204_TO_203_94_EQ_0b_ETC___d1016 +
+	     IF_mav_request_pa_req_BITS_204_TO_203_94_EQ_0b_ETC___d1018 ;
+  assign final_st_val__h56101 = w1__h55922 ^ w2__h55924 ;
+  assign final_st_val__h56105 = w1__h55922 & w2__h55924 ;
+  assign final_st_val__h56109 = w1__h55922 | w2__h55924 ;
+  assign final_st_val__h56113 =
+	     (w1__h55922 < w2__h55924) ? w1__h55922 : w2__h55924 ;
+  assign final_st_val__h56118 =
+	     (w1__h55922 <= w2__h55924) ? w2__h55924 : w1__h55922 ;
+  assign final_st_val__h56124 =
+	     ((IF_mav_request_pa_req_BITS_204_TO_203_94_EQ_0b_ETC___d1016 ^
 	       64'h8000000000000000) <
-	      (IF_mav_request_pa_req_BITS_204_TO_203_86_EQ_0b_ETC___d1010 ^
+	      (IF_mav_request_pa_req_BITS_204_TO_203_94_EQ_0b_ETC___d1018 ^
 	       64'h8000000000000000)) ?
-	       w1__h55385 :
-	       w2__h55387 ;
-  assign final_st_val__h55592 =
-	     ((IF_mav_request_pa_req_BITS_204_TO_203_86_EQ_0b_ETC___d1008 ^
+	       w1__h55922 :
+	       w2__h55924 ;
+  assign final_st_val__h56129 =
+	     ((IF_mav_request_pa_req_BITS_204_TO_203_94_EQ_0b_ETC___d1016 ^
 	       64'h8000000000000000) <=
-	      (IF_mav_request_pa_req_BITS_204_TO_203_86_EQ_0b_ETC___d1010 ^
+	      (IF_mav_request_pa_req_BITS_204_TO_203_94_EQ_0b_ETC___d1018 ^
 	       64'h8000000000000000)) ?
-	       w2__h55387 :
-	       w1__h55385 ;
+	       w2__h55924 :
+	       w1__h55922 ;
   assign l1_to_l2_req_addr__h6372 = { rg_pa[63:6], 6'd0 } ;
   assign mav_request_pa_req_BITS_106_TO_75__q4 = mav_request_pa_req[106:75] ;
-  assign new_st_val__h55233 =
+  assign new_st_val__h55770 =
 	     (mav_request_pa_req[204:203] == 2'b10) ?
-	       final_st_val__h55396 :
-	       _theResult_____2__h55392 ;
+	       final_st_val__h55933 :
+	       _theResult_____2__h55929 ;
   assign next_cset_cword_in_cache__h10277 =
 	     { rg_va[11:6], cword_in_cline__h3170 } ;
-  assign next_cset_in_cache__h14806 = rg_cset_in_cache + 6'd1 ;
-  assign num_valids__h18871 =
-	     IF_NOT_ram_cset_meta_a_read__8_BITS_53_TO_52_1_ETC___d464 +
+  assign next_cset_in_cache__h14956 = rg_cset_in_cache + 6'd1 ;
+  assign num_valids__h19309 =
+	     IF_NOT_ram_cset_meta_a_read__8_BITS_53_TO_52_1_ETC___d513 +
 	     2'd1 ;
-  assign num_valids__h36328 =
-	     IF_NOT_ram_cset_meta_a_read__8_BITS_53_TO_52_1_ETC___d782 +
+  assign num_valids__h36865 =
+	     IF_NOT_ram_cset_meta_a_read__8_BITS_53_TO_52_1_ETC___d790 +
 	     2'd1 ;
-  assign pa__h13491 = { ctag__h13030, rg_cset_in_cache, 6'd0 } ;
-  assign pa__h13512 = { ctag__h13025, rg_cset_in_cache, 6'd0 } ;
-  assign pa__h13726 =
-	     { IF_rg_way_in_cset_3_THEN_SEL_ARR_IF_rg_way_in__ETC___d402,
+  assign pa__h13641 = { ctag__h13180, rg_cset_in_cache, 6'd0 } ;
+  assign pa__h13662 = { ctag__h13175, rg_cset_in_cache, 6'd0 } ;
+  assign pa__h13876 =
+	     { IF_rg_way_in_cset_3_THEN_SEL_ARR_IF_rg_way_in__ETC___d406,
 	       rg_cset_in_cache,
 	       6'd0 } ;
-  assign pa__h13750 =
-	     { IF_rg_way_in_cset_3_THEN_IF_rg_way_in_cset_3_T_ETC___d386,
+  assign pa__h13900 =
+	     { IF_rg_way_in_cset_3_THEN_IF_rg_way_in_cset_3_T_ETC___d390,
 	       rg_cset_in_cache,
 	       6'd0 } ;
-  assign pa__h18473 = { ram_cset_meta$DOA[105:54], rg_cset_in_cache, 6'd0 } ;
-  assign pa__h18494 = { ram_cset_meta$DOA[51:0], rg_cset_in_cache, 6'd0 } ;
-  assign pa__h35937 = { ram_cset_meta$DOA[105:54], rg_va[11:6], 6'd0 } ;
-  assign pa__h35958 = { ram_cset_meta$DOA[51:0], rg_va[11:6], 6'd0 } ;
-  assign ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d778 =
+  assign pa__h18911 = { ram_cset_meta$DOA[105:54], rg_cset_in_cache, 6'd0 } ;
+  assign pa__h18932 = { ram_cset_meta$DOA[51:0], rg_cset_in_cache, 6'd0 } ;
+  assign pa__h36474 = { ram_cset_meta$DOA[105:54], rg_va[11:6], 6'd0 } ;
+  assign pa__h36495 = { ram_cset_meta$DOA[51:0], rg_va[11:6], 6'd0 } ;
+  assign ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d786 =
 	     ram_cset_meta$DOA[105:54] == mav_request_pa_pa[63:12] ;
-  assign ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_rg_ETC___d460 =
+  assign ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_rg_ETC___d509 =
 	     ram_cset_meta$DOA[105:54] == rg_pa[63:12] ;
-  assign result__h49877 = data__h49100 | y__h49889 ;
-  assign result__h49949 = data__h49100 & mask__h55322 ;
+  assign result__h50414 = data__h49637 | y__h50426 ;
+  assign result__h50486 = data__h49637 & mask__h55859 ;
   assign rg_cword_in_cline_EQ_7_AND_NOT_verbosity_EQ_0__ETC___d92 =
 	     rg_cword_in_cline == 3'd7 && verbosity != 3'd0 &&
 	     rg_post_wb_fsm_state != 4'd0 &&
@@ -2458,58 +2474,58 @@ module mkCache(CLK,
 	     rg_post_wb_fsm_state != 4'd7 &&
 	     rg_post_wb_fsm_state != 4'd8 &&
 	     rg_post_wb_fsm_state != 4'd9 ;
-  assign rg_lrsc_pa_22_EQ_mav_request_pa_pa___d923 =
+  assign rg_lrsc_pa_30_EQ_mav_request_pa_pa___d931 =
 	     rg_lrsc_pa == mav_request_pa_pa ;
-  assign shamt__h55276 = { mav_request_pa_req[141:139], 3'b0 } ;
+  assign shamt__h55813 = { mav_request_pa_req[141:139], 3'b0 } ;
   assign tmp__h4960 = { 1'd0, rg_victim_way } ;
   assign tmp__h4961 = tmp__h4960 + 2'd1 ;
-  assign valid_info_data__h18716 = x__h18968 | y__h18969 ;
-  assign valid_info_data__h36174 = x__h36425 | y__h36426 ;
-  assign valid_info_num_valids__h18714 =
+  assign valid_info_data__h19154 = x__h19406 | y__h19407 ;
+  assign valid_info_data__h36711 = x__h36962 | y__h36963 ;
+  assign valid_info_num_valids__h19152 =
 	     (ram_cset_meta$DOA[107:106] != 2'd0 &&
-	      ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_rg_ETC___d460) ?
-	       num_valids__h18871 :
-	       IF_NOT_ram_cset_meta_a_read__8_BITS_53_TO_52_1_ETC___d464 ;
-  assign valid_info_num_valids__h36172 =
+	      ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_rg_ETC___d509) ?
+	       num_valids__h19309 :
+	       IF_NOT_ram_cset_meta_a_read__8_BITS_53_TO_52_1_ETC___d513 ;
+  assign valid_info_num_valids__h36709 =
 	     (ram_cset_meta$DOA[107:106] != 2'd0 &&
-	      ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d778) ?
-	       num_valids__h36328 :
-	       IF_NOT_ram_cset_meta_a_read__8_BITS_53_TO_52_1_ETC___d782 ;
+	      ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d786) ?
+	       num_valids__h36865 :
+	       IF_NOT_ram_cset_meta_a_read__8_BITS_53_TO_52_1_ETC___d790 ;
   assign victim_cline_pa__h4977 = { tag__h5196, rg_va[11:6], 6'd0 } ;
   assign victim_way__h4850 =
 	     (ram_cset_meta$DOA[107:106] != 2'd0 &&
 	      ram_cset_meta$DOA[53:52] != 2'd0) ?
 	       tmp__h4961[0] :
 	       _theResult___snd__h4875 ;
-  assign w1___1__h55455 = { 32'd0, data__h49100[31:0] } ;
-  assign w1__h55385 =
+  assign w1___1__h55992 = { 32'd0, data__h49637[31:0] } ;
+  assign w1__h55922 =
 	     (mav_request_pa_req[204:203] == 2'b10) ?
-	       w1___1__h55455 :
-	       data__h49100 ;
-  assign w2___1__h55456 = { 32'd0, mav_request_pa_req[106:75] } ;
-  assign w2__h55387 =
+	       w1___1__h55992 :
+	       data__h49637 ;
+  assign w2___1__h55993 = { 32'd0, mav_request_pa_req[106:75] } ;
+  assign w2__h55924 =
 	     (mav_request_pa_req[204:203] == 2'b10) ?
-	       w2___1__h55456 :
+	       w2___1__h55993 :
 	       mav_request_pa_req[138:75] ;
-  assign x__h14811 = rg_way_in_cset + 1'd1 ;
-  assign x__h18968 = ram_cset_cword$DOA[63:0] & y__h18986 ;
-  assign x__h36425 = ram_cset_cword$DOA[63:0] & y__h36443 ;
+  assign x__h14961 = rg_way_in_cset + 1'd1 ;
+  assign x__h19406 = ram_cset_cword$DOA[63:0] & y__h19424 ;
+  assign x__h36962 = ram_cset_cword$DOA[63:0] & y__h36980 ;
   assign x_addr__h3203 = { ctag__h3208, rg_cset_in_cache, 6'd0 } ;
-  assign x_addr__h57985 = { mav_request_pa_pa[63:6], 6'd0 } ;
-  assign y__h18969 = ram_cset_cword$DOA[127:64] & y__h25301 ;
-  assign y__h18986 =
+  assign x_addr__h58522 = { mav_request_pa_pa[63:6], 6'd0 } ;
+  assign y__h19407 = ram_cset_cword$DOA[127:64] & y__h25739 ;
+  assign y__h19424 =
 	     {64{ram_cset_meta$DOA[53:52] != 2'd0 &&
 		 ram_cset_meta$DOA[51:0] == rg_pa[63:12]}} ;
-  assign y__h25301 =
+  assign y__h25739 =
 	     {64{ram_cset_meta$DOA[107:106] != 2'd0 &&
-		 ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_rg_ETC___d460}} ;
-  assign y__h36426 = ram_cset_cword$DOA[127:64] & y__h42758 ;
-  assign y__h36443 =
+		 ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_rg_ETC___d509}} ;
+  assign y__h36963 = ram_cset_cword$DOA[127:64] & y__h43295 ;
+  assign y__h36980 =
 	     {64{ram_cset_meta$DOA[53:52] != 2'd0 &&
 		 ram_cset_meta$DOA[51:0] == mav_request_pa_pa[63:12]}} ;
-  assign y__h42758 =
+  assign y__h43295 =
 	     {64{ram_cset_meta$DOA[107:106] != 2'd0 &&
-		 ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d778}} ;
+		 ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d786}} ;
   always@(rg_way_in_cset or ram_cset_meta$DOA)
   begin
     case (rg_way_in_cset)
@@ -2517,29 +2533,29 @@ module mkCache(CLK,
       1'd1: ctag__h3208 = ram_cset_meta$DOA[105:54];
     endcase
   end
-  always@(rg_way_in_cset or ctag__h13025 or ctag__h13030)
+  always@(rg_way_in_cset or ctag__h13175 or ctag__h13180)
   begin
     case (rg_way_in_cset)
-      1'd0: new_meta_ctag__h13322 = ctag__h13025;
-      1'd1: new_meta_ctag__h13322 = ctag__h13030;
+      1'd0: new_meta_ctag__h13472 = ctag__h13175;
+      1'd1: new_meta_ctag__h13472 = ctag__h13180;
     endcase
   end
   always@(mav_request_pa_req)
   begin
     case (mav_request_pa_req[204:203])
-      2'b0: mask__h55322 = 64'h00000000000000FF;
-      2'b01: mask__h55322 = 64'h000000000000FFFF;
-      2'b10: mask__h55322 = 64'h00000000FFFFFFFF;
-      2'd3: mask__h55322 = 64'hFFFFFFFFFFFFFFFF;
+      2'b0: mask__h55859 = 64'h00000000000000FF;
+      2'b01: mask__h55859 = 64'h000000000000FFFF;
+      2'b10: mask__h55859 = 64'h00000000FFFFFFFF;
+      2'd3: mask__h55859 = 64'hFFFFFFFFFFFFFFFF;
     endcase
   end
   always@(mav_request_pa_req)
   begin
     case (mav_request_pa_req[204:203])
-      2'b0: y__h49889 = 64'hFFFFFFFFFFFFFF00;
-      2'b01: y__h49889 = 64'hFFFFFFFFFFFF0000;
-      2'b10: y__h49889 = 64'hFFFFFFFF00000000;
-      2'd3: y__h49889 = 64'd0;
+      2'b0: y__h50426 = 64'hFFFFFFFFFFFFFF00;
+      2'b01: y__h50426 = 64'hFFFFFFFFFFFF0000;
+      2'b10: y__h50426 = 64'hFFFFFFFF00000000;
+      2'd3: y__h50426 = 64'd0;
     endcase
   end
   always@(victim_way__h4850 or ram_cset_meta$DOA)
@@ -2561,265 +2577,265 @@ module mkCache(CLK,
     endcase
   end
   always@(rg_way_in_cset or
-	  IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_97_B_ETC___d299 or
-	  IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_97_B_ETC___d301)
+	  IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_01_B_ETC___d303 or
+	  IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_01_B_ETC___d305)
   begin
     case (rg_way_in_cset)
       1'd0:
-	  SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d303 =
-	      IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_97_B_ETC___d299;
+	  SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d307 =
+	      IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_01_B_ETC___d303;
       1'd1:
-	  SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d303 =
-	      IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_97_B_ETC___d301;
+	  SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d307 =
+	      IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_01_B_ETC___d305;
     endcase
   end
   always@(ram_cset_meta$DOA or
-	  ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d778 or
+	  ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d786 or
 	  ram_cset_cword$DOA)
   begin
     case (ram_cset_meta$DOA[107:106] != 2'd0 &&
-	  ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d778)
-      1'd0: old_cword__h50639 = ram_cset_cword$DOA[63:0];
-      1'd1: old_cword__h50639 = ram_cset_cword$DOA[127:64];
+	  ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d786)
+      1'd0: old_cword__h51176 = ram_cset_cword$DOA[63:0];
+      1'd1: old_cword__h51176 = ram_cset_cword$DOA[127:64];
     endcase
   end
-  always@(mav_request_pa_req or data__h49100)
+  always@(mav_request_pa_req or data__h49637)
   begin
     case (mav_request_pa_req[204:203])
       2'b0:
 	  CASE_mav_request_pa_req_BITS_204_TO_203_0b0_da_ETC__q1 =
-	      data__h49100[7];
+	      data__h49637[7];
       2'b01:
 	  CASE_mav_request_pa_req_BITS_204_TO_203_0b0_da_ETC__q1 =
-	      data__h49100[15];
+	      data__h49637[15];
       2'b10:
 	  CASE_mav_request_pa_req_BITS_204_TO_203_0b0_da_ETC__q1 =
-	      data__h49100[31];
+	      data__h49637[31];
       2'd3:
 	  CASE_mav_request_pa_req_BITS_204_TO_203_0b0_da_ETC__q1 =
-	      data__h49100[63];
+	      data__h49637[63];
     endcase
   end
-  always@(mav_request_pa_pa or old_cword__h50639 or mav_request_pa_req)
+  always@(mav_request_pa_pa or old_cword__h51176 or mav_request_pa_req)
   begin
     case (mav_request_pa_pa[2:0])
       3'h0:
-	  IF_mav_request_pa_pa_BITS_2_TO_0_37_EQ_0x0_38__ETC___d977 =
-	      { old_cword__h50639[63:8], mav_request_pa_req[82:75] };
+	  IF_mav_request_pa_pa_BITS_2_TO_0_45_EQ_0x0_46__ETC___d985 =
+	      { old_cword__h51176[63:8], mav_request_pa_req[82:75] };
       3'h1:
-	  IF_mav_request_pa_pa_BITS_2_TO_0_37_EQ_0x0_38__ETC___d977 =
-	      { old_cword__h50639[63:16],
+	  IF_mav_request_pa_pa_BITS_2_TO_0_45_EQ_0x0_46__ETC___d985 =
+	      { old_cword__h51176[63:16],
 		mav_request_pa_req[82:75],
-		old_cword__h50639[7:0] };
+		old_cword__h51176[7:0] };
       3'h2:
-	  IF_mav_request_pa_pa_BITS_2_TO_0_37_EQ_0x0_38__ETC___d977 =
-	      { old_cword__h50639[63:24],
+	  IF_mav_request_pa_pa_BITS_2_TO_0_45_EQ_0x0_46__ETC___d985 =
+	      { old_cword__h51176[63:24],
 		mav_request_pa_req[82:75],
-		old_cword__h50639[15:0] };
+		old_cword__h51176[15:0] };
       3'h3:
-	  IF_mav_request_pa_pa_BITS_2_TO_0_37_EQ_0x0_38__ETC___d977 =
-	      { old_cword__h50639[63:32],
+	  IF_mav_request_pa_pa_BITS_2_TO_0_45_EQ_0x0_46__ETC___d985 =
+	      { old_cword__h51176[63:32],
 		mav_request_pa_req[82:75],
-		old_cword__h50639[23:0] };
+		old_cword__h51176[23:0] };
       3'h4:
-	  IF_mav_request_pa_pa_BITS_2_TO_0_37_EQ_0x0_38__ETC___d977 =
-	      { old_cword__h50639[63:40],
+	  IF_mav_request_pa_pa_BITS_2_TO_0_45_EQ_0x0_46__ETC___d985 =
+	      { old_cword__h51176[63:40],
 		mav_request_pa_req[82:75],
-		old_cword__h50639[31:0] };
+		old_cword__h51176[31:0] };
       3'h5:
-	  IF_mav_request_pa_pa_BITS_2_TO_0_37_EQ_0x0_38__ETC___d977 =
-	      { old_cword__h50639[63:48],
+	  IF_mav_request_pa_pa_BITS_2_TO_0_45_EQ_0x0_46__ETC___d985 =
+	      { old_cword__h51176[63:48],
 		mav_request_pa_req[82:75],
-		old_cword__h50639[39:0] };
+		old_cword__h51176[39:0] };
       3'h6:
-	  IF_mav_request_pa_pa_BITS_2_TO_0_37_EQ_0x0_38__ETC___d977 =
-	      { old_cword__h50639[63:56],
+	  IF_mav_request_pa_pa_BITS_2_TO_0_45_EQ_0x0_46__ETC___d985 =
+	      { old_cword__h51176[63:56],
 		mav_request_pa_req[82:75],
-		old_cword__h50639[47:0] };
+		old_cword__h51176[47:0] };
       3'h7:
-	  IF_mav_request_pa_pa_BITS_2_TO_0_37_EQ_0x0_38__ETC___d977 =
-	      { mav_request_pa_req[82:75], old_cword__h50639[55:0] };
+	  IF_mav_request_pa_pa_BITS_2_TO_0_45_EQ_0x0_46__ETC___d985 =
+	      { mav_request_pa_req[82:75], old_cword__h51176[55:0] };
     endcase
   end
-  always@(mav_request_pa_pa or old_cword__h50639 or mav_request_pa_req)
+  always@(mav_request_pa_pa or old_cword__h51176 or mav_request_pa_req)
   begin
     case (mav_request_pa_pa[2:0])
       3'h0:
-	  IF_mav_request_pa_pa_BITS_2_TO_0_37_EQ_0x0_38__ETC___d987 =
-	      { old_cword__h50639[63:16], mav_request_pa_req[90:75] };
+	  IF_mav_request_pa_pa_BITS_2_TO_0_45_EQ_0x0_46__ETC___d995 =
+	      { old_cword__h51176[63:16], mav_request_pa_req[90:75] };
       3'h2:
-	  IF_mav_request_pa_pa_BITS_2_TO_0_37_EQ_0x0_38__ETC___d987 =
-	      { old_cword__h50639[63:32],
+	  IF_mav_request_pa_pa_BITS_2_TO_0_45_EQ_0x0_46__ETC___d995 =
+	      { old_cword__h51176[63:32],
 		mav_request_pa_req[90:75],
-		old_cword__h50639[15:0] };
+		old_cword__h51176[15:0] };
       3'h4:
-	  IF_mav_request_pa_pa_BITS_2_TO_0_37_EQ_0x0_38__ETC___d987 =
-	      { old_cword__h50639[63:48],
+	  IF_mav_request_pa_pa_BITS_2_TO_0_45_EQ_0x0_46__ETC___d995 =
+	      { old_cword__h51176[63:48],
 		mav_request_pa_req[90:75],
-		old_cword__h50639[31:0] };
+		old_cword__h51176[31:0] };
       3'h6:
-	  IF_mav_request_pa_pa_BITS_2_TO_0_37_EQ_0x0_38__ETC___d987 =
-	      { mav_request_pa_req[90:75], old_cword__h50639[47:0] };
-      default: IF_mav_request_pa_pa_BITS_2_TO_0_37_EQ_0x0_38__ETC___d987 =
-		   old_cword__h50639;
+	  IF_mav_request_pa_pa_BITS_2_TO_0_45_EQ_0x0_46__ETC___d995 =
+	      { mav_request_pa_req[90:75], old_cword__h51176[47:0] };
+      default: IF_mav_request_pa_pa_BITS_2_TO_0_45_EQ_0x0_46__ETC___d995 =
+		   old_cword__h51176;
     endcase
   end
-  always@(mav_request_pa_pa or old_cword__h50639 or mav_request_pa_req)
+  always@(mav_request_pa_pa or old_cword__h51176 or mav_request_pa_req)
   begin
     case (mav_request_pa_pa[2:0])
       3'h0:
 	  CASE_mav_request_pa_pa_BITS_2_TO_0_0x0_old_cwo_ETC__q2 =
-	      { old_cword__h50639[63:32], mav_request_pa_req[106:75] };
+	      { old_cword__h51176[63:32], mav_request_pa_req[106:75] };
       3'h4:
 	  CASE_mav_request_pa_pa_BITS_2_TO_0_0x0_old_cwo_ETC__q2 =
-	      { mav_request_pa_req[106:75], old_cword__h50639[31:0] };
+	      { mav_request_pa_req[106:75], old_cword__h51176[31:0] };
       default: CASE_mav_request_pa_pa_BITS_2_TO_0_0x0_old_cwo_ETC__q2 =
-		   old_cword__h50639;
+		   old_cword__h51176;
     endcase
   end
   always@(mav_request_pa_req or
-	  old_cword__h50639 or
-	  IF_mav_request_pa_pa_BITS_2_TO_0_37_EQ_0x0_38__ETC___d977 or
-	  IF_mav_request_pa_pa_BITS_2_TO_0_37_EQ_0x0_38__ETC___d987 or
+	  old_cword__h51176 or
+	  IF_mav_request_pa_pa_BITS_2_TO_0_45_EQ_0x0_46__ETC___d985 or
+	  IF_mav_request_pa_pa_BITS_2_TO_0_45_EQ_0x0_46__ETC___d995 or
 	  CASE_mav_request_pa_pa_BITS_2_TO_0_0x0_old_cwo_ETC__q2)
   begin
     case (mav_request_pa_req[205:203])
       3'b0:
-	  n__h50650 =
-	      IF_mav_request_pa_pa_BITS_2_TO_0_37_EQ_0x0_38__ETC___d977;
+	  n__h51187 =
+	      IF_mav_request_pa_pa_BITS_2_TO_0_45_EQ_0x0_46__ETC___d985;
       3'b001:
-	  n__h50650 =
-	      IF_mav_request_pa_pa_BITS_2_TO_0_37_EQ_0x0_38__ETC___d987;
+	  n__h51187 =
+	      IF_mav_request_pa_pa_BITS_2_TO_0_45_EQ_0x0_46__ETC___d995;
       3'b010:
-	  n__h50650 = CASE_mav_request_pa_pa_BITS_2_TO_0_0x0_old_cwo_ETC__q2;
-      3'b011: n__h50650 = mav_request_pa_req[138:75];
-      default: n__h50650 = old_cword__h50639;
+	  n__h51187 = CASE_mav_request_pa_pa_BITS_2_TO_0_0x0_old_cwo_ETC__q2;
+      3'b011: n__h51187 = mav_request_pa_req[138:75];
+      default: n__h51187 = old_cword__h51176;
     endcase
   end
   always@(mav_request_pa_req or
-	  final_st_val__h55592 or
-	  final_st_val__h55486 or
-	  w2__h55387 or
-	  final_st_val__h55564 or
-	  final_st_val__h55572 or
-	  final_st_val__h55568 or
-	  final_st_val__h55587 or
-	  final_st_val__h55576 or final_st_val__h55581)
+	  final_st_val__h56129 or
+	  final_st_val__h56023 or
+	  w2__h55924 or
+	  final_st_val__h56101 or
+	  final_st_val__h56109 or
+	  final_st_val__h56105 or
+	  final_st_val__h56124 or
+	  final_st_val__h56113 or final_st_val__h56118)
   begin
     case (mav_request_pa_req[74:70])
-      5'b0: _theResult_____2__h55392 = final_st_val__h55486;
-      5'b00001: _theResult_____2__h55392 = w2__h55387;
-      5'b00100: _theResult_____2__h55392 = final_st_val__h55564;
-      5'b01000: _theResult_____2__h55392 = final_st_val__h55572;
-      5'b01100: _theResult_____2__h55392 = final_st_val__h55568;
-      5'b10000: _theResult_____2__h55392 = final_st_val__h55587;
-      5'b11000: _theResult_____2__h55392 = final_st_val__h55576;
-      5'b11100: _theResult_____2__h55392 = final_st_val__h55581;
-      default: _theResult_____2__h55392 = final_st_val__h55592;
+      5'b0: _theResult_____2__h55929 = final_st_val__h56023;
+      5'b00001: _theResult_____2__h55929 = w2__h55924;
+      5'b00100: _theResult_____2__h55929 = final_st_val__h56101;
+      5'b01000: _theResult_____2__h55929 = final_st_val__h56109;
+      5'b01100: _theResult_____2__h55929 = final_st_val__h56105;
+      5'b10000: _theResult_____2__h55929 = final_st_val__h56124;
+      5'b11000: _theResult_____2__h55929 = final_st_val__h56113;
+      5'b11100: _theResult_____2__h55929 = final_st_val__h56118;
+      default: _theResult_____2__h55929 = final_st_val__h56129;
     endcase
   end
-  always@(mav_request_pa_pa or old_cword__h50639 or new_st_val__h55233)
+  always@(mav_request_pa_pa or old_cword__h51176 or new_st_val__h55770)
   begin
     case (mav_request_pa_pa[2:0])
       3'h0:
-	  IF_mav_request_pa_pa_BITS_2_TO_0_37_EQ_0x0_38__ETC___d1063 =
-	      { old_cword__h50639[63:16], new_st_val__h55233[15:0] };
+	  IF_mav_request_pa_pa_BITS_2_TO_0_45_EQ_0x0_46__ETC___d1071 =
+	      { old_cword__h51176[63:16], new_st_val__h55770[15:0] };
       3'h2:
-	  IF_mav_request_pa_pa_BITS_2_TO_0_37_EQ_0x0_38__ETC___d1063 =
-	      { old_cword__h50639[63:32],
-		new_st_val__h55233[15:0],
-		old_cword__h50639[15:0] };
+	  IF_mav_request_pa_pa_BITS_2_TO_0_45_EQ_0x0_46__ETC___d1071 =
+	      { old_cword__h51176[63:32],
+		new_st_val__h55770[15:0],
+		old_cword__h51176[15:0] };
       3'h4:
-	  IF_mav_request_pa_pa_BITS_2_TO_0_37_EQ_0x0_38__ETC___d1063 =
-	      { old_cword__h50639[63:48],
-		new_st_val__h55233[15:0],
-		old_cword__h50639[31:0] };
+	  IF_mav_request_pa_pa_BITS_2_TO_0_45_EQ_0x0_46__ETC___d1071 =
+	      { old_cword__h51176[63:48],
+		new_st_val__h55770[15:0],
+		old_cword__h51176[31:0] };
       3'h6:
-	  IF_mav_request_pa_pa_BITS_2_TO_0_37_EQ_0x0_38__ETC___d1063 =
-	      { new_st_val__h55233[15:0], old_cword__h50639[47:0] };
-      default: IF_mav_request_pa_pa_BITS_2_TO_0_37_EQ_0x0_38__ETC___d1063 =
-		   old_cword__h50639;
+	  IF_mav_request_pa_pa_BITS_2_TO_0_45_EQ_0x0_46__ETC___d1071 =
+	      { new_st_val__h55770[15:0], old_cword__h51176[47:0] };
+      default: IF_mav_request_pa_pa_BITS_2_TO_0_45_EQ_0x0_46__ETC___d1071 =
+		   old_cword__h51176;
     endcase
   end
-  always@(mav_request_pa_pa or old_cword__h50639 or new_st_val__h55233)
+  always@(mav_request_pa_pa or old_cword__h51176 or new_st_val__h55770)
   begin
     case (mav_request_pa_pa[2:0])
       3'h0:
-	  IF_mav_request_pa_pa_BITS_2_TO_0_37_EQ_0x0_38__ETC___d1054 =
-	      { old_cword__h50639[63:8], new_st_val__h55233[7:0] };
+	  IF_mav_request_pa_pa_BITS_2_TO_0_45_EQ_0x0_46__ETC___d1062 =
+	      { old_cword__h51176[63:8], new_st_val__h55770[7:0] };
       3'h1:
-	  IF_mav_request_pa_pa_BITS_2_TO_0_37_EQ_0x0_38__ETC___d1054 =
-	      { old_cword__h50639[63:16],
-		new_st_val__h55233[7:0],
-		old_cword__h50639[7:0] };
+	  IF_mav_request_pa_pa_BITS_2_TO_0_45_EQ_0x0_46__ETC___d1062 =
+	      { old_cword__h51176[63:16],
+		new_st_val__h55770[7:0],
+		old_cword__h51176[7:0] };
       3'h2:
-	  IF_mav_request_pa_pa_BITS_2_TO_0_37_EQ_0x0_38__ETC___d1054 =
-	      { old_cword__h50639[63:24],
-		new_st_val__h55233[7:0],
-		old_cword__h50639[15:0] };
+	  IF_mav_request_pa_pa_BITS_2_TO_0_45_EQ_0x0_46__ETC___d1062 =
+	      { old_cword__h51176[63:24],
+		new_st_val__h55770[7:0],
+		old_cword__h51176[15:0] };
       3'h3:
-	  IF_mav_request_pa_pa_BITS_2_TO_0_37_EQ_0x0_38__ETC___d1054 =
-	      { old_cword__h50639[63:32],
-		new_st_val__h55233[7:0],
-		old_cword__h50639[23:0] };
+	  IF_mav_request_pa_pa_BITS_2_TO_0_45_EQ_0x0_46__ETC___d1062 =
+	      { old_cword__h51176[63:32],
+		new_st_val__h55770[7:0],
+		old_cword__h51176[23:0] };
       3'h4:
-	  IF_mav_request_pa_pa_BITS_2_TO_0_37_EQ_0x0_38__ETC___d1054 =
-	      { old_cword__h50639[63:40],
-		new_st_val__h55233[7:0],
-		old_cword__h50639[31:0] };
+	  IF_mav_request_pa_pa_BITS_2_TO_0_45_EQ_0x0_46__ETC___d1062 =
+	      { old_cword__h51176[63:40],
+		new_st_val__h55770[7:0],
+		old_cword__h51176[31:0] };
       3'h5:
-	  IF_mav_request_pa_pa_BITS_2_TO_0_37_EQ_0x0_38__ETC___d1054 =
-	      { old_cword__h50639[63:48],
-		new_st_val__h55233[7:0],
-		old_cword__h50639[39:0] };
+	  IF_mav_request_pa_pa_BITS_2_TO_0_45_EQ_0x0_46__ETC___d1062 =
+	      { old_cword__h51176[63:48],
+		new_st_val__h55770[7:0],
+		old_cword__h51176[39:0] };
       3'h6:
-	  IF_mav_request_pa_pa_BITS_2_TO_0_37_EQ_0x0_38__ETC___d1054 =
-	      { old_cword__h50639[63:56],
-		new_st_val__h55233[7:0],
-		old_cword__h50639[47:0] };
+	  IF_mav_request_pa_pa_BITS_2_TO_0_45_EQ_0x0_46__ETC___d1062 =
+	      { old_cword__h51176[63:56],
+		new_st_val__h55770[7:0],
+		old_cword__h51176[47:0] };
       3'h7:
-	  IF_mav_request_pa_pa_BITS_2_TO_0_37_EQ_0x0_38__ETC___d1054 =
-	      { new_st_val__h55233[7:0], old_cword__h50639[55:0] };
+	  IF_mav_request_pa_pa_BITS_2_TO_0_45_EQ_0x0_46__ETC___d1062 =
+	      { new_st_val__h55770[7:0], old_cword__h51176[55:0] };
     endcase
   end
-  always@(mav_request_pa_pa or old_cword__h50639 or new_st_val__h55233)
+  always@(mav_request_pa_pa or old_cword__h51176 or new_st_val__h55770)
   begin
     case (mav_request_pa_pa[2:0])
       3'h0:
 	  CASE_mav_request_pa_pa_BITS_2_TO_0_0x0_old_cwo_ETC__q5 =
-	      { old_cword__h50639[63:32], new_st_val__h55233[31:0] };
+	      { old_cword__h51176[63:32], new_st_val__h55770[31:0] };
       3'h4:
 	  CASE_mav_request_pa_pa_BITS_2_TO_0_0x0_old_cwo_ETC__q5 =
-	      { new_st_val__h55233[31:0], old_cword__h50639[31:0] };
+	      { new_st_val__h55770[31:0], old_cword__h51176[31:0] };
       default: CASE_mav_request_pa_pa_BITS_2_TO_0_0x0_old_cwo_ETC__q5 =
-		   old_cword__h50639;
+		   old_cword__h51176;
     endcase
   end
   always@(mav_request_pa_req or
-	  old_cword__h50639 or
-	  IF_mav_request_pa_pa_BITS_2_TO_0_37_EQ_0x0_38__ETC___d1054 or
-	  IF_mav_request_pa_pa_BITS_2_TO_0_37_EQ_0x0_38__ETC___d1063 or
+	  old_cword__h51176 or
+	  IF_mav_request_pa_pa_BITS_2_TO_0_45_EQ_0x0_46__ETC___d1062 or
+	  IF_mav_request_pa_pa_BITS_2_TO_0_45_EQ_0x0_46__ETC___d1071 or
 	  CASE_mav_request_pa_pa_BITS_2_TO_0_0x0_old_cwo_ETC__q5 or
-	  new_st_val__h55233)
+	  new_st_val__h55770)
   begin
     case (mav_request_pa_req[205:203])
       3'b0:
-	  n__h56213 =
-	      IF_mav_request_pa_pa_BITS_2_TO_0_37_EQ_0x0_38__ETC___d1054;
+	  n__h56750 =
+	      IF_mav_request_pa_pa_BITS_2_TO_0_45_EQ_0x0_46__ETC___d1062;
       3'b001:
-	  n__h56213 =
-	      IF_mav_request_pa_pa_BITS_2_TO_0_37_EQ_0x0_38__ETC___d1063;
+	  n__h56750 =
+	      IF_mav_request_pa_pa_BITS_2_TO_0_45_EQ_0x0_46__ETC___d1071;
       3'b010:
-	  n__h56213 = CASE_mav_request_pa_pa_BITS_2_TO_0_0x0_old_cwo_ETC__q5;
-      3'b011: n__h56213 = new_st_val__h55233;
-      default: n__h56213 = old_cword__h50639;
+	  n__h56750 = CASE_mav_request_pa_pa_BITS_2_TO_0_0x0_old_cwo_ETC__q5;
+      3'b011: n__h56750 = new_st_val__h55770;
+      default: n__h56750 = old_cword__h51176;
     endcase
   end
   always@(ram_cset_meta$DOA or
-	  ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d778)
+	  ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d786)
   begin
     case (ram_cset_meta$DOA[107:106] != 2'd0 &&
-	  ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d778)
+	  ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d786)
       1'd0:
 	  CASE_NOT_ram_cset_metaDOA_BITS_107_TO_106_EQ__ETC__q6 =
 	      ram_cset_meta$DOA[51:0];
@@ -2951,14 +2967,14 @@ module mkCache(CLK,
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && verbosity != 3'd0)
 	begin
-	  v__h35463 = $stime;
+	  v__h36000 = $stime;
 	  #0;
 	end
-    v__h35457 = v__h35463 / 32'd10;
+    v__h35994 = v__h36000 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && verbosity != 3'd0)
 	$display("%0d: %m.mav_request_pa: pa %0h",
-		 v__h35457,
+		 v__h35994,
 		 mav_request_pa_pa);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && verbosity != 3'd0) $write("    ");
@@ -3155,7 +3171,7 @@ module mkCache(CLK,
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && verbosity != 3'd0 &&
 	  ram_cset_meta$DOA[53:52] != 2'd0)
-	$write(", ctag %0h (= pa %0h)", ram_cset_meta$DOA[51:0], pa__h35958);
+	$write(", ctag %0h (= pa %0h)", ram_cset_meta$DOA[51:0], pa__h36495);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && verbosity != 3'd0) $write("\n");
     if (RST_N != `BSV_RESET_VALUE)
@@ -3188,7 +3204,7 @@ module mkCache(CLK,
 	  ram_cset_meta$DOA[107:106] != 2'd0)
 	$write(", ctag %0h (= pa %0h)",
 	       ram_cset_meta$DOA[105:54],
-	       pa__h35937);
+	       pa__h36474);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && verbosity != 3'd0) $write("\n");
     if (RST_N != `BSV_RESET_VALUE)
@@ -3198,386 +3214,386 @@ module mkCache(CLK,
 	$write("Valid_Info { ", "num_valids: ");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && verbosity != 3'd0)
-	$write("'h%h", valid_info_num_valids__h36172);
+	$write("'h%h", valid_info_num_valids__h36709);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && verbosity != 3'd0)
 	$write(", ", "valid_state: ");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && verbosity != 3'd0 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d786 == 2'd0)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d794 == 2'd0)
 	$write("INVALID");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && verbosity != 3'd0 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d786 == 2'd1)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d794 == 2'd1)
 	$write("SHARED");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && verbosity != 3'd0 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d786 == 2'd2)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d794 == 2'd2)
 	$write("EXCLUSIVE");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && verbosity != 3'd0 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d786 != 2'd0 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d786 != 2'd1 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d786 != 2'd2)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d794 != 2'd0 &&
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d794 != 2'd1 &&
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d794 != 2'd2)
 	$write("MODIFIED");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && verbosity != 3'd0) $write(", ", "data: ");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && verbosity != 3'd0)
-	$write("'h%h", valid_info_data__h36174);
+	$write("'h%h", valid_info_data__h36711);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && verbosity != 3'd0) $write(", ", "way: ");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && verbosity != 3'd0)
 	$write("'h%h",
 	       ram_cset_meta$DOA[107:106] != 2'd0 &&
-	       ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d778,
+	       ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d786,
 	       " }");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && verbosity != 3'd0) $write("\n");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d867)
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d875)
 	$write("    INTERNAL ERROR ");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d867 &&
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d875 &&
 	  mav_request_pa_req[207:206] == 2'd0)
 	$write("CACHE_LD");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d867 &&
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d875 &&
 	  mav_request_pa_req[207:206] == 2'd1)
 	$write("CACHE_ST");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d867 &&
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d875 &&
 	  mav_request_pa_req[207:206] != 2'd0 &&
 	  mav_request_pa_req[207:206] != 2'd1)
 	$write("CACHE_AMO");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d867)
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d875)
 	$write(" va %0h pa %0h",
 	       mav_request_pa_req[202:139],
 	       mav_request_pa_pa,
 	       "\n");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d867)
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d875)
 	$display("    # of valids in set: %0d    (should be 0 or 1)",
-		 valid_info_num_valids__h36172);
+		 valid_info_num_valids__h36709);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d867)
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d875)
 	$write("    ");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d867)
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d875)
 	$write("CSet [%0h] (state, tag)\n", rg_va[11:6]);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d867)
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d875)
 	$write("        way %0d: ", $signed(32'd0));
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d867 &&
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d875 &&
 	  ram_cset_meta$DOA[53:52] == 2'd0)
 	$write("INVALID");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d867 &&
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d875 &&
 	  ram_cset_meta$DOA[53:52] == 2'd1)
 	$write("SHARED");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d867 &&
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d875 &&
 	  ram_cset_meta$DOA[53:52] == 2'd2)
 	$write("EXCLUSIVE");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d867 &&
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d875 &&
 	  ram_cset_meta$DOA[53:52] != 2'd0 &&
 	  ram_cset_meta$DOA[53:52] != 2'd1 &&
 	  ram_cset_meta$DOA[53:52] != 2'd2)
 	$write("MODIFIED");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d867 &&
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d875 &&
 	  ram_cset_meta$DOA[53:52] == 2'd0)
 	$write("");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d867 &&
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d875 &&
 	  ram_cset_meta$DOA[53:52] != 2'd0)
-	$write(", ctag %0h (= pa %0h)", ram_cset_meta$DOA[51:0], pa__h35958);
+	$write(", ctag %0h (= pa %0h)", ram_cset_meta$DOA[51:0], pa__h36495);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d867)
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d875)
 	$write("\n");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d867)
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d875)
 	$write("        way %0d: ", $signed(32'd1));
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d867 &&
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d875 &&
 	  ram_cset_meta$DOA[107:106] == 2'd0)
 	$write("INVALID");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d867 &&
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d875 &&
 	  ram_cset_meta$DOA[107:106] == 2'd1)
 	$write("SHARED");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d867 &&
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d875 &&
 	  ram_cset_meta$DOA[107:106] == 2'd2)
 	$write("EXCLUSIVE");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d867 &&
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d875 &&
 	  ram_cset_meta$DOA[107:106] != 2'd0 &&
 	  ram_cset_meta$DOA[107:106] != 2'd1 &&
 	  ram_cset_meta$DOA[107:106] != 2'd2)
 	$write("MODIFIED");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d867 &&
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d875 &&
 	  ram_cset_meta$DOA[107:106] == 2'd0)
 	$write("");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d867 &&
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d875 &&
 	  ram_cset_meta$DOA[107:106] != 2'd0)
 	$write(", ctag %0h (= pa %0h)",
 	       ram_cset_meta$DOA[105:54],
-	       pa__h35937);
+	       pa__h36474);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d867)
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d875)
 	$write("\n");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d867)
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d875)
 	$finish(32'd1);
     if (RST_N != `BSV_RESET_VALUE)
-      if (EN_mav_request_pa && valid_info_num_valids__h36172 == 2'd1 &&
+      if (EN_mav_request_pa && valid_info_num_valids__h36709 == 2'd1 &&
 	  mav_request_pa_req[207:206] == 2'd0 &&
 	  verbosity != 3'd0)
 	$display("    LOAD-HIT: va %0h pa %0h data %0h",
 		 mav_request_pa_req[202:139],
 		 mav_request_pa_pa,
-		 data__h49101);
+		 data__h49638);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1102)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1110)
 	$display("    STORE-HIT: va %0h pa %0h data %0h",
 		 mav_request_pa_req[202:139],
 		 mav_request_pa_pa,
 		 mav_request_pa_req[138:75]);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1103)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1111)
 	begin
-	  v__h50323 = $stime;
+	  v__h50860 = $stime;
 	  #0;
 	end
-    v__h50317 = v__h50323 / 32'd10;
+    v__h50854 = v__h50860 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1103)
-	$display("%0d: %m.fa_write: INTERNAL ERROR", v__h50317);
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1111)
+	$display("%0d: %m.fa_write: INTERNAL ERROR", v__h50854);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1103)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1111)
 	$display("    va_cset_cword_in_cache %0h way %0d pa %0h f3 %0d st_value %0h",
 		 rg_va[11:3],
 		 ram_cset_meta$DOA[107:106] != 2'd0 &&
-		 ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d778,
+		 ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d786,
 		 mav_request_pa_pa,
 		 mav_request_pa_req[205:203],
 		 mav_request_pa_req[138:75]);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1103)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1111)
 	$display("    Cache write on a miss (need EXCLUSIVE)");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1103)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1111)
 	$finish(32'd1);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1102)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1110)
 	$display("      cache.fa_write: va_cset_cword_in_cache %0h way %0d pa %0h f3 %0d st_value %0h",
 		 rg_va[11:3],
 		 ram_cset_meta$DOA[107:106] != 2'd0 &&
-		 ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d778,
+		 ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d786,
 		 mav_request_pa_pa,
 		 mav_request_pa_req[205:203],
 		 mav_request_pa_req[138:75]);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1102)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1110)
 	$write("      from: ");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1102)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1110)
 	$write("CSet_Cword {", "%0h", ram_cset_cword$DOA[63:0]);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1102)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1110)
 	$write(", ");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1102)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1110)
 	$write("%0h", ram_cset_cword$DOA[127:64]);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1102)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1110)
 	$write("}");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1102)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1110)
 	$write("\n");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1102)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1110)
 	$write("      to:   ");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1102)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1110)
 	$write("CSet_Cword {",
 	       "%0h",
-	       IF_ram_cset_meta_a_read__8_BITS_107_TO_106_12__ETC___d1002);
+	       IF_ram_cset_meta_a_read__8_BITS_107_TO_106_12__ETC___d1010);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1102)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1110)
 	$write(", ");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1102)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1110)
 	$write("%0h",
-	       IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d999);
+	       IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1007);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1102)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1110)
 	$write("}");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1102)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1110)
 	$write("\n");
     if (RST_N != `BSV_RESET_VALUE)
-      if (EN_mav_request_pa && valid_info_num_valids__h36172 == 2'd1 &&
+      if (EN_mav_request_pa && valid_info_num_valids__h36709 == 2'd1 &&
 	  mav_request_pa_req[207:206] == 2'd2 &&
 	  mav_request_pa_req[74:70] == 5'b00010 &&
 	  verbosity != 3'd0)
 	$display("    LR-HIT: va %0h pa %0h data %0h",
 		 mav_request_pa_req[202:139],
 		 mav_request_pa_pa,
-		 data__h49101);
+		 data__h49638);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1108)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1116)
 	$display("    SC-HIT and success: va %0h pa %0h data %0h",
 		 mav_request_pa_req[202:139],
 		 mav_request_pa_pa,
 		 mav_request_pa_req[138:75]);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1110)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1118)
 	begin
-	  v__h52949 = $stime;
+	  v__h53486 = $stime;
 	  #0;
 	end
-    v__h52943 = v__h52949 / 32'd10;
+    v__h53480 = v__h53486 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1110)
-	$display("%0d: %m.fa_write: INTERNAL ERROR", v__h52943);
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1118)
+	$display("%0d: %m.fa_write: INTERNAL ERROR", v__h53480);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1110)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1118)
 	$display("    va_cset_cword_in_cache %0h way %0d pa %0h f3 %0d st_value %0h",
 		 rg_va[11:3],
 		 ram_cset_meta$DOA[107:106] != 2'd0 &&
-		 ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d778,
+		 ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d786,
 		 mav_request_pa_pa,
 		 mav_request_pa_req[205:203],
 		 mav_request_pa_req[138:75]);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1110)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1118)
 	$display("    Cache write on a miss (need EXCLUSIVE)");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1110)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1118)
 	$finish(32'd1);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1108)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1116)
 	$display("      cache.fa_write: va_cset_cword_in_cache %0h way %0d pa %0h f3 %0d st_value %0h",
 		 rg_va[11:3],
 		 ram_cset_meta$DOA[107:106] != 2'd0 &&
-		 ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d778,
+		 ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d786,
 		 mav_request_pa_pa,
 		 mav_request_pa_req[205:203],
 		 mav_request_pa_req[138:75]);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1108)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1116)
 	$write("      from: ");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1108)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1116)
 	$write("CSet_Cword {", "%0h", ram_cset_cword$DOA[63:0]);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1108)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1116)
 	$write(", ");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1108)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1116)
 	$write("%0h", ram_cset_cword$DOA[127:64]);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1108)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1116)
 	$write("}");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1108)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1116)
 	$write("\n");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1108)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1116)
 	$write("      to:   ");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1108)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1116)
 	$write("CSet_Cword {",
 	       "%0h",
-	       IF_ram_cset_meta_a_read__8_BITS_107_TO_106_12__ETC___d1002);
+	       IF_ram_cset_meta_a_read__8_BITS_107_TO_106_12__ETC___d1010);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1108)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1116)
 	$write(", ");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1108)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1116)
 	$write("%0h",
-	       IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d999);
+	       IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1007);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1108)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1116)
 	$write("}");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1108)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1116)
 	$write("\n");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d920 &&
-	  (!rg_lrsc_valid || !rg_lrsc_pa_22_EQ_mav_request_pa_pa___d923) &&
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d928 &&
+	  (!rg_lrsc_valid || !rg_lrsc_pa_30_EQ_mav_request_pa_pa___d931) &&
 	  verbosity != 3'd0)
 	$display("    SC-HIT and fail: va %0h pa %0h data %0h",
 		 mav_request_pa_req[202:139],
@@ -3586,7 +3602,7 @@ module mkCache(CLK,
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && mav_request_pa_req[74:70] != 5'b00010 &&
 	  mav_request_pa_req[74:70] != 5'b00011 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1118)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1126)
 	$display("    AMO-HIT: va %0h pa %0h data %0h",
 		 mav_request_pa_req[202:139],
 		 mav_request_pa_pa,
@@ -3594,53 +3610,53 @@ module mkCache(CLK,
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && mav_request_pa_req[74:70] != 5'b00010 &&
 	  mav_request_pa_req[74:70] != 5'b00011 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1118)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1126)
 	$write("    f3 %3b AMO ", mav_request_pa_req[205:203]);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1122)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1130)
 	$write("ADD");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1124)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1132)
 	$write("SWAP");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1126)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1134)
 	$write("XOR");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1128)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1136)
 	$write("AND");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1130)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1138)
 	$write("OR");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1132)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1140)
 	$write("MIN");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1134)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1142)
 	$write("MAX");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1136)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1144)
 	$write("MINU");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1138)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1146)
 	$write("MAXU");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && mav_request_pa_req[74:70] != 5'b00010 &&
 	  mav_request_pa_req[74:70] != 5'b00011 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1118)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1126)
 	$write("\n");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && mav_request_pa_req[74:70] != 5'b00010 &&
 	  mav_request_pa_req[74:70] != 5'b00011 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1118)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1126)
 	$display("    va %0h  pa %0h  st_value %0h",
 		 mav_request_pa_req[202:139],
 		 mav_request_pa_pa,
@@ -3648,207 +3664,215 @@ module mkCache(CLK,
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && mav_request_pa_req[74:70] != 5'b00010 &&
 	  mav_request_pa_req[74:70] != 5'b00011 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1118)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1126)
 	$display("    Cache cword %0h, load-result %0h",
-		 valid_info_data__h36174,
-		 valid_info_data__h36174);
+		 valid_info_data__h36711,
+		 valid_info_data__h36711);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && mav_request_pa_req[74:70] != 5'b00010 &&
 	  mav_request_pa_req[74:70] != 5'b00011 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1118)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1126)
 	$write("    ");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1122)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1130)
 	$write("ADD");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1124)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1132)
 	$write("SWAP");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1126)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1134)
 	$write("XOR");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1128)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1136)
 	$write("AND");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1130)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1138)
 	$write("OR");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1132)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1140)
 	$write("MIN");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1134)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1142)
 	$write("MAX");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1136)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1144)
 	$write("MINU");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1138)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1146)
 	$write("MAXU");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && mav_request_pa_req[74:70] != 5'b00010 &&
 	  mav_request_pa_req[74:70] != 5'b00011 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1118)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1126)
 	$write(" (%0h, %0h) -> %0h",
-	       data__h49100,
+	       data__h49637,
 	       mav_request_pa_req[138:75],
-	       new_st_val__h55233,
+	       new_st_val__h55770,
 	       "\n");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && mav_request_pa_req[74:70] != 5'b00010 &&
 	  mav_request_pa_req[74:70] != 5'b00011 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1139)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1147)
 	begin
-	  v__h55907 = $stime;
+	  v__h56444 = $stime;
 	  #0;
 	end
-    v__h55901 = v__h55907 / 32'd10;
+    v__h56438 = v__h56444 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && mav_request_pa_req[74:70] != 5'b00010 &&
 	  mav_request_pa_req[74:70] != 5'b00011 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1139)
-	$display("%0d: %m.fa_write: INTERNAL ERROR", v__h55901);
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1147)
+	$display("%0d: %m.fa_write: INTERNAL ERROR", v__h56438);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && mav_request_pa_req[74:70] != 5'b00010 &&
 	  mav_request_pa_req[74:70] != 5'b00011 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1139)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1147)
 	$display("    va_cset_cword_in_cache %0h way %0d pa %0h f3 %0d st_value %0h",
 		 rg_va[11:3],
 		 ram_cset_meta$DOA[107:106] != 2'd0 &&
-		 ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d778,
+		 ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d786,
 		 mav_request_pa_pa,
 		 mav_request_pa_req[205:203],
-		 new_st_val__h55233);
+		 new_st_val__h55770);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && mav_request_pa_req[74:70] != 5'b00010 &&
 	  mav_request_pa_req[74:70] != 5'b00011 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1139)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1147)
 	$display("    Cache write on a miss (need EXCLUSIVE)");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && mav_request_pa_req[74:70] != 5'b00010 &&
 	  mav_request_pa_req[74:70] != 5'b00011 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1139)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1147)
 	$finish(32'd1);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && mav_request_pa_req[74:70] != 5'b00010 &&
 	  mav_request_pa_req[74:70] != 5'b00011 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1118)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1126)
 	$display("      cache.fa_write: va_cset_cword_in_cache %0h way %0d pa %0h f3 %0d st_value %0h",
 		 rg_va[11:3],
 		 ram_cset_meta$DOA[107:106] != 2'd0 &&
-		 ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d778,
+		 ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_ma_ETC___d786,
 		 mav_request_pa_pa,
 		 mav_request_pa_req[205:203],
-		 new_st_val__h55233);
+		 new_st_val__h55770);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && mav_request_pa_req[74:70] != 5'b00010 &&
 	  mav_request_pa_req[74:70] != 5'b00011 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1118)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1126)
 	$write("      from: ");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && mav_request_pa_req[74:70] != 5'b00010 &&
 	  mav_request_pa_req[74:70] != 5'b00011 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1118)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1126)
 	$write("CSet_Cword {", "%0h", ram_cset_cword$DOA[63:0]);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && mav_request_pa_req[74:70] != 5'b00010 &&
 	  mav_request_pa_req[74:70] != 5'b00011 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1118)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1126)
 	$write(", ");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && mav_request_pa_req[74:70] != 5'b00010 &&
 	  mav_request_pa_req[74:70] != 5'b00011 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1118)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1126)
 	$write("%0h", ram_cset_cword$DOA[127:64]);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && mav_request_pa_req[74:70] != 5'b00010 &&
 	  mav_request_pa_req[74:70] != 5'b00011 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1118)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1126)
 	$write("}");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && mav_request_pa_req[74:70] != 5'b00010 &&
 	  mav_request_pa_req[74:70] != 5'b00011 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1118)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1126)
 	$write("\n");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && mav_request_pa_req[74:70] != 5'b00010 &&
 	  mav_request_pa_req[74:70] != 5'b00011 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1118)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1126)
 	$write("      to:   ");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && mav_request_pa_req[74:70] != 5'b00010 &&
 	  mav_request_pa_req[74:70] != 5'b00011 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1118)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1126)
 	$write("CSet_Cword {",
 	       "%0h",
-	       IF_ram_cset_meta_a_read__8_BITS_107_TO_106_12__ETC___d1074);
+	       IF_ram_cset_meta_a_read__8_BITS_107_TO_106_12__ETC___d1082);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && mav_request_pa_req[74:70] != 5'b00010 &&
 	  mav_request_pa_req[74:70] != 5'b00011 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1118)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1126)
 	$write(", ");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && mav_request_pa_req[74:70] != 5'b00010 &&
 	  mav_request_pa_req[74:70] != 5'b00011 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1118)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1126)
 	$write("%0h",
-	       IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1073);
+	       IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1081);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && mav_request_pa_req[74:70] != 5'b00010 &&
 	  mav_request_pa_req[74:70] != 5'b00011 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1118)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1126)
 	$write("}");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && mav_request_pa_req[74:70] != 5'b00010 &&
 	  mav_request_pa_req[74:70] != 5'b00011 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1118)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d1126)
 	$write("\n");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && mav_request_pa_req[207:206] != 2'd0 &&
-	  NOT_mav_request_pa_req_BITS_207_TO_206_94_EQ_1_ETC___d1167)
+	  NOT_mav_request_pa_req_BITS_207_TO_206_02_EQ_1_ETC___d1175)
 	$display("    Store-hit, but need S->E upgrade");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa && mav_request_pa_req[207:206] != 2'd0 &&
-	  NOT_mav_request_pa_req_BITS_207_TO_206_94_EQ_1_ETC___d1167)
+	  NOT_mav_request_pa_req_BITS_207_TO_206_02_EQ_1_ETC___d1175)
 	$display("    va %0h pa %0h data %0h -> FSM_UPGRADE_REFILL",
 		 mav_request_pa_req[202:139],
 		 mav_request_pa_pa,
 		 mav_request_pa_req[138:75]);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_mav_request_pa &&
-	  (valid_info_num_valids__h36172 != 2'd1 ||
+	  (valid_info_num_valids__h36709 != 2'd1 ||
 	   mav_request_pa_req[207:206] != 2'd0) &&
-	  (valid_info_num_valids__h36172 != 2'd1 ||
+	  (valid_info_num_valids__h36709 != 2'd1 ||
 	   mav_request_pa_req[207:206] != 2'd1 ||
-	   IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d914) &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1175)
+	   IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d922) &&
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d1183)
 	$display("    MISS: va %0h pa %0h; -> REPLACE_START",
 		 mav_request_pa_req[202:139],
 		 mav_request_pa_pa);
     if (RST_N != `BSV_RESET_VALUE)
+      if (EN_ma_request_va && verbosity != 3'd0)
+	begin
+	  v__h35136 = $stime;
+	  #0;
+	end
+    v__h35130 = v__h35136 / 32'd10;
+    if (RST_N != `BSV_RESET_VALUE)
+      if (EN_ma_request_va && verbosity != 3'd0)
+	$display("%0d: %m.ma_request_va: %0h", v__h35130, ma_request_va_va);
+    if (RST_N != `BSV_RESET_VALUE)
+      if (EN_ma_request_va && NOT_verbosity_ULT_2_2___d23 &&
+	  dcache_not_icache)
+	$write("    dmem");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (EN_ma_request_va && NOT_verbosity_ULT_2_2___d23 &&
+	  !dcache_not_icache)
+	$write("    imem");
+    if (RST_N != `BSV_RESET_VALUE)
       if (EN_ma_request_va && NOT_verbosity_ULT_2_2___d23)
-	$display("    fa_req_rams_A %0h cset_in_cache %0h, cset_cword_in_cache %0h",
+	$display(".fa_req_rams_A %0h cset_in_cache %0h, cset_cword_in_cache %0h",
 		 ma_request_va_va,
 		 ma_request_va_va[11:6],
 		 ma_request_va_va[11:3]);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (EN_ma_request_va && verbosity != 3'd0)
-	begin
-	  v__h35357 = $stime;
-	  #0;
-	end
-    v__h35351 = v__h35357 / 32'd10;
-    if (RST_N != `BSV_RESET_VALUE)
-      if (EN_ma_request_va && verbosity != 3'd0)
-	$display("%0d: %m.ma_request_va: %0h", v__h35351, ma_request_va_va);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_writeback_loop &&
 	  (verbosity != 3'd0 && rg_cword_in_cline == 3'd0 ||
@@ -4113,7 +4137,7 @@ module mkCache(CLK,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_refill_start && NOT_verbosity_ULT_2_2___d23)
 	$display("    Requesting cline: ram_cset_cword.a: cword-in-cache: 0x%0h",
-		 cset_cword_in_cache__h32631);
+		 cset_cword_in_cache__h33069);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_refill_start && NOT_verbosity_ULT_2_2___d23)
 	$write("    ");
@@ -4290,8 +4314,20 @@ module mkCache(CLK,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_refill_loop && rg_cword_in_cline == 3'd7 &&
 	  rg_va[5:3] != 3'd7 &&
+	  NOT_verbosity_ULT_2_2___d23 &&
+	  dcache_not_icache)
+	$write("    dmem");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_rl_refill_loop && rg_cword_in_cline == 3'd7 &&
+	  rg_va[5:3] != 3'd7 &&
+	  NOT_verbosity_ULT_2_2___d23 &&
+	  !dcache_not_icache)
+	$write("    imem");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_rl_refill_loop && rg_cword_in_cline == 3'd7 &&
+	  rg_va[5:3] != 3'd7 &&
 	  NOT_verbosity_ULT_2_2___d23)
-	$display("    fa_req_rams_A %0h cset_in_cache %0h, cset_cword_in_cache %0h",
+	$display(".fa_req_rams_A %0h cset_in_cache %0h, cset_cword_in_cache %0h",
 		 rg_va,
 		 rg_va[11:6],
 		 rg_va[11:3]);
@@ -4305,62 +4341,70 @@ module mkCache(CLK,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_refill_loop_final && verbosity != 3'd0)
 	begin
-	  v__h11382 = $stime;
+	  v__h11457 = $stime;
 	  #0;
 	end
-    v__h11376 = v__h11382 / 32'd10;
+    v__h11451 = v__h11457 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_refill_loop_final && verbosity != 3'd0)
-	$display("%0d: %m.rl_refill_loop_final; re-request RAM", v__h11376);
+	$display("%0d: %m.rl_refill_loop_final; re-request RAM", v__h11451);
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_rl_refill_loop_final && NOT_verbosity_ULT_2_2___d23 &&
+	  dcache_not_icache)
+	$write("    dmem");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_rl_refill_loop_final && NOT_verbosity_ULT_2_2___d23 &&
+	  !dcache_not_icache)
+	$write("    imem");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_refill_loop_final && NOT_verbosity_ULT_2_2___d23)
-	$display("    fa_req_rams_A %0h cset_in_cache %0h, cset_cword_in_cache %0h",
+	$display(".fa_req_rams_A %0h cset_in_cache %0h, cset_cword_in_cache %0h",
 		 rg_va,
 		 rg_va[11:6],
 		 rg_va[11:3]);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_start && verbosity != 3'd0)
 	begin
-	  v__h12363 = $stime;
+	  v__h12513 = $stime;
 	  #0;
 	end
-    v__h12357 = v__h12363 / 32'd10;
+    v__h12507 = v__h12513 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_start && verbosity != 3'd0)
-	$display("%0d: %m.rl_flush_start", v__h12357);
+	$display("%0d: %m.rl_flush_start", v__h12507);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop && NOT_verbosity_ULT_2_2___d23)
 	begin
-	  v__h12897 = $stime;
+	  v__h13047 = $stime;
 	  #0;
 	end
-    v__h12891 = v__h12897 / 32'd10;
+    v__h13041 = v__h13047 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop && NOT_verbosity_ULT_2_2___d23)
-	$display("%0d: %m.rl_flush_loop", v__h12891);
+	$display("%0d: %m.rl_flush_loop", v__h13041);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop && NOT_verbosity_ULT_2_2___d23)
 	$write("    @ %0h (cset %0h, way %0d) cline state ",
-	       cline_pa__h14161,
+	       cline_pa__h14311,
 	       rg_cset_in_cache,
 	       rg_way_in_cset);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop && NOT_verbosity_ULT_2_2___d23 &&
-	  SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d303 == 2'd0)
+	  SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d307 == 2'd0)
 	$write("INVALID");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop && NOT_verbosity_ULT_2_2___d23 &&
-	  SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d303 == 2'd1)
+	  SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d307 == 2'd1)
 	$write("SHARED");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop && NOT_verbosity_ULT_2_2___d23 &&
-	  SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d303 == 2'd2)
+	  SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d307 == 2'd2)
 	$write("EXCLUSIVE");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop && NOT_verbosity_ULT_2_2___d23 &&
-	  SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d303 != 2'd0 &&
-	  SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d303 != 2'd1 &&
-	  SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d303 != 2'd2)
+	  SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d307 != 2'd0 &&
+	  SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d307 != 2'd1 &&
+	  SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d307 != 2'd2)
 	$write("MODIFIED");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop && NOT_verbosity_ULT_2_2___d23)
@@ -4379,30 +4423,30 @@ module mkCache(CLK,
 	$write("        way %0d: ", $signed(32'd0));
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop && NOT_verbosity_ULT_2_2___d23 &&
-	  IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_97_B_ETC___d299 == 2'd0)
+	  IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_01_B_ETC___d303 == 2'd0)
 	$write("INVALID");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop && NOT_verbosity_ULT_2_2___d23 &&
-	  IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_97_B_ETC___d299 == 2'd1)
+	  IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_01_B_ETC___d303 == 2'd1)
 	$write("SHARED");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop && NOT_verbosity_ULT_2_2___d23 &&
-	  IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_97_B_ETC___d299 == 2'd2)
+	  IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_01_B_ETC___d303 == 2'd2)
 	$write("EXCLUSIVE");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop && NOT_verbosity_ULT_2_2___d23 &&
-	  IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_97_B_ETC___d299 != 2'd0 &&
-	  IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_97_B_ETC___d299 != 2'd1 &&
-	  IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_97_B_ETC___d299 != 2'd2)
+	  IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_01_B_ETC___d303 != 2'd0 &&
+	  IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_01_B_ETC___d303 != 2'd1 &&
+	  IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_01_B_ETC___d303 != 2'd2)
 	$write("MODIFIED");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop && NOT_verbosity_ULT_2_2___d23 &&
-	  IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_97_B_ETC___d299 == 2'd0)
+	  IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_01_B_ETC___d303 == 2'd0)
 	$write("");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop && NOT_verbosity_ULT_2_2___d23 &&
-	  IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_97_B_ETC___d299 != 2'd0)
-	$write(", ctag %0h (= pa %0h)", ctag__h13025, pa__h13512);
+	  IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_01_B_ETC___d303 != 2'd0)
+	$write(", ctag %0h (= pa %0h)", ctag__h13175, pa__h13662);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop && NOT_verbosity_ULT_2_2___d23)
 	$write("\n");
@@ -4411,30 +4455,30 @@ module mkCache(CLK,
 	$write("        way %0d: ", $signed(32'd1));
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop && NOT_verbosity_ULT_2_2___d23 &&
-	  IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_97_B_ETC___d301 == 2'd0)
+	  IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_01_B_ETC___d305 == 2'd0)
 	$write("INVALID");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop && NOT_verbosity_ULT_2_2___d23 &&
-	  IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_97_B_ETC___d301 == 2'd1)
+	  IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_01_B_ETC___d305 == 2'd1)
 	$write("SHARED");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop && NOT_verbosity_ULT_2_2___d23 &&
-	  IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_97_B_ETC___d301 == 2'd2)
+	  IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_01_B_ETC___d305 == 2'd2)
 	$write("EXCLUSIVE");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop && NOT_verbosity_ULT_2_2___d23 &&
-	  IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_97_B_ETC___d301 != 2'd0 &&
-	  IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_97_B_ETC___d301 != 2'd1 &&
-	  IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_97_B_ETC___d301 != 2'd2)
+	  IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_01_B_ETC___d305 != 2'd0 &&
+	  IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_01_B_ETC___d305 != 2'd1 &&
+	  IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_01_B_ETC___d305 != 2'd2)
 	$write("MODIFIED");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop && NOT_verbosity_ULT_2_2___d23 &&
-	  IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_97_B_ETC___d301 == 2'd0)
+	  IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_01_B_ETC___d305 == 2'd0)
 	$write("");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop && NOT_verbosity_ULT_2_2___d23 &&
-	  IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_97_B_ETC___d301 != 2'd0)
-	$write(", ctag %0h (= pa %0h)", ctag__h13030, pa__h13491);
+	  IF_rg_way_in_cset_3_THEN_rg_new_cset_meta_01_B_ETC___d305 != 2'd0)
+	$write(", ctag %0h (= pa %0h)", ctag__h13180, pa__h13641);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop && NOT_verbosity_ULT_2_2___d23)
 	$write("\n");
@@ -4449,32 +4493,32 @@ module mkCache(CLK,
 	$write("        way %0d: ", $signed(32'd0));
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop && NOT_verbosity_ULT_2_2___d23 &&
-	  IF_rg_way_in_cset_3_THEN_IF_rg_way_in_cset_3_T_ETC___d372 == 2'd0)
+	  IF_rg_way_in_cset_3_THEN_IF_rg_way_in_cset_3_T_ETC___d376 == 2'd0)
 	$write("INVALID");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop && NOT_verbosity_ULT_2_2___d23 &&
-	  IF_rg_way_in_cset_3_THEN_IF_rg_way_in_cset_3_T_ETC___d372 == 2'd1)
+	  IF_rg_way_in_cset_3_THEN_IF_rg_way_in_cset_3_T_ETC___d376 == 2'd1)
 	$write("SHARED");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop && NOT_verbosity_ULT_2_2___d23 &&
-	  IF_rg_way_in_cset_3_THEN_IF_rg_way_in_cset_3_T_ETC___d372 == 2'd2)
+	  IF_rg_way_in_cset_3_THEN_IF_rg_way_in_cset_3_T_ETC___d376 == 2'd2)
 	$write("EXCLUSIVE");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop && NOT_verbosity_ULT_2_2___d23 &&
-	  IF_rg_way_in_cset_3_THEN_IF_rg_way_in_cset_3_T_ETC___d372 != 2'd0 &&
-	  IF_rg_way_in_cset_3_THEN_IF_rg_way_in_cset_3_T_ETC___d372 != 2'd1 &&
-	  IF_rg_way_in_cset_3_THEN_IF_rg_way_in_cset_3_T_ETC___d372 != 2'd2)
+	  IF_rg_way_in_cset_3_THEN_IF_rg_way_in_cset_3_T_ETC___d376 != 2'd0 &&
+	  IF_rg_way_in_cset_3_THEN_IF_rg_way_in_cset_3_T_ETC___d376 != 2'd1 &&
+	  IF_rg_way_in_cset_3_THEN_IF_rg_way_in_cset_3_T_ETC___d376 != 2'd2)
 	$write("MODIFIED");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop && NOT_verbosity_ULT_2_2___d23 &&
-	  IF_rg_way_in_cset_3_THEN_IF_rg_way_in_cset_3_T_ETC___d372 == 2'd0)
+	  IF_rg_way_in_cset_3_THEN_IF_rg_way_in_cset_3_T_ETC___d376 == 2'd0)
 	$write("");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop && NOT_verbosity_ULT_2_2___d23 &&
-	  IF_rg_way_in_cset_3_THEN_IF_rg_way_in_cset_3_T_ETC___d372 != 2'd0)
+	  IF_rg_way_in_cset_3_THEN_IF_rg_way_in_cset_3_T_ETC___d376 != 2'd0)
 	$write(", ctag %0h (= pa %0h)",
-	       IF_rg_way_in_cset_3_THEN_IF_rg_way_in_cset_3_T_ETC___d386,
-	       pa__h13750);
+	       IF_rg_way_in_cset_3_THEN_IF_rg_way_in_cset_3_T_ETC___d390,
+	       pa__h13900);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop && NOT_verbosity_ULT_2_2___d23)
 	$write("\n");
@@ -4483,73 +4527,95 @@ module mkCache(CLK,
 	$write("        way %0d: ", $signed(32'd1));
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop && NOT_verbosity_ULT_2_2___d23 &&
-	  IF_rg_way_in_cset_3_THEN_rg_new_meta_state_05__ETC___d388 == 2'd0)
+	  IF_rg_way_in_cset_3_THEN_rg_new_meta_state_09__ETC___d392 == 2'd0)
 	$write("INVALID");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop && NOT_verbosity_ULT_2_2___d23 &&
-	  IF_rg_way_in_cset_3_THEN_rg_new_meta_state_05__ETC___d388 == 2'd1)
+	  IF_rg_way_in_cset_3_THEN_rg_new_meta_state_09__ETC___d392 == 2'd1)
 	$write("SHARED");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop && NOT_verbosity_ULT_2_2___d23 &&
-	  IF_rg_way_in_cset_3_THEN_rg_new_meta_state_05__ETC___d388 == 2'd2)
+	  IF_rg_way_in_cset_3_THEN_rg_new_meta_state_09__ETC___d392 == 2'd2)
 	$write("EXCLUSIVE");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop && NOT_verbosity_ULT_2_2___d23 &&
-	  IF_rg_way_in_cset_3_THEN_rg_new_meta_state_05__ETC___d388 != 2'd0 &&
-	  IF_rg_way_in_cset_3_THEN_rg_new_meta_state_05__ETC___d388 != 2'd1 &&
-	  IF_rg_way_in_cset_3_THEN_rg_new_meta_state_05__ETC___d388 != 2'd2)
+	  IF_rg_way_in_cset_3_THEN_rg_new_meta_state_09__ETC___d392 != 2'd0 &&
+	  IF_rg_way_in_cset_3_THEN_rg_new_meta_state_09__ETC___d392 != 2'd1 &&
+	  IF_rg_way_in_cset_3_THEN_rg_new_meta_state_09__ETC___d392 != 2'd2)
 	$write("MODIFIED");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop && NOT_verbosity_ULT_2_2___d23 &&
-	  IF_rg_way_in_cset_3_THEN_rg_new_meta_state_05__ETC___d388 == 2'd0)
+	  IF_rg_way_in_cset_3_THEN_rg_new_meta_state_09__ETC___d392 == 2'd0)
 	$write("");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop && NOT_verbosity_ULT_2_2___d23 &&
-	  IF_rg_way_in_cset_3_THEN_rg_new_meta_state_05__ETC___d388 != 2'd0)
+	  IF_rg_way_in_cset_3_THEN_rg_new_meta_state_09__ETC___d392 != 2'd0)
 	$write(", ctag %0h (= pa %0h)",
-	       IF_rg_way_in_cset_3_THEN_SEL_ARR_IF_rg_way_in__ETC___d402,
-	       pa__h13726);
+	       IF_rg_way_in_cset_3_THEN_SEL_ARR_IF_rg_way_in__ETC___d406,
+	       pa__h13876);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop && NOT_verbosity_ULT_2_2___d23)
 	$write("\n");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop &&
-	  SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d303 == 2'd3 &&
+	  SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d307 == 2'd3 &&
 	  NOT_verbosity_ULT_2_2___d23)
 	$display("    MODIFIED; writeback cline");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop &&
-	  SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d303 == 2'd3 &&
+	  SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cset_m_ETC___d307 == 2'd3 &&
 	  verbosity != 3'd0)
 	$display("    fa_cache_writeback_loop_prequel @ %0h (cset %0h, way %0h)",
-		 cline_pa__h14161,
+		 cline_pa__h14311,
 		 rg_cset_in_cache,
 		 rg_way_in_cset);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop &&
-	  NOT_SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cs_ETC___d420)
-	$display("    fa_req_rams_A %0h cset_in_cache %0h, cset_cword_in_cache %0h",
+	  NOT_SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cs_ETC___d424)
+	$write("    dmem");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_rl_flush_loop &&
+	  NOT_SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cs_ETC___d426)
+	$write("    imem");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_rl_flush_loop &&
+	  NOT_SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cs_ETC___d428)
+	$display(".fa_req_rams_A %0h cset_in_cache %0h, cset_cword_in_cache %0h",
 		 rg_va,
 		 rg_va[11:6],
 		 rg_va[11:3]);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop &&
-	  NOT_SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cs_ETC___d420)
+	  NOT_SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cs_ETC___d428)
 	begin
-	  v__h15517 = $stime;
+	  v__h15742 = $stime;
 	  #0;
 	end
-    v__h15511 = v__h15517 / 32'd10;
+    v__h15736 = v__h15742 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop &&
-	  NOT_SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cs_ETC___d420)
-	$display("%0d: %m.rl_flush_loop: done; -> FSM_IDLE", v__h15511);
+	  NOT_SEL_ARR_IF_rg_way_in_cset_3_THEN_rg_new_cs_ETC___d428)
+	$display("%0d: %m.rl_flush_loop: done; -> FSM_IDLE", v__h15736);
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_rl_flush_loop_writeback_sequel &&
+	  rg_cset_in_cache == 6'd63 &&
+	  rg_way_in_cset &&
+	  NOT_verbosity_ULT_2_2___d23 &&
+	  dcache_not_icache)
+	$write("    dmem");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_rl_flush_loop_writeback_sequel &&
+	  rg_cset_in_cache == 6'd63 &&
+	  rg_way_in_cset &&
+	  NOT_verbosity_ULT_2_2___d23 &&
+	  !dcache_not_icache)
+	$write("    imem");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop_writeback_sequel &&
 	  rg_cset_in_cache == 6'd63 &&
 	  rg_way_in_cset &&
 	  NOT_verbosity_ULT_2_2___d23)
-	$display("    fa_req_rams_A %0h cset_in_cache %0h, cset_cword_in_cache %0h",
+	$display(".fa_req_rams_A %0h cset_in_cache %0h, cset_cword_in_cache %0h",
 		 rg_va,
 		 rg_va[11:6],
 		 rg_va[11:3]);
@@ -4559,56 +4625,116 @@ module mkCache(CLK,
 	  rg_way_in_cset &&
 	  verbosity != 3'd0)
 	begin
-	  v__h16816 = $stime;
+	  v__h17116 = $stime;
 	  #0;
 	end
-    v__h16810 = v__h16816 / 32'd10;
+    v__h17110 = v__h17116 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop_writeback_sequel &&
 	  rg_cset_in_cache == 6'd63 &&
 	  rg_way_in_cset &&
 	  verbosity != 3'd0)
 	$display("%0d: %m.rl_flush_writeback_sequel; flush loop done; -> FSM_IDLE",
-		 v__h16810);
+		 v__h17110);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop_writeback_sequel &&
 	  (rg_cset_in_cache != 6'd63 || !rg_way_in_cset) &&
 	  verbosity != 3'd0)
 	begin
-	  v__h16886 = $stime;
+	  v__h17186 = $stime;
 	  #0;
 	end
-    v__h16880 = v__h16886 / 32'd10;
+    v__h17180 = v__h17186 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_flush_loop_writeback_sequel &&
 	  (rg_cset_in_cache != 6'd63 || !rg_way_in_cset) &&
 	  verbosity != 3'd0)
-	$display("%0d: %m.rl_flush_writeback_sequel; continue", v__h16880);
+	$display("%0d: %m.rl_flush_writeback_sequel; continue", v__h17180);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_A && verbosity != 3'd0)
 	begin
-	  v__h17190 = $stime;
+	  v__h17490 = $stime;
 	  #0;
 	end
-    v__h17184 = v__h17190 / 32'd10;
+    v__h17484 = v__h17490 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_A && verbosity != 3'd0)
-	$display("%0d: %m.rl_downgrade_req_from_L2_A", v__h17184);
+	$display("%0d: %m.rl_downgrade_req_from_L2_A: save state (push)",
+		 v__h17484);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_A && verbosity != 3'd0)
-	$display("    Save rg_va             = %0h", rg_va);
+	$write("    rg_save_fsm_state <= ");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_rl_downgrade_req_from_L2_A && verbosity != 3'd0 &&
+	  rg_save_fsm_state == 4'd0)
+	$write("FSM_INITIALIZE");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_rl_downgrade_req_from_L2_A && verbosity != 3'd0 &&
+	  rg_save_fsm_state == 4'd1)
+	$write("FSM_IDLE");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_rl_downgrade_req_from_L2_A && verbosity != 3'd0 &&
+	  rg_save_fsm_state == 4'd2)
+	$write("FSM_REPLACE_START");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_rl_downgrade_req_from_L2_A && verbosity != 3'd0 &&
+	  rg_save_fsm_state == 4'd3)
+	$write("FSM_WRITEBACK_LOOP");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_rl_downgrade_req_from_L2_A && verbosity != 3'd0 &&
+	  rg_save_fsm_state == 4'd4)
+	$write("FSM_REFILL_START");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_rl_downgrade_req_from_L2_A && verbosity != 3'd0 &&
+	  rg_save_fsm_state == 4'd5)
+	$write("FSM_UPGRADE_REFILL");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_rl_downgrade_req_from_L2_A && verbosity != 3'd0 &&
+	  rg_save_fsm_state == 4'd6)
+	$write("FSM_REFILL_FINAL_DELAY");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_rl_downgrade_req_from_L2_A && verbosity != 3'd0 &&
+	  rg_save_fsm_state == 4'd7)
+	$write("FSM_DOWNGRADE_B");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_rl_downgrade_req_from_L2_A && verbosity != 3'd0 &&
+	  rg_save_fsm_state == 4'd8)
+	$write("FSM_DOWNGRADE_C");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_rl_downgrade_req_from_L2_A && verbosity != 3'd0 &&
+	  rg_save_fsm_state == 4'd9)
+	$write("FSM_FLUSH_LOOP");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_rl_downgrade_req_from_L2_A && verbosity != 3'd0 &&
+	  rg_save_fsm_state != 4'd0 &&
+	  rg_save_fsm_state != 4'd1 &&
+	  rg_save_fsm_state != 4'd2 &&
+	  rg_save_fsm_state != 4'd3 &&
+	  rg_save_fsm_state != 4'd4 &&
+	  rg_save_fsm_state != 4'd5 &&
+	  rg_save_fsm_state != 4'd6 &&
+	  rg_save_fsm_state != 4'd7 &&
+	  rg_save_fsm_state != 4'd8 &&
+	  rg_save_fsm_state != 4'd9)
+	$write("FSM_FLUSH_LOOP_WRITEBACK_SEQUEL");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_A && verbosity != 3'd0)
-	$display("    Save rg_pa             = %0h", rg_pa);
+	$write("\n");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_A && verbosity != 3'd0)
-	$display("    Save rg_cset_in_cache  = %0h", rg_cset_in_cache);
+	$display("    rg_save_va             <= %0h", rg_va);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_A && verbosity != 3'd0)
-	$display("    Save rg_cword_in_cline = %0h", rg_cword_in_cline);
+	$display("    rg_save_pa             <= %0h", rg_pa);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_A && verbosity != 3'd0)
-	$display("    Save rg_way_in_cset    = %0h", rg_way_in_cset);
+	$display("    rg_save_cset_in_cache  <= %0h", rg_cset_in_cache);
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_rl_downgrade_req_from_L2_A && verbosity != 3'd0)
+	$display("    rg_save_cword_in_cline <= %0h", rg_cword_in_cline);
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_rl_downgrade_req_from_L2_A && verbosity != 3'd0)
+	$display("    rg_save_way_in_cset    <= %0h", rg_way_in_cset);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_A && verbosity != 3'd0)
 	$write("    Probe RAMs for: ");
@@ -4650,21 +4776,31 @@ module mkCache(CLK,
 	$display("    -> FSM_DOWNGRADE_B");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_A &&
+	  NOT_verbosity_ULT_2_2___d23 &&
+	  dcache_not_icache)
+	$write("    dmem");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_rl_downgrade_req_from_L2_A &&
+	  NOT_verbosity_ULT_2_2___d23 &&
+	  !dcache_not_icache)
+	$write("    imem");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_rl_downgrade_req_from_L2_A &&
 	  NOT_verbosity_ULT_2_2___d23)
-	$display("    fa_req_rams_A %0h cset_in_cache %0h, cset_cword_in_cache %0h",
+	$display(".fa_req_rams_A %0h cset_in_cache %0h, cset_cword_in_cache %0h",
 		 f_L2_to_L1_reqs$D_OUT[65:2],
 		 f_L2_to_L1_reqs$D_OUT[13:8],
 		 f_L2_to_L1_reqs$D_OUT[13:5]);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B && verbosity != 3'd0)
 	begin
-	  v__h18345 = $stime;
+	  v__h18783 = $stime;
 	  #0;
 	end
-    v__h18339 = v__h18345 / 32'd10;
+    v__h18777 = v__h18783 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B && verbosity != 3'd0)
-	$display("%0d: %m.rl_downgrade_req_from_L2_B", v__h18339);
+	$display("%0d: %m.rl_downgrade_req_from_L2_B", v__h18777);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B && verbosity != 3'd0)
 	$write("    ");
@@ -4699,7 +4835,7 @@ module mkCache(CLK,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B && verbosity != 3'd0 &&
 	  ram_cset_meta$DOA[53:52] != 2'd0)
-	$write(", ctag %0h (= pa %0h)", ram_cset_meta$DOA[51:0], pa__h18494);
+	$write(", ctag %0h (= pa %0h)", ram_cset_meta$DOA[51:0], pa__h18932);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B && verbosity != 3'd0)
 	$write("\n");
@@ -4733,7 +4869,7 @@ module mkCache(CLK,
 	  ram_cset_meta$DOA[107:106] != 2'd0)
 	$write(", ctag %0h (= pa %0h)",
 	       ram_cset_meta$DOA[105:54],
-	       pa__h18473);
+	       pa__h18911);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B && verbosity != 3'd0)
 	$write("\n");
@@ -4745,34 +4881,34 @@ module mkCache(CLK,
 	$write("Valid_Info { ", "num_valids: ");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B && verbosity != 3'd0)
-	$write("'h%h", valid_info_num_valids__h18714);
+	$write("'h%h", valid_info_num_valids__h19152);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B && verbosity != 3'd0)
 	$write(", ", "valid_state: ");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B && verbosity != 3'd0 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d469 == 2'd0)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d518 == 2'd0)
 	$write("INVALID");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B && verbosity != 3'd0 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d469 == 2'd1)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d518 == 2'd1)
 	$write("SHARED");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B && verbosity != 3'd0 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d469 == 2'd2)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d518 == 2'd2)
 	$write("EXCLUSIVE");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B && verbosity != 3'd0 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d469 != 2'd0 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d469 != 2'd1 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d469 != 2'd2)
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d518 != 2'd0 &&
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d518 != 2'd1 &&
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d518 != 2'd2)
 	$write("MODIFIED");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B && verbosity != 3'd0)
 	$write(", ", "data: ");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B && verbosity != 3'd0)
-	$write("'h%h", valid_info_data__h18716);
+	$write("'h%h", valid_info_data__h19154);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B && verbosity != 3'd0)
 	$write(", ", "way: ");
@@ -4780,141 +4916,141 @@ module mkCache(CLK,
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B && verbosity != 3'd0)
 	$write("'h%h",
 	       ram_cset_meta$DOA[107:106] != 2'd0 &&
-	       ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_rg_ETC___d460,
+	       ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_rg_ETC___d509,
 	       " }");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B && verbosity != 3'd0)
 	$write("\n");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d582)
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d631)
 	$display("    INTERNAL ERROR pa %0h", rg_pa);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d582)
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d631)
 	$display("    # of valids in set: %0d    (should be 0 or 1)",
-		 valid_info_num_valids__h18714);
+		 valid_info_num_valids__h19152);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d582)
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d631)
 	$write("CSet [%0h] (state, tag)\n", rg_cset_in_cache);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d582)
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d631)
 	$write("        way %0d: ", $signed(32'd0));
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d582 &&
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d631 &&
 	  ram_cset_meta$DOA[53:52] == 2'd0)
 	$write("INVALID");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d582 &&
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d631 &&
 	  ram_cset_meta$DOA[53:52] == 2'd1)
 	$write("SHARED");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d582 &&
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d631 &&
 	  ram_cset_meta$DOA[53:52] == 2'd2)
 	$write("EXCLUSIVE");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d582 &&
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d631 &&
 	  ram_cset_meta$DOA[53:52] != 2'd0 &&
 	  ram_cset_meta$DOA[53:52] != 2'd1 &&
 	  ram_cset_meta$DOA[53:52] != 2'd2)
 	$write("MODIFIED");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d582 &&
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d631 &&
 	  ram_cset_meta$DOA[53:52] == 2'd0)
 	$write("");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d582 &&
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d631 &&
 	  ram_cset_meta$DOA[53:52] != 2'd0)
-	$write(", ctag %0h (= pa %0h)", ram_cset_meta$DOA[51:0], pa__h18494);
+	$write(", ctag %0h (= pa %0h)", ram_cset_meta$DOA[51:0], pa__h18932);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d582)
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d631)
 	$write("\n");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d582)
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d631)
 	$write("        way %0d: ", $signed(32'd1));
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d582 &&
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d631 &&
 	  ram_cset_meta$DOA[107:106] == 2'd0)
 	$write("INVALID");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d582 &&
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d631 &&
 	  ram_cset_meta$DOA[107:106] == 2'd1)
 	$write("SHARED");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d582 &&
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d631 &&
 	  ram_cset_meta$DOA[107:106] == 2'd2)
 	$write("EXCLUSIVE");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d582 &&
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d631 &&
 	  ram_cset_meta$DOA[107:106] != 2'd0 &&
 	  ram_cset_meta$DOA[107:106] != 2'd1 &&
 	  ram_cset_meta$DOA[107:106] != 2'd2)
 	$write("MODIFIED");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d582 &&
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d631 &&
 	  ram_cset_meta$DOA[107:106] == 2'd0)
 	$write("");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d582 &&
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d631 &&
 	  ram_cset_meta$DOA[107:106] != 2'd0)
 	$write(", ctag %0h (= pa %0h)",
 	       ram_cset_meta$DOA[105:54],
-	       pa__h18473);
+	       pa__h18911);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d582)
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d631)
 	$write("\n");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d582)
+	  NOT_IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_ETC___d631)
 	$finish(32'd1);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	  valid_info_num_valids__h18714 == 2'd0 &&
+	  valid_info_num_valids__h19152 == 2'd0 &&
 	  verbosity != 3'd0)
 	$display("    MISS (= INVALID already); ignoring; -> FSM_DOWNGRADE_C");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	  valid_info_num_valids__h18714 != 2'd0 &&
+	  valid_info_num_valids__h19152 != 2'd0 &&
 	  verbosity != 3'd0)
 	$write("    Update meta state to ");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	  valid_info_num_valids__h18714 != 2'd0 &&
+	  valid_info_num_valids__h19152 != 2'd0 &&
 	  verbosity != 3'd0 &&
 	  f_L2_to_L1_reqs$D_OUT[1:0] == 2'd0)
 	$write("INVALID");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	  valid_info_num_valids__h18714 != 2'd0 &&
+	  valid_info_num_valids__h19152 != 2'd0 &&
 	  verbosity != 3'd0 &&
 	  f_L2_to_L1_reqs$D_OUT[1:0] == 2'd1)
 	$write("SHARED");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	  valid_info_num_valids__h18714 != 2'd0 &&
+	  valid_info_num_valids__h19152 != 2'd0 &&
 	  verbosity != 3'd0 &&
 	  f_L2_to_L1_reqs$D_OUT[1:0] == 2'd2)
 	$write("EXCLUSIVE");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	  valid_info_num_valids__h18714 != 2'd0 &&
+	  valid_info_num_valids__h19152 != 2'd0 &&
 	  verbosity != 3'd0 &&
 	  f_L2_to_L1_reqs$D_OUT[1:0] != 2'd0 &&
 	  f_L2_to_L1_reqs$D_OUT[1:0] != 2'd1 &&
@@ -4922,74 +5058,74 @@ module mkCache(CLK,
 	$write("MODIFIED");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	  valid_info_num_valids__h18714 != 2'd0 &&
+	  valid_info_num_valids__h19152 != 2'd0 &&
 	  verbosity != 3'd0)
 	$write("\n");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	  valid_info_num_valids__h18714 != 2'd0 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d469 == 2'd3 &&
+	  valid_info_num_valids__h19152 != 2'd0 &&
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d518 == 2'd3 &&
 	  verbosity != 3'd0)
 	$display("    fa_cache_writeback_loop_prequel @ %0h (cset %0h, way %0h)",
-		 cline_pa__h32506,
+		 cline_pa__h32944,
 		 rg_cset_in_cache,
 		 ram_cset_meta$DOA[107:106] != 2'd0 &&
-		 ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_rg_ETC___d460);
+		 ram_cset_meta_a_read__8_BITS_105_TO_54_0_EQ_rg_ETC___d509);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	  valid_info_num_valids__h18714 != 2'd0 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d469 == 2'd3 &&
+	  valid_info_num_valids__h19152 != 2'd0 &&
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d518 == 2'd3 &&
 	  verbosity != 3'd0)
 	$display("    -> FSM_WRITEBACK_LOOP");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	  valid_info_num_valids__h18714 != 2'd0 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d469 != 2'd3 &&
+	  valid_info_num_valids__h19152 != 2'd0 &&
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d518 != 2'd3 &&
 	  verbosity != 3'd0)
 	$write("    Send ");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	  valid_info_num_valids__h18714 != 2'd0 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d469 != 2'd3 &&
+	  valid_info_num_valids__h19152 != 2'd0 &&
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d518 != 2'd3 &&
 	  verbosity != 3'd0)
 	$write("L1_to_L2_Rsp { ", "addr: ");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	  valid_info_num_valids__h18714 != 2'd0 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d469 != 2'd3 &&
+	  valid_info_num_valids__h19152 != 2'd0 &&
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d518 != 2'd3 &&
 	  verbosity != 3'd0)
 	$write("'h%h", rg_pa);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	  valid_info_num_valids__h18714 != 2'd0 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d469 != 2'd3 &&
+	  valid_info_num_valids__h19152 != 2'd0 &&
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d518 != 2'd3 &&
 	  verbosity != 3'd0)
 	$write(", ", "to_state: ");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	  valid_info_num_valids__h18714 != 2'd0 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d469 != 2'd3 &&
+	  valid_info_num_valids__h19152 != 2'd0 &&
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d518 != 2'd3 &&
 	  verbosity != 3'd0 &&
 	  f_L2_to_L1_reqs$D_OUT[1:0] == 2'd0)
 	$write("INVALID");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	  valid_info_num_valids__h18714 != 2'd0 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d469 != 2'd3 &&
+	  valid_info_num_valids__h19152 != 2'd0 &&
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d518 != 2'd3 &&
 	  verbosity != 3'd0 &&
 	  f_L2_to_L1_reqs$D_OUT[1:0] == 2'd1)
 	$write("SHARED");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	  valid_info_num_valids__h18714 != 2'd0 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d469 != 2'd3 &&
+	  valid_info_num_valids__h19152 != 2'd0 &&
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d518 != 2'd3 &&
 	  verbosity != 3'd0 &&
 	  f_L2_to_L1_reqs$D_OUT[1:0] == 2'd2)
 	$write("EXCLUSIVE");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	  valid_info_num_valids__h18714 != 2'd0 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d469 != 2'd3 &&
+	  valid_info_num_valids__h19152 != 2'd0 &&
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d518 != 2'd3 &&
 	  verbosity != 3'd0 &&
 	  f_L2_to_L1_reqs$D_OUT[1:0] != 2'd0 &&
 	  f_L2_to_L1_reqs$D_OUT[1:0] != 2'd1 &&
@@ -4997,41 +5133,41 @@ module mkCache(CLK,
 	$write("MODIFIED");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	  valid_info_num_valids__h18714 != 2'd0 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d469 != 2'd3 &&
+	  valid_info_num_valids__h19152 != 2'd0 &&
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d518 != 2'd3 &&
 	  verbosity != 3'd0)
 	$write(", ", "m_cline: ");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	  valid_info_num_valids__h18714 != 2'd0 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d469 != 2'd3 &&
+	  valid_info_num_valids__h19152 != 2'd0 &&
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d518 != 2'd3 &&
 	  verbosity != 3'd0)
 	$write("tagged Invalid ", "");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	  valid_info_num_valids__h18714 != 2'd0 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d469 != 2'd3 &&
+	  valid_info_num_valids__h19152 != 2'd0 &&
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d518 != 2'd3 &&
 	  verbosity != 3'd0)
 	$write(" }");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_B &&
-	  valid_info_num_valids__h18714 != 2'd0 &&
-	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d469 != 2'd3 &&
+	  valid_info_num_valids__h19152 != 2'd0 &&
+	  IF_NOT_ram_cset_meta_a_read__8_BITS_107_TO_106_ETC___d518 != 2'd3 &&
 	  verbosity != 3'd0)
 	$write(" -> FSM_DOWNGRADE_C", "\n");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_C && verbosity != 3'd0)
 	begin
-	  v__h33137 = $stime;
+	  v__h33575 = $stime;
 	  #0;
 	end
-    v__h33131 = v__h33137 / 32'd10;
+    v__h33569 = v__h33575 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_C && verbosity != 3'd0)
-	$display("%0d: %m.rl_downgrade_req_from_L2_C", v__h33131);
+	$display("%0d: %m.rl_downgrade_req_from_L2_C", v__h33569);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_C && verbosity != 3'd0)
-	$display("    writeback done; restore and reprobe RAMs");
+	$display("    writeback done; restore (pop) and reprobe RAMs");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_downgrade_req_from_L2_C && verbosity != 3'd0)
 	$write("    rg_fsm_state      <= ");
@@ -5109,13 +5245,13 @@ module mkCache(CLK,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_initialize && rg_cset_in_cache == 6'd63)
 	begin
-	  v__h34418 = $stime;
+	  v__h34854 = $stime;
 	  #0;
 	end
-    v__h34412 = v__h34418 / 32'd10;
+    v__h34848 = v__h34854 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_initialize && rg_cset_in_cache == 6'd63)
-	$display("%0d: INFO: %m.rl_initialize", v__h34412);
+	$display("%0d: INFO: %m.rl_initialize", v__h34848);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_initialize && rg_cset_in_cache == 6'd63)
 	$display("    Size %0d KB, Associativity %0d, CLine size %0d bytes (= %0d XLEN words)",
@@ -5127,15 +5263,15 @@ module mkCache(CLK,
       if (WILL_FIRE_RL_rl_initialize && rg_cset_in_cache == 6'd63 &&
 	  verbosity != 3'd0)
 	begin
-	  v__h34518 = $stime;
+	  v__h34954 = $stime;
 	  #0;
 	end
-    v__h34512 = v__h34518 / 32'd10;
+    v__h34948 = v__h34954 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_initialize && rg_cset_in_cache == 6'd63 &&
 	  verbosity != 3'd0)
 	$display("    All clines (%0d sets %0d ways) initialized to INVALID",
-		 v__h34512,
+		 v__h34948,
 		 $signed(32'd64),
 		 $signed(32'd2));
   end

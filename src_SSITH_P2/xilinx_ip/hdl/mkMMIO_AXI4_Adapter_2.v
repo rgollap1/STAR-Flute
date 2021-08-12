@@ -12,6 +12,9 @@
 // RDY_v_mmio_server_1_request_put  O     1 reg
 // v_mmio_server_1_response_get   O    65 reg
 // RDY_v_mmio_server_1_response_get  O     1 reg
+// RDY_v_mmio_server_2_request_put  O     1 reg
+// v_mmio_server_2_response_get   O    65 reg
+// RDY_v_mmio_server_2_response_get  O     1 reg
 // mem_master_awvalid             O     1 reg
 // mem_master_awid                O    16 reg
 // mem_master_awaddr              O    64 reg
@@ -45,6 +48,7 @@
 // RST_N                          I     1 reset
 // v_mmio_server_0_request_put    I   131 reg
 // v_mmio_server_1_request_put    I   131 reg
+// v_mmio_server_2_request_put    I   131 reg
 // mem_master_awready             I     1
 // mem_master_wready              I     1
 // mem_master_bvalid              I     1
@@ -58,8 +62,10 @@
 // mem_master_rlast               I     1 reg
 // EN_v_mmio_server_0_request_put  I     1
 // EN_v_mmio_server_1_request_put  I     1
+// EN_v_mmio_server_2_request_put  I     1
 // EN_v_mmio_server_0_response_get  I     1
 // EN_v_mmio_server_1_response_get  I     1
+// EN_v_mmio_server_2_response_get  I     1
 //
 // No combinational paths from inputs to outputs
 //
@@ -96,6 +102,14 @@ module mkMMIO_AXI4_Adapter_2(CLK,
 			     EN_v_mmio_server_1_response_get,
 			     v_mmio_server_1_response_get,
 			     RDY_v_mmio_server_1_response_get,
+
+			     v_mmio_server_2_request_put,
+			     EN_v_mmio_server_2_request_put,
+			     RDY_v_mmio_server_2_request_put,
+
+			     EN_v_mmio_server_2_response_get,
+			     v_mmio_server_2_response_get,
+			     RDY_v_mmio_server_2_response_get,
 
 			     mem_master_awvalid,
 
@@ -193,6 +207,16 @@ module mkMMIO_AXI4_Adapter_2(CLK,
   input  EN_v_mmio_server_1_response_get;
   output [64 : 0] v_mmio_server_1_response_get;
   output RDY_v_mmio_server_1_response_get;
+
+  // action method v_mmio_server_2_request_put
+  input  [130 : 0] v_mmio_server_2_request_put;
+  input  EN_v_mmio_server_2_request_put;
+  output RDY_v_mmio_server_2_request_put;
+
+  // actionvalue method v_mmio_server_2_response_get
+  input  EN_v_mmio_server_2_response_get;
+  output [64 : 0] v_mmio_server_2_response_get;
+  output RDY_v_mmio_server_2_response_get;
 
   // value method mem_master_m_awvalid
   output mem_master_awvalid;
@@ -309,7 +333,9 @@ module mkMMIO_AXI4_Adapter_2(CLK,
   output mv_write_error;
 
   // signals for module outputs
-  wire [64 : 0] v_mmio_server_0_response_get, v_mmio_server_1_response_get;
+  wire [64 : 0] v_mmio_server_0_response_get,
+		v_mmio_server_1_response_get,
+		v_mmio_server_2_response_get;
   wire [63 : 0] mem_master_araddr, mem_master_awaddr, mem_master_wdata;
   wire [15 : 0] mem_master_arid, mem_master_awid;
   wire [7 : 0] mem_master_arlen, mem_master_awlen, mem_master_wstrb;
@@ -328,6 +354,8 @@ module mkMMIO_AXI4_Adapter_2(CLK,
        RDY_v_mmio_server_0_response_get,
        RDY_v_mmio_server_1_request_put,
        RDY_v_mmio_server_1_response_get,
+       RDY_v_mmio_server_2_request_put,
+       RDY_v_mmio_server_2_response_get,
        mem_master_arlock,
        mem_master_arvalid,
        mem_master_awlock,
@@ -364,8 +392,9 @@ module mkMMIO_AXI4_Adapter_2(CLK,
   wire ifc_rg_wr_beat$EN;
 
   // register ifc_rg_wr_client_id
-  reg ifc_rg_wr_client_id;
-  wire ifc_rg_wr_client_id$D_IN, ifc_rg_wr_client_id$EN;
+  reg [1 : 0] ifc_rg_wr_client_id;
+  reg [1 : 0] ifc_rg_wr_client_id$D_IN;
+  wire ifc_rg_wr_client_id$EN;
 
   // register ifc_rg_wr_data_buf
   reg [63 : 0] ifc_rg_wr_data_buf;
@@ -387,7 +416,8 @@ module mkMMIO_AXI4_Adapter_2(CLK,
   wire ifc_rg_wr_strb_buf$EN;
 
   // ports of submodule ifc_f_rd_rsp_control
-  wire [14 : 0] ifc_f_rd_rsp_control$D_IN, ifc_f_rd_rsp_control$D_OUT;
+  reg [76 : 0] ifc_f_rd_rsp_control$D_IN;
+  wire [76 : 0] ifc_f_rd_rsp_control$D_OUT;
   wire ifc_f_rd_rsp_control$CLR,
        ifc_f_rd_rsp_control$DEQ,
        ifc_f_rd_rsp_control$EMPTY_N,
@@ -395,8 +425,8 @@ module mkMMIO_AXI4_Adapter_2(CLK,
        ifc_f_rd_rsp_control$FULL_N;
 
   // ports of submodule ifc_master_xactor_f_rd_addr
-  wire [108 : 0] ifc_master_xactor_f_rd_addr$D_IN,
-		 ifc_master_xactor_f_rd_addr$D_OUT;
+  reg [108 : 0] ifc_master_xactor_f_rd_addr$D_IN;
+  wire [108 : 0] ifc_master_xactor_f_rd_addr$D_OUT;
   wire ifc_master_xactor_f_rd_addr$CLR,
        ifc_master_xactor_f_rd_addr$DEQ,
        ifc_master_xactor_f_rd_addr$EMPTY_N,
@@ -413,8 +443,8 @@ module mkMMIO_AXI4_Adapter_2(CLK,
        ifc_master_xactor_f_rd_data$FULL_N;
 
   // ports of submodule ifc_master_xactor_f_wr_addr
-  wire [108 : 0] ifc_master_xactor_f_wr_addr$D_IN,
-		 ifc_master_xactor_f_wr_addr$D_OUT;
+  reg [108 : 0] ifc_master_xactor_f_wr_addr$D_IN;
+  wire [108 : 0] ifc_master_xactor_f_wr_addr$D_OUT;
   wire ifc_master_xactor_f_wr_addr$CLR,
        ifc_master_xactor_f_wr_addr$DEQ,
        ifc_master_xactor_f_wr_addr$EMPTY_N,
@@ -455,6 +485,14 @@ module mkMMIO_AXI4_Adapter_2(CLK,
        ifc_v_f_reqs_1$ENQ,
        ifc_v_f_reqs_1$FULL_N;
 
+  // ports of submodule ifc_v_f_reqs_2
+  wire [130 : 0] ifc_v_f_reqs_2$D_IN, ifc_v_f_reqs_2$D_OUT;
+  wire ifc_v_f_reqs_2$CLR,
+       ifc_v_f_reqs_2$DEQ,
+       ifc_v_f_reqs_2$EMPTY_N,
+       ifc_v_f_reqs_2$ENQ,
+       ifc_v_f_reqs_2$FULL_N;
+
   // ports of submodule ifc_v_f_rsps_0
   wire [64 : 0] ifc_v_f_rsps_0$D_IN, ifc_v_f_rsps_0$D_OUT;
   wire ifc_v_f_rsps_0$CLR,
@@ -471,13 +509,23 @@ module mkMMIO_AXI4_Adapter_2(CLK,
        ifc_v_f_rsps_1$ENQ,
        ifc_v_f_rsps_1$FULL_N;
 
+  // ports of submodule ifc_v_f_rsps_2
+  wire [64 : 0] ifc_v_f_rsps_2$D_IN, ifc_v_f_rsps_2$D_OUT;
+  wire ifc_v_f_rsps_2$CLR,
+       ifc_v_f_rsps_2$DEQ,
+       ifc_v_f_rsps_2$EMPTY_N,
+       ifc_v_f_rsps_2$ENQ,
+       ifc_v_f_rsps_2$FULL_N;
+
   // rule scheduling signals
   wire CAN_FIRE_RL_ifc_rl_rd_data,
        CAN_FIRE_RL_ifc_rl_rd_req,
        CAN_FIRE_RL_ifc_rl_rd_req_1,
+       CAN_FIRE_RL_ifc_rl_rd_req_2,
        CAN_FIRE_RL_ifc_rl_wr_data,
        CAN_FIRE_RL_ifc_rl_wr_req,
        CAN_FIRE_RL_ifc_rl_wr_req_1,
+       CAN_FIRE_RL_ifc_rl_wr_req_2,
        CAN_FIRE_RL_ifc_rl_wr_rsp,
        CAN_FIRE_mem_master_m_arready,
        CAN_FIRE_mem_master_m_awready,
@@ -488,12 +536,16 @@ module mkMMIO_AXI4_Adapter_2(CLK,
        CAN_FIRE_v_mmio_server_0_response_get,
        CAN_FIRE_v_mmio_server_1_request_put,
        CAN_FIRE_v_mmio_server_1_response_get,
+       CAN_FIRE_v_mmio_server_2_request_put,
+       CAN_FIRE_v_mmio_server_2_response_get,
        WILL_FIRE_RL_ifc_rl_rd_data,
        WILL_FIRE_RL_ifc_rl_rd_req,
        WILL_FIRE_RL_ifc_rl_rd_req_1,
+       WILL_FIRE_RL_ifc_rl_rd_req_2,
        WILL_FIRE_RL_ifc_rl_wr_data,
        WILL_FIRE_RL_ifc_rl_wr_req,
        WILL_FIRE_RL_ifc_rl_wr_req_1,
+       WILL_FIRE_RL_ifc_rl_wr_req_2,
        WILL_FIRE_RL_ifc_rl_wr_rsp,
        WILL_FIRE_mem_master_m_arready,
        WILL_FIRE_mem_master_m_awready,
@@ -503,73 +555,86 @@ module mkMMIO_AXI4_Adapter_2(CLK,
        WILL_FIRE_v_mmio_server_0_request_put,
        WILL_FIRE_v_mmio_server_0_response_get,
        WILL_FIRE_v_mmio_server_1_request_put,
-       WILL_FIRE_v_mmio_server_1_response_get;
+       WILL_FIRE_v_mmio_server_1_response_get,
+       WILL_FIRE_v_mmio_server_2_request_put,
+       WILL_FIRE_v_mmio_server_2_response_get;
 
   // inputs to muxes for submodule ports
   wire [108 : 0] MUX_ifc_master_xactor_f_rd_addr$enq_1__VAL_1,
-		 MUX_ifc_master_xactor_f_rd_addr$enq_1__VAL_2;
+		 MUX_ifc_master_xactor_f_rd_addr$enq_1__VAL_2,
+		 MUX_ifc_master_xactor_f_rd_addr$enq_1__VAL_3;
+  wire [76 : 0] MUX_ifc_f_rd_rsp_control$enq_1__VAL_1,
+		MUX_ifc_f_rd_rsp_control$enq_1__VAL_2,
+		MUX_ifc_f_rd_rsp_control$enq_1__VAL_3;
   wire [63 : 0] MUX_ifc_rg_wr_data_buf$write_1__VAL_1,
-		MUX_ifc_rg_wr_data_buf$write_1__VAL_2;
-  wire [14 : 0] MUX_ifc_f_rd_rsp_control$enq_1__VAL_1,
-		MUX_ifc_f_rd_rsp_control$enq_1__VAL_2;
+		MUX_ifc_rg_wr_data_buf$write_1__VAL_2,
+		MUX_ifc_rg_wr_data_buf$write_1__VAL_3;
   wire [7 : 0] MUX_ifc_rg_rd_beat$write_1__VAL_1,
 	       MUX_ifc_rg_wr_beat$write_1__VAL_1,
 	       MUX_ifc_rg_wr_strb_buf$write_1__VAL_1,
-	       MUX_ifc_rg_wr_strb_buf$write_1__VAL_2;
+	       MUX_ifc_rg_wr_strb_buf$write_1__VAL_2,
+	       MUX_ifc_rg_wr_strb_buf$write_1__VAL_3;
   wire [3 : 0] MUX_ifc_rg_rd_rsps_pending$write_1__VAL_1,
 	       MUX_ifc_rg_rd_rsps_pending$write_1__VAL_2,
 	       MUX_ifc_rg_wr_rsps_pending$write_1__VAL_1,
 	       MUX_ifc_rg_wr_rsps_pending$write_1__VAL_2;
-  wire MUX_ifc_rg_rd_beat$write_1__SEL_2,
-       MUX_ifc_rg_rd_rsps_pending$write_1__SEL_1,
+  wire MUX_ifc_rg_rd_rsps_pending$write_1__SEL_1,
        MUX_ifc_rg_wr_beat$write_1__SEL_2,
        MUX_ifc_rg_wr_rsps_pending$write_1__SEL_1;
 
   // declarations used by system tasks
   // synopsys translate_off
-  reg [31 : 0] v__h1556;
-  reg [31 : 0] v__h2004;
-  reg [31 : 0] v__h3783;
-  reg [31 : 0] v__h4311;
-  reg [31 : 0] v__h2465;
-  reg [31 : 0] v__h3074;
-  reg [31 : 0] v__h4642;
-  reg [31 : 0] v__h4847;
-  reg [31 : 0] v__h4942;
-  reg [31 : 0] v__h4993;
-  reg [31 : 0] v__h1550;
-  reg [31 : 0] v__h1998;
-  reg [31 : 0] v__h2459;
-  reg [31 : 0] v__h3068;
-  reg [31 : 0] v__h3777;
-  reg [31 : 0] v__h4305;
-  reg [31 : 0] v__h4636;
-  reg [31 : 0] v__h4841;
-  reg [31 : 0] v__h4936;
-  reg [31 : 0] v__h4987;
+  reg [31 : 0] v__h1797;
+  reg [31 : 0] v__h2225;
+  reg [31 : 0] v__h2592;
+  reg [31 : 0] v__h4593;
+  reg [31 : 0] v__h5121;
+  reg [31 : 0] v__h5649;
+  reg [31 : 0] v__h3025;
+  reg [31 : 0] v__h3222;
+  reg [31 : 0] v__h3884;
+  reg [31 : 0] v__h5993;
+  reg [31 : 0] v__h6198;
+  reg [31 : 0] v__h6315;
+  reg [31 : 0] v__h6357;
+  reg [31 : 0] v__h1791;
+  reg [31 : 0] v__h2219;
+  reg [31 : 0] v__h2586;
+  reg [31 : 0] v__h3019;
+  reg [31 : 0] v__h3216;
+  reg [31 : 0] v__h3878;
+  reg [31 : 0] v__h4587;
+  reg [31 : 0] v__h5115;
+  reg [31 : 0] v__h5643;
+  reg [31 : 0] v__h5987;
+  reg [31 : 0] v__h6192;
+  reg [31 : 0] v__h6309;
+  reg [31 : 0] v__h6351;
   // synopsys translate_on
 
   // remaining internal signals
-  reg [63 : 0] v__h2409;
-  reg [7 : 0] strb__h3334, strb__h3887;
-  reg CASE_ifc_f_rd_rsp_controlD_OUT_BIT_14_0_ifc_v_ETC__q1,
+  reg [63 : 0] v__h3166;
+  reg [7 : 0] strb__h4144, strb__h4697, strb__h5225;
+  reg CASE_ifc_f_rd_rsp_controlD_OUT_BITS_76_TO_75__ETC__q1,
       CASE_ifc_rg_wr_client_id_0_ifc_v_f_reqs_0EMPT_ETC__q2;
-  wire [63 : 0] v__h2649,
-		v__h2664,
-		v__h2747,
-		word64___1__h2434,
-		y_avValue_fst__h3407,
-		y_avValue_fst__h3960;
-  wire [7 : 0] x__h2999,
-	       y_avValue_snd_snd_snd__h3559,
-	       y_avValue_snd_snd_snd__h4110;
-  wire [5 : 0] v__h2754, x__h3494, x__h4045;
-  wire [2 : 0] x__h1718, x__h2140;
-  wire ifc_master_xactor_f_rd_data_i_notEmpty__2_AND__ETC___d83,
-       ifc_master_xactor_f_wr_data_i_notFull__66_AND__ETC___d172,
-       ifc_rg_rd_beat_3_EQ_ifc_f_rd_rsp_control_first_ETC___d76,
-       ifc_rg_wr_beat_24_EQ_ifc_rg_awlen_25___d167,
-       ifc_rg_wr_beat_24_ULE_ifc_rg_awlen_25___d126;
+  wire [63 : 0] v__h3402,
+		v__h3417,
+		v__h3498,
+		word64___1__h3191,
+		y_avValue_fst__h4217,
+		y_avValue_fst__h4770,
+		y_avValue_fst__h5298;
+  wire [7 : 0] x__h3809,
+	       y_avValue_snd_snd_snd__h4369,
+	       y_avValue_snd_snd_snd__h4920,
+	       y_avValue_snd_snd_snd__h5448;
+  wire [5 : 0] v__h3505, x__h4304, x__h4855, x__h5383;
+  wire [2 : 0] x__h1959, x__h2361, x__h2728;
+  wire NOT_ifc_rg_rd_beat_00_EQ_ifc_f_rd_rsp_control__ETC___d110,
+       NOT_ifc_rg_wr_beat_63_EQ_ifc_rg_awlen_64_27_28_ETC___d231,
+       ifc_rg_rd_beat_00_EQ_ifc_f_rd_rsp_control_firs_ETC___d103,
+       ifc_rg_wr_beat_63_EQ_ifc_rg_awlen_64___d227,
+       ifc_rg_wr_beat_63_ULE_ifc_rg_awlen_64___d165;
 
   // action method v_mmio_server_0_request_put
   assign RDY_v_mmio_server_0_request_put = ifc_v_f_reqs_0$FULL_N ;
@@ -596,6 +661,19 @@ module mkMMIO_AXI4_Adapter_2(CLK,
   assign CAN_FIRE_v_mmio_server_1_response_get = ifc_v_f_rsps_1$EMPTY_N ;
   assign WILL_FIRE_v_mmio_server_1_response_get =
 	     EN_v_mmio_server_1_response_get ;
+
+  // action method v_mmio_server_2_request_put
+  assign RDY_v_mmio_server_2_request_put = ifc_v_f_reqs_2$FULL_N ;
+  assign CAN_FIRE_v_mmio_server_2_request_put = ifc_v_f_reqs_2$FULL_N ;
+  assign WILL_FIRE_v_mmio_server_2_request_put =
+	     EN_v_mmio_server_2_request_put ;
+
+  // actionvalue method v_mmio_server_2_response_get
+  assign v_mmio_server_2_response_get = ifc_v_f_rsps_2$D_OUT ;
+  assign RDY_v_mmio_server_2_response_get = ifc_v_f_rsps_2$EMPTY_N ;
+  assign CAN_FIRE_v_mmio_server_2_response_get = ifc_v_f_rsps_2$EMPTY_N ;
+  assign WILL_FIRE_v_mmio_server_2_response_get =
+	     EN_v_mmio_server_2_response_get ;
 
   // value method mem_master_m_awvalid
   assign mem_master_awvalid = ifc_master_xactor_f_wr_addr$EMPTY_N ;
@@ -705,7 +783,7 @@ module mkMMIO_AXI4_Adapter_2(CLK,
   assign mv_write_error = ifc_rg_wr_error ;
 
   // submodule ifc_f_rd_rsp_control
-  FIFO2 #(.width(32'd15), .guarded(32'd1)) ifc_f_rd_rsp_control(.RST(RST_N),
+  FIFO2 #(.width(32'd77), .guarded(32'd1)) ifc_f_rd_rsp_control(.RST(RST_N),
 								.CLK(CLK),
 								.D_IN(ifc_f_rd_rsp_control$D_IN),
 								.ENQ(ifc_f_rd_rsp_control$ENQ),
@@ -797,6 +875,17 @@ module mkMMIO_AXI4_Adapter_2(CLK,
 							   .FULL_N(ifc_v_f_reqs_1$FULL_N),
 							   .EMPTY_N(ifc_v_f_reqs_1$EMPTY_N));
 
+  // submodule ifc_v_f_reqs_2
+  FIFO2 #(.width(32'd131), .guarded(32'd1)) ifc_v_f_reqs_2(.RST(RST_N),
+							   .CLK(CLK),
+							   .D_IN(ifc_v_f_reqs_2$D_IN),
+							   .ENQ(ifc_v_f_reqs_2$ENQ),
+							   .DEQ(ifc_v_f_reqs_2$DEQ),
+							   .CLR(ifc_v_f_reqs_2$CLR),
+							   .D_OUT(ifc_v_f_reqs_2$D_OUT),
+							   .FULL_N(ifc_v_f_reqs_2$FULL_N),
+							   .EMPTY_N(ifc_v_f_reqs_2$EMPTY_N));
+
   // submodule ifc_v_f_rsps_0
   FIFO2 #(.width(32'd65), .guarded(32'd1)) ifc_v_f_rsps_0(.RST(RST_N),
 							  .CLK(CLK),
@@ -819,6 +908,17 @@ module mkMMIO_AXI4_Adapter_2(CLK,
 							  .FULL_N(ifc_v_f_rsps_1$FULL_N),
 							  .EMPTY_N(ifc_v_f_rsps_1$EMPTY_N));
 
+  // submodule ifc_v_f_rsps_2
+  FIFO2 #(.width(32'd65), .guarded(32'd1)) ifc_v_f_rsps_2(.RST(RST_N),
+							  .CLK(CLK),
+							  .D_IN(ifc_v_f_rsps_2$D_IN),
+							  .ENQ(ifc_v_f_rsps_2$ENQ),
+							  .DEQ(ifc_v_f_rsps_2$DEQ),
+							  .CLR(ifc_v_f_rsps_2$CLR),
+							  .D_OUT(ifc_v_f_rsps_2$D_OUT),
+							  .FULL_N(ifc_v_f_rsps_2$FULL_N),
+							  .EMPTY_N(ifc_v_f_rsps_2$EMPTY_N));
+
   // rule RL_ifc_rl_rd_req
   assign CAN_FIRE_RL_ifc_rl_rd_req =
 	     ifc_v_f_reqs_0$EMPTY_N && ifc_master_xactor_f_rd_addr$FULL_N &&
@@ -839,81 +939,120 @@ module mkMMIO_AXI4_Adapter_2(CLK,
   assign WILL_FIRE_RL_ifc_rl_rd_req_1 =
 	     CAN_FIRE_RL_ifc_rl_rd_req_1 && !WILL_FIRE_RL_ifc_rl_rd_req ;
 
+  // rule RL_ifc_rl_rd_req_2
+  assign CAN_FIRE_RL_ifc_rl_rd_req_2 =
+	     ifc_master_xactor_f_rd_addr$FULL_N &&
+	     ifc_f_rd_rsp_control$FULL_N &&
+	     ifc_v_f_reqs_2$EMPTY_N &&
+	     ifc_v_f_reqs_2$D_OUT[130] &&
+	     ifc_rg_rd_rsps_pending != 4'd15 &&
+	     ifc_rg_wr_rsps_pending == 4'd0 ;
+  assign WILL_FIRE_RL_ifc_rl_rd_req_2 =
+	     CAN_FIRE_RL_ifc_rl_rd_req_2 && !WILL_FIRE_RL_ifc_rl_rd_req_1 &&
+	     !WILL_FIRE_RL_ifc_rl_rd_req ;
+
   // rule RL_ifc_rl_wr_req
   assign CAN_FIRE_RL_ifc_rl_wr_req =
 	     ifc_v_f_reqs_0$EMPTY_N && ifc_master_xactor_f_wr_addr$FULL_N &&
 	     !ifc_v_f_reqs_0$D_OUT[130] &&
-	     !ifc_rg_wr_beat_24_ULE_ifc_rg_awlen_25___d126 &&
+	     !ifc_rg_wr_beat_63_ULE_ifc_rg_awlen_64___d165 &&
 	     ifc_rg_rd_rsps_pending == 4'd0 &&
 	     ifc_rg_wr_rsps_pending != 4'd15 ;
   assign WILL_FIRE_RL_ifc_rl_wr_req =
-	     CAN_FIRE_RL_ifc_rl_wr_req && !WILL_FIRE_RL_ifc_rl_rd_req_1 ;
+	     CAN_FIRE_RL_ifc_rl_wr_req && !WILL_FIRE_RL_ifc_rl_rd_req_2 &&
+	     !WILL_FIRE_RL_ifc_rl_rd_req_1 ;
 
   // rule RL_ifc_rl_wr_req_1
   assign CAN_FIRE_RL_ifc_rl_wr_req_1 =
 	     ifc_v_f_reqs_1$EMPTY_N && ifc_master_xactor_f_wr_addr$FULL_N &&
 	     !ifc_v_f_reqs_1$D_OUT[130] &&
-	     !ifc_rg_wr_beat_24_ULE_ifc_rg_awlen_25___d126 &&
+	     !ifc_rg_wr_beat_63_ULE_ifc_rg_awlen_64___d165 &&
 	     ifc_rg_rd_rsps_pending == 4'd0 &&
 	     ifc_rg_wr_rsps_pending != 4'd15 ;
   assign WILL_FIRE_RL_ifc_rl_wr_req_1 =
 	     CAN_FIRE_RL_ifc_rl_wr_req_1 && !WILL_FIRE_RL_ifc_rl_wr_req &&
+	     !WILL_FIRE_RL_ifc_rl_rd_req_2 &&
+	     !WILL_FIRE_RL_ifc_rl_rd_req ;
+
+  // rule RL_ifc_rl_wr_req_2
+  assign CAN_FIRE_RL_ifc_rl_wr_req_2 =
+	     ifc_v_f_reqs_2$EMPTY_N && ifc_master_xactor_f_wr_addr$FULL_N &&
+	     !ifc_v_f_reqs_2$D_OUT[130] &&
+	     !ifc_rg_wr_beat_63_ULE_ifc_rg_awlen_64___d165 &&
+	     ifc_rg_rd_rsps_pending == 4'd0 &&
+	     ifc_rg_wr_rsps_pending != 4'd15 ;
+  assign WILL_FIRE_RL_ifc_rl_wr_req_2 =
+	     CAN_FIRE_RL_ifc_rl_wr_req_2 && !WILL_FIRE_RL_ifc_rl_wr_req_1 &&
+	     !WILL_FIRE_RL_ifc_rl_wr_req &&
+	     !WILL_FIRE_RL_ifc_rl_rd_req_1 &&
 	     !WILL_FIRE_RL_ifc_rl_rd_req ;
 
   // rule RL_ifc_rl_rd_data
   assign CAN_FIRE_RL_ifc_rl_rd_data =
 	     ifc_f_rd_rsp_control$EMPTY_N &&
-	     ifc_master_xactor_f_rd_data_i_notEmpty__2_AND__ETC___d83 &&
+	     ifc_master_xactor_f_rd_data$EMPTY_N &&
+	     NOT_ifc_rg_rd_beat_00_EQ_ifc_f_rd_rsp_control__ETC___d110 &&
 	     ifc_rg_rd_beat <= ifc_f_rd_rsp_control$D_OUT[7:0] ;
   assign WILL_FIRE_RL_ifc_rl_rd_data =
-	     CAN_FIRE_RL_ifc_rl_rd_data && !WILL_FIRE_RL_ifc_rl_rd_req_1 &&
+	     CAN_FIRE_RL_ifc_rl_rd_data && !WILL_FIRE_RL_ifc_rl_rd_req_2 &&
+	     !WILL_FIRE_RL_ifc_rl_rd_req_1 &&
 	     !WILL_FIRE_RL_ifc_rl_rd_req ;
 
   // rule RL_ifc_rl_wr_data
   assign CAN_FIRE_RL_ifc_rl_wr_data =
-	     ifc_master_xactor_f_wr_data_i_notFull__66_AND__ETC___d172 &&
-	     ifc_rg_wr_beat_24_ULE_ifc_rg_awlen_25___d126 ;
+	     ifc_master_xactor_f_wr_data$FULL_N &&
+	     NOT_ifc_rg_wr_beat_63_EQ_ifc_rg_awlen_64_27_28_ETC___d231 &&
+	     ifc_rg_wr_beat_63_ULE_ifc_rg_awlen_64___d165 ;
   assign WILL_FIRE_RL_ifc_rl_wr_data =
-	     CAN_FIRE_RL_ifc_rl_wr_data && !WILL_FIRE_RL_ifc_rl_rd_req_1 &&
+	     CAN_FIRE_RL_ifc_rl_wr_data && !WILL_FIRE_RL_ifc_rl_rd_req_2 &&
+	     !WILL_FIRE_RL_ifc_rl_rd_req_1 &&
 	     !WILL_FIRE_RL_ifc_rl_rd_req ;
 
   // rule RL_ifc_rl_wr_rsp
   assign CAN_FIRE_RL_ifc_rl_wr_rsp = ifc_master_xactor_f_wr_resp$EMPTY_N ;
   assign WILL_FIRE_RL_ifc_rl_wr_rsp =
 	     ifc_master_xactor_f_wr_resp$EMPTY_N &&
+	     !WILL_FIRE_RL_ifc_rl_wr_req_2 &&
 	     !WILL_FIRE_RL_ifc_rl_wr_req_1 &&
 	     !WILL_FIRE_RL_ifc_rl_wr_req ;
 
   // inputs to muxes for submodule ports
-  assign MUX_ifc_rg_rd_beat$write_1__SEL_2 =
-	     WILL_FIRE_RL_ifc_rl_rd_req_1 || WILL_FIRE_RL_ifc_rl_rd_req ;
   assign MUX_ifc_rg_rd_rsps_pending$write_1__SEL_1 =
 	     WILL_FIRE_RL_ifc_rl_rd_data &&
-	     ifc_rg_rd_beat_3_EQ_ifc_f_rd_rsp_control_first_ETC___d76 ;
+	     ifc_rg_rd_beat_00_EQ_ifc_f_rd_rsp_control_firs_ETC___d103 ;
   assign MUX_ifc_rg_wr_beat$write_1__SEL_2 =
-	     WILL_FIRE_RL_ifc_rl_wr_req_1 || WILL_FIRE_RL_ifc_rl_wr_req ;
+	     WILL_FIRE_RL_ifc_rl_wr_req_2 || WILL_FIRE_RL_ifc_rl_wr_req_1 ||
+	     WILL_FIRE_RL_ifc_rl_wr_req ;
   assign MUX_ifc_rg_wr_rsps_pending$write_1__SEL_1 =
 	     WILL_FIRE_RL_ifc_rl_wr_rsp && ifc_rg_wr_rsps_pending != 4'd0 ;
   assign MUX_ifc_f_rd_rsp_control$enq_1__VAL_1 =
-	     { 1'd0, x__h1718, ifc_v_f_reqs_0$D_OUT[68:66], 8'd0 } ;
+	     { 2'd0, ifc_v_f_reqs_0$D_OUT[129:66], x__h1959, 8'd0 } ;
   assign MUX_ifc_f_rd_rsp_control$enq_1__VAL_2 =
-	     { 1'd1, x__h2140, ifc_v_f_reqs_1$D_OUT[68:66], 8'd0 } ;
+	     { 2'd1, ifc_v_f_reqs_1$D_OUT[129:66], x__h2361, 8'd0 } ;
+  assign MUX_ifc_f_rd_rsp_control$enq_1__VAL_3 =
+	     { 2'd2, ifc_v_f_reqs_2$D_OUT[129:66], x__h2728, 8'd0 } ;
   assign MUX_ifc_master_xactor_f_rd_addr$enq_1__VAL_1 =
-	     { 16'd0,
-	       ifc_v_f_reqs_1$D_OUT[129:66],
-	       8'd0,
-	       x__h2140,
-	       18'd65536 } ;
-  assign MUX_ifc_master_xactor_f_rd_addr$enq_1__VAL_2 =
 	     { 16'd0,
 	       ifc_v_f_reqs_0$D_OUT[129:66],
 	       8'd0,
-	       x__h1718,
+	       x__h1959,
+	       18'd65536 } ;
+  assign MUX_ifc_master_xactor_f_rd_addr$enq_1__VAL_2 =
+	     { 16'd0,
+	       ifc_v_f_reqs_1$D_OUT[129:66],
+	       8'd0,
+	       x__h2361,
+	       18'd65536 } ;
+  assign MUX_ifc_master_xactor_f_rd_addr$enq_1__VAL_3 =
+	     { 16'd0,
+	       ifc_v_f_reqs_2$D_OUT[129:66],
+	       8'd0,
+	       x__h2728,
 	       18'd65536 } ;
   assign MUX_ifc_rg_rd_beat$write_1__VAL_1 =
-	     ifc_rg_rd_beat_3_EQ_ifc_f_rd_rsp_control_first_ETC___d76 ?
+	     ifc_rg_rd_beat_00_EQ_ifc_f_rd_rsp_control_firs_ETC___d103 ?
 	       8'd0 :
-	       x__h2999 ;
+	       x__h3809 ;
   assign MUX_ifc_rg_rd_rsps_pending$write_1__VAL_1 =
 	     ifc_rg_rd_rsps_pending - 4'd1 ;
   assign MUX_ifc_rg_rd_rsps_pending$write_1__VAL_2 =
@@ -922,23 +1061,31 @@ module mkMMIO_AXI4_Adapter_2(CLK,
   assign MUX_ifc_rg_wr_data_buf$write_1__VAL_1 =
 	     (ifc_v_f_reqs_0$D_OUT[65:64] == 2'd3) ?
 	       ifc_v_f_reqs_0$D_OUT[63:0] :
-	       y_avValue_fst__h3407 ;
+	       y_avValue_fst__h4217 ;
   assign MUX_ifc_rg_wr_data_buf$write_1__VAL_2 =
 	     (ifc_v_f_reqs_1$D_OUT[65:64] == 2'd3) ?
 	       ifc_v_f_reqs_1$D_OUT[63:0] :
-	       y_avValue_fst__h3960 ;
+	       y_avValue_fst__h4770 ;
+  assign MUX_ifc_rg_wr_data_buf$write_1__VAL_3 =
+	     (ifc_v_f_reqs_2$D_OUT[65:64] == 2'd3) ?
+	       ifc_v_f_reqs_2$D_OUT[63:0] :
+	       y_avValue_fst__h5298 ;
   assign MUX_ifc_rg_wr_rsps_pending$write_1__VAL_1 =
 	     ifc_rg_wr_rsps_pending - 4'd1 ;
   assign MUX_ifc_rg_wr_rsps_pending$write_1__VAL_2 =
 	     ifc_rg_wr_rsps_pending + 4'd1 ;
   assign MUX_ifc_rg_wr_strb_buf$write_1__VAL_1 =
 	     (ifc_v_f_reqs_0$D_OUT[65:64] == 2'd3) ?
-	       strb__h3334 :
-	       y_avValue_snd_snd_snd__h3559 ;
+	       strb__h4144 :
+	       y_avValue_snd_snd_snd__h4369 ;
   assign MUX_ifc_rg_wr_strb_buf$write_1__VAL_2 =
 	     (ifc_v_f_reqs_1$D_OUT[65:64] == 2'd3) ?
-	       strb__h3887 :
-	       y_avValue_snd_snd_snd__h4110 ;
+	       strb__h4697 :
+	       y_avValue_snd_snd_snd__h4920 ;
+  assign MUX_ifc_rg_wr_strb_buf$write_1__VAL_3 =
+	     (ifc_v_f_reqs_2$D_OUT[65:64] == 2'd3) ?
+	       strb__h5225 :
+	       y_avValue_snd_snd_snd__h5448 ;
 
   // register ifc_rg_awlen
   assign ifc_rg_awlen$D_IN = 8'd0 ;
@@ -950,11 +1097,12 @@ module mkMMIO_AXI4_Adapter_2(CLK,
 	       MUX_ifc_rg_rd_beat$write_1__VAL_1 :
 	       8'd0 ;
   assign ifc_rg_rd_beat$EN =
-	     WILL_FIRE_RL_ifc_rl_rd_data || WILL_FIRE_RL_ifc_rl_rd_req_1 ||
+	     WILL_FIRE_RL_ifc_rl_rd_data || WILL_FIRE_RL_ifc_rl_rd_req_2 ||
+	     WILL_FIRE_RL_ifc_rl_rd_req_1 ||
 	     WILL_FIRE_RL_ifc_rl_rd_req ;
 
   // register ifc_rg_rd_data_buf
-  assign ifc_rg_rd_data_buf$D_IN = v__h2409 ;
+  assign ifc_rg_rd_data_buf$D_IN = v__h3166 ;
   assign ifc_rg_rd_data_buf$EN = WILL_FIRE_RL_ifc_rl_rd_data ;
 
   // register ifc_rg_rd_rsps_pending
@@ -964,7 +1112,8 @@ module mkMMIO_AXI4_Adapter_2(CLK,
 	       MUX_ifc_rg_rd_rsps_pending$write_1__VAL_2 ;
   assign ifc_rg_rd_rsps_pending$EN =
 	     WILL_FIRE_RL_ifc_rl_rd_data &&
-	     ifc_rg_rd_beat_3_EQ_ifc_f_rd_rsp_control_first_ETC___d76 ||
+	     ifc_rg_rd_beat_00_EQ_ifc_f_rd_rsp_control_firs_ETC___d103 ||
+	     WILL_FIRE_RL_ifc_rl_rd_req_2 ||
 	     WILL_FIRE_RL_ifc_rl_rd_req_1 ||
 	     WILL_FIRE_RL_ifc_rl_rd_req ;
 
@@ -974,19 +1123,32 @@ module mkMMIO_AXI4_Adapter_2(CLK,
 	       MUX_ifc_rg_wr_beat$write_1__VAL_1 :
 	       8'd0 ;
   assign ifc_rg_wr_beat$EN =
-	     WILL_FIRE_RL_ifc_rl_wr_data || WILL_FIRE_RL_ifc_rl_wr_req_1 ||
+	     WILL_FIRE_RL_ifc_rl_wr_data || WILL_FIRE_RL_ifc_rl_wr_req_2 ||
+	     WILL_FIRE_RL_ifc_rl_wr_req_1 ||
 	     WILL_FIRE_RL_ifc_rl_wr_req ;
 
   // register ifc_rg_wr_client_id
-  assign ifc_rg_wr_client_id$D_IN = !WILL_FIRE_RL_ifc_rl_wr_req ;
+  always@(WILL_FIRE_RL_ifc_rl_wr_req or
+	  WILL_FIRE_RL_ifc_rl_wr_req_1 or WILL_FIRE_RL_ifc_rl_wr_req_2)
+  begin
+    case (1'b1) // synopsys parallel_case
+      WILL_FIRE_RL_ifc_rl_wr_req: ifc_rg_wr_client_id$D_IN = 2'd0;
+      WILL_FIRE_RL_ifc_rl_wr_req_1: ifc_rg_wr_client_id$D_IN = 2'd1;
+      WILL_FIRE_RL_ifc_rl_wr_req_2: ifc_rg_wr_client_id$D_IN = 2'd2;
+      default: ifc_rg_wr_client_id$D_IN = 2'b10 /* unspecified value */ ;
+    endcase
+  end
   assign ifc_rg_wr_client_id$EN =
-	     WILL_FIRE_RL_ifc_rl_wr_req || WILL_FIRE_RL_ifc_rl_wr_req_1 ;
+	     WILL_FIRE_RL_ifc_rl_wr_req || WILL_FIRE_RL_ifc_rl_wr_req_1 ||
+	     WILL_FIRE_RL_ifc_rl_wr_req_2 ;
 
   // register ifc_rg_wr_data_buf
   always@(WILL_FIRE_RL_ifc_rl_wr_req or
 	  MUX_ifc_rg_wr_data_buf$write_1__VAL_1 or
 	  WILL_FIRE_RL_ifc_rl_wr_req_1 or
 	  MUX_ifc_rg_wr_data_buf$write_1__VAL_2 or
+	  WILL_FIRE_RL_ifc_rl_wr_req_2 or
+	  MUX_ifc_rg_wr_data_buf$write_1__VAL_3 or
 	  WILL_FIRE_RL_ifc_rl_wr_data)
   begin
     case (1'b1) // synopsys parallel_case
@@ -994,6 +1156,8 @@ module mkMMIO_AXI4_Adapter_2(CLK,
 	  ifc_rg_wr_data_buf$D_IN = MUX_ifc_rg_wr_data_buf$write_1__VAL_1;
       WILL_FIRE_RL_ifc_rl_wr_req_1:
 	  ifc_rg_wr_data_buf$D_IN = MUX_ifc_rg_wr_data_buf$write_1__VAL_2;
+      WILL_FIRE_RL_ifc_rl_wr_req_2:
+	  ifc_rg_wr_data_buf$D_IN = MUX_ifc_rg_wr_data_buf$write_1__VAL_3;
       WILL_FIRE_RL_ifc_rl_wr_data: ifc_rg_wr_data_buf$D_IN = 64'd0;
       default: ifc_rg_wr_data_buf$D_IN =
 		   64'hAAAAAAAAAAAAAAAA /* unspecified value */ ;
@@ -1001,6 +1165,7 @@ module mkMMIO_AXI4_Adapter_2(CLK,
   end
   assign ifc_rg_wr_data_buf$EN =
 	     WILL_FIRE_RL_ifc_rl_wr_req || WILL_FIRE_RL_ifc_rl_wr_req_1 ||
+	     WILL_FIRE_RL_ifc_rl_wr_req_2 ||
 	     WILL_FIRE_RL_ifc_rl_wr_data ;
 
   // register ifc_rg_wr_error
@@ -1017,6 +1182,7 @@ module mkMMIO_AXI4_Adapter_2(CLK,
 	       MUX_ifc_rg_wr_rsps_pending$write_1__VAL_2 ;
   assign ifc_rg_wr_rsps_pending$EN =
 	     WILL_FIRE_RL_ifc_rl_wr_rsp && ifc_rg_wr_rsps_pending != 4'd0 ||
+	     WILL_FIRE_RL_ifc_rl_wr_req_2 ||
 	     WILL_FIRE_RL_ifc_rl_wr_req_1 ||
 	     WILL_FIRE_RL_ifc_rl_wr_req ;
 
@@ -1025,6 +1191,8 @@ module mkMMIO_AXI4_Adapter_2(CLK,
 	  MUX_ifc_rg_wr_strb_buf$write_1__VAL_1 or
 	  WILL_FIRE_RL_ifc_rl_wr_req_1 or
 	  MUX_ifc_rg_wr_strb_buf$write_1__VAL_2 or
+	  WILL_FIRE_RL_ifc_rl_wr_req_2 or
+	  MUX_ifc_rg_wr_strb_buf$write_1__VAL_3 or
 	  WILL_FIRE_RL_ifc_rl_wr_data)
   begin
     case (1'b1) // synopsys parallel_case
@@ -1032,31 +1200,68 @@ module mkMMIO_AXI4_Adapter_2(CLK,
 	  ifc_rg_wr_strb_buf$D_IN = MUX_ifc_rg_wr_strb_buf$write_1__VAL_1;
       WILL_FIRE_RL_ifc_rl_wr_req_1:
 	  ifc_rg_wr_strb_buf$D_IN = MUX_ifc_rg_wr_strb_buf$write_1__VAL_2;
+      WILL_FIRE_RL_ifc_rl_wr_req_2:
+	  ifc_rg_wr_strb_buf$D_IN = MUX_ifc_rg_wr_strb_buf$write_1__VAL_3;
       WILL_FIRE_RL_ifc_rl_wr_data: ifc_rg_wr_strb_buf$D_IN = 8'd0;
       default: ifc_rg_wr_strb_buf$D_IN = 8'b10101010 /* unspecified value */ ;
     endcase
   end
   assign ifc_rg_wr_strb_buf$EN =
 	     WILL_FIRE_RL_ifc_rl_wr_req || WILL_FIRE_RL_ifc_rl_wr_req_1 ||
+	     WILL_FIRE_RL_ifc_rl_wr_req_2 ||
 	     WILL_FIRE_RL_ifc_rl_wr_data ;
 
   // submodule ifc_f_rd_rsp_control
-  assign ifc_f_rd_rsp_control$D_IN =
-	     WILL_FIRE_RL_ifc_rl_rd_req ?
-	       MUX_ifc_f_rd_rsp_control$enq_1__VAL_1 :
-	       MUX_ifc_f_rd_rsp_control$enq_1__VAL_2 ;
+  always@(WILL_FIRE_RL_ifc_rl_rd_req or
+	  MUX_ifc_f_rd_rsp_control$enq_1__VAL_1 or
+	  WILL_FIRE_RL_ifc_rl_rd_req_1 or
+	  MUX_ifc_f_rd_rsp_control$enq_1__VAL_2 or
+	  WILL_FIRE_RL_ifc_rl_rd_req_2 or
+	  MUX_ifc_f_rd_rsp_control$enq_1__VAL_3)
+  begin
+    case (1'b1) // synopsys parallel_case
+      WILL_FIRE_RL_ifc_rl_rd_req:
+	  ifc_f_rd_rsp_control$D_IN = MUX_ifc_f_rd_rsp_control$enq_1__VAL_1;
+      WILL_FIRE_RL_ifc_rl_rd_req_1:
+	  ifc_f_rd_rsp_control$D_IN = MUX_ifc_f_rd_rsp_control$enq_1__VAL_2;
+      WILL_FIRE_RL_ifc_rl_rd_req_2:
+	  ifc_f_rd_rsp_control$D_IN = MUX_ifc_f_rd_rsp_control$enq_1__VAL_3;
+      default: ifc_f_rd_rsp_control$D_IN =
+		   77'h0AAAAAAAAAAAAAAAAAAA /* unspecified value */ ;
+    endcase
+  end
   assign ifc_f_rd_rsp_control$ENQ =
-	     WILL_FIRE_RL_ifc_rl_rd_req || WILL_FIRE_RL_ifc_rl_rd_req_1 ;
+	     WILL_FIRE_RL_ifc_rl_rd_req || WILL_FIRE_RL_ifc_rl_rd_req_1 ||
+	     WILL_FIRE_RL_ifc_rl_rd_req_2 ;
   assign ifc_f_rd_rsp_control$DEQ =
 	     MUX_ifc_rg_rd_rsps_pending$write_1__SEL_1 ;
   assign ifc_f_rd_rsp_control$CLR = 1'b0 ;
 
   // submodule ifc_master_xactor_f_rd_addr
-  assign ifc_master_xactor_f_rd_addr$D_IN =
-	     WILL_FIRE_RL_ifc_rl_rd_req_1 ?
-	       MUX_ifc_master_xactor_f_rd_addr$enq_1__VAL_1 :
-	       MUX_ifc_master_xactor_f_rd_addr$enq_1__VAL_2 ;
-  assign ifc_master_xactor_f_rd_addr$ENQ = MUX_ifc_rg_rd_beat$write_1__SEL_2 ;
+  always@(WILL_FIRE_RL_ifc_rl_rd_req or
+	  MUX_ifc_master_xactor_f_rd_addr$enq_1__VAL_1 or
+	  WILL_FIRE_RL_ifc_rl_rd_req_1 or
+	  MUX_ifc_master_xactor_f_rd_addr$enq_1__VAL_2 or
+	  WILL_FIRE_RL_ifc_rl_rd_req_2 or
+	  MUX_ifc_master_xactor_f_rd_addr$enq_1__VAL_3)
+  begin
+    case (1'b1) // synopsys parallel_case
+      WILL_FIRE_RL_ifc_rl_rd_req:
+	  ifc_master_xactor_f_rd_addr$D_IN =
+	      MUX_ifc_master_xactor_f_rd_addr$enq_1__VAL_1;
+      WILL_FIRE_RL_ifc_rl_rd_req_1:
+	  ifc_master_xactor_f_rd_addr$D_IN =
+	      MUX_ifc_master_xactor_f_rd_addr$enq_1__VAL_2;
+      WILL_FIRE_RL_ifc_rl_rd_req_2:
+	  ifc_master_xactor_f_rd_addr$D_IN =
+	      MUX_ifc_master_xactor_f_rd_addr$enq_1__VAL_3;
+      default: ifc_master_xactor_f_rd_addr$D_IN =
+		   109'h0AAAAAAAAAAAAAAAAAAAAAAAAAAA /* unspecified value */ ;
+    endcase
+  end
+  assign ifc_master_xactor_f_rd_addr$ENQ =
+	     WILL_FIRE_RL_ifc_rl_rd_req || WILL_FIRE_RL_ifc_rl_rd_req_1 ||
+	     WILL_FIRE_RL_ifc_rl_rd_req_2 ;
   assign ifc_master_xactor_f_rd_addr$DEQ =
 	     ifc_master_xactor_f_rd_addr$EMPTY_N && mem_master_arready ;
   assign ifc_master_xactor_f_rd_addr$CLR = 1'b0 ;
@@ -1073,11 +1278,30 @@ module mkMMIO_AXI4_Adapter_2(CLK,
   assign ifc_master_xactor_f_rd_data$CLR = 1'b0 ;
 
   // submodule ifc_master_xactor_f_wr_addr
-  assign ifc_master_xactor_f_wr_addr$D_IN =
-	     WILL_FIRE_RL_ifc_rl_wr_req_1 ?
-	       MUX_ifc_master_xactor_f_rd_addr$enq_1__VAL_1 :
-	       MUX_ifc_master_xactor_f_rd_addr$enq_1__VAL_2 ;
-  assign ifc_master_xactor_f_wr_addr$ENQ = MUX_ifc_rg_wr_beat$write_1__SEL_2 ;
+  always@(WILL_FIRE_RL_ifc_rl_wr_req or
+	  MUX_ifc_master_xactor_f_rd_addr$enq_1__VAL_1 or
+	  WILL_FIRE_RL_ifc_rl_wr_req_1 or
+	  MUX_ifc_master_xactor_f_rd_addr$enq_1__VAL_2 or
+	  WILL_FIRE_RL_ifc_rl_wr_req_2 or
+	  MUX_ifc_master_xactor_f_rd_addr$enq_1__VAL_3)
+  begin
+    case (1'b1) // synopsys parallel_case
+      WILL_FIRE_RL_ifc_rl_wr_req:
+	  ifc_master_xactor_f_wr_addr$D_IN =
+	      MUX_ifc_master_xactor_f_rd_addr$enq_1__VAL_1;
+      WILL_FIRE_RL_ifc_rl_wr_req_1:
+	  ifc_master_xactor_f_wr_addr$D_IN =
+	      MUX_ifc_master_xactor_f_rd_addr$enq_1__VAL_2;
+      WILL_FIRE_RL_ifc_rl_wr_req_2:
+	  ifc_master_xactor_f_wr_addr$D_IN =
+	      MUX_ifc_master_xactor_f_rd_addr$enq_1__VAL_3;
+      default: ifc_master_xactor_f_wr_addr$D_IN =
+		   109'h0AAAAAAAAAAAAAAAAAAAAAAAAAAA /* unspecified value */ ;
+    endcase
+  end
+  assign ifc_master_xactor_f_wr_addr$ENQ =
+	     WILL_FIRE_RL_ifc_rl_wr_req || WILL_FIRE_RL_ifc_rl_wr_req_1 ||
+	     WILL_FIRE_RL_ifc_rl_wr_req_2 ;
   assign ifc_master_xactor_f_wr_addr$DEQ =
 	     ifc_master_xactor_f_wr_addr$EMPTY_N && mem_master_awready ;
   assign ifc_master_xactor_f_wr_addr$CLR = 1'b0 ;
@@ -1086,7 +1310,7 @@ module mkMMIO_AXI4_Adapter_2(CLK,
   assign ifc_master_xactor_f_wr_data$D_IN =
 	     { ifc_rg_wr_data_buf,
 	       ifc_rg_wr_strb_buf,
-	       ifc_rg_wr_beat_24_EQ_ifc_rg_awlen_25___d167 } ;
+	       ifc_rg_wr_beat_63_EQ_ifc_rg_awlen_64___d227 } ;
   assign ifc_master_xactor_f_wr_data$ENQ = WILL_FIRE_RL_ifc_rl_wr_data ;
   assign ifc_master_xactor_f_wr_data$DEQ =
 	     ifc_master_xactor_f_wr_data$EMPTY_N && mem_master_wready ;
@@ -1104,8 +1328,8 @@ module mkMMIO_AXI4_Adapter_2(CLK,
   assign ifc_v_f_reqs_0$D_IN = v_mmio_server_0_request_put ;
   assign ifc_v_f_reqs_0$ENQ = EN_v_mmio_server_0_request_put ;
   assign ifc_v_f_reqs_0$DEQ =
-	     WILL_FIRE_RL_ifc_rl_wr_data && ifc_rg_wr_client_id == 1'd0 &&
-	     ifc_rg_wr_beat_24_EQ_ifc_rg_awlen_25___d167 ||
+	     WILL_FIRE_RL_ifc_rl_wr_data && ifc_rg_wr_client_id == 2'd0 &&
+	     ifc_rg_wr_beat_63_EQ_ifc_rg_awlen_64___d227 ||
 	     WILL_FIRE_RL_ifc_rl_rd_req ;
   assign ifc_v_f_reqs_0$CLR = 1'b0 ;
 
@@ -1113,120 +1337,159 @@ module mkMMIO_AXI4_Adapter_2(CLK,
   assign ifc_v_f_reqs_1$D_IN = v_mmio_server_1_request_put ;
   assign ifc_v_f_reqs_1$ENQ = EN_v_mmio_server_1_request_put ;
   assign ifc_v_f_reqs_1$DEQ =
-	     WILL_FIRE_RL_ifc_rl_wr_data && ifc_rg_wr_client_id == 1'd1 &&
-	     ifc_rg_wr_beat_24_EQ_ifc_rg_awlen_25___d167 ||
+	     WILL_FIRE_RL_ifc_rl_wr_data && ifc_rg_wr_client_id == 2'd1 &&
+	     ifc_rg_wr_beat_63_EQ_ifc_rg_awlen_64___d227 ||
 	     WILL_FIRE_RL_ifc_rl_rd_req_1 ;
   assign ifc_v_f_reqs_1$CLR = 1'b0 ;
 
+  // submodule ifc_v_f_reqs_2
+  assign ifc_v_f_reqs_2$D_IN = v_mmio_server_2_request_put ;
+  assign ifc_v_f_reqs_2$ENQ = EN_v_mmio_server_2_request_put ;
+  assign ifc_v_f_reqs_2$DEQ =
+	     WILL_FIRE_RL_ifc_rl_wr_data && ifc_rg_wr_client_id == 2'd2 &&
+	     ifc_rg_wr_beat_63_EQ_ifc_rg_awlen_64___d227 ||
+	     WILL_FIRE_RL_ifc_rl_rd_req_2 ;
+  assign ifc_v_f_reqs_2$CLR = 1'b0 ;
+
   // submodule ifc_v_f_rsps_0
   assign ifc_v_f_rsps_0$D_IN =
-	     { ifc_master_xactor_f_rd_data$D_OUT[2:1] == 2'b0, v__h2664 } ;
+	     { ifc_master_xactor_f_rd_data$D_OUT[2:1] == 2'b0, v__h3417 } ;
   assign ifc_v_f_rsps_0$ENQ =
 	     WILL_FIRE_RL_ifc_rl_rd_data &&
-	     ifc_f_rd_rsp_control$D_OUT[14] == 1'd0 &&
-	     ifc_rg_rd_beat_3_EQ_ifc_f_rd_rsp_control_first_ETC___d76 ;
+	     ifc_f_rd_rsp_control$D_OUT[76:75] == 2'd0 &&
+	     ifc_rg_rd_beat_00_EQ_ifc_f_rd_rsp_control_firs_ETC___d103 ;
   assign ifc_v_f_rsps_0$DEQ = EN_v_mmio_server_0_response_get ;
   assign ifc_v_f_rsps_0$CLR = 1'b0 ;
 
   // submodule ifc_v_f_rsps_1
-  assign ifc_v_f_rsps_1$D_IN =
-	     { ifc_master_xactor_f_rd_data$D_OUT[2:1] == 2'b0, v__h2664 } ;
+  assign ifc_v_f_rsps_1$D_IN = ifc_v_f_rsps_0$D_IN ;
   assign ifc_v_f_rsps_1$ENQ =
 	     WILL_FIRE_RL_ifc_rl_rd_data &&
-	     ifc_f_rd_rsp_control$D_OUT[14] == 1'd1 &&
-	     ifc_rg_rd_beat_3_EQ_ifc_f_rd_rsp_control_first_ETC___d76 ;
+	     ifc_f_rd_rsp_control$D_OUT[76:75] == 2'd1 &&
+	     ifc_rg_rd_beat_00_EQ_ifc_f_rd_rsp_control_firs_ETC___d103 ;
   assign ifc_v_f_rsps_1$DEQ = EN_v_mmio_server_1_response_get ;
   assign ifc_v_f_rsps_1$CLR = 1'b0 ;
 
+  // submodule ifc_v_f_rsps_2
+  assign ifc_v_f_rsps_2$D_IN = ifc_v_f_rsps_0$D_IN ;
+  assign ifc_v_f_rsps_2$ENQ =
+	     WILL_FIRE_RL_ifc_rl_rd_data &&
+	     ifc_f_rd_rsp_control$D_OUT[76:75] == 2'd2 &&
+	     ifc_rg_rd_beat_00_EQ_ifc_f_rd_rsp_control_firs_ETC___d103 ;
+  assign ifc_v_f_rsps_2$DEQ = EN_v_mmio_server_2_response_get ;
+  assign ifc_v_f_rsps_2$CLR = 1'b0 ;
+
   // remaining internal signals
-  assign ifc_master_xactor_f_rd_data_i_notEmpty__2_AND__ETC___d83 =
-	     ifc_master_xactor_f_rd_data$EMPTY_N &&
-	     (!ifc_rg_rd_beat_3_EQ_ifc_f_rd_rsp_control_first_ETC___d76 ||
-	      CASE_ifc_f_rd_rsp_controlD_OUT_BIT_14_0_ifc_v_ETC__q1) ;
-  assign ifc_master_xactor_f_wr_data_i_notFull__66_AND__ETC___d172 =
-	     ifc_master_xactor_f_wr_data$FULL_N &&
-	     (!ifc_rg_wr_beat_24_EQ_ifc_rg_awlen_25___d167 ||
-	      CASE_ifc_rg_wr_client_id_0_ifc_v_f_reqs_0EMPT_ETC__q2) ;
-  assign ifc_rg_rd_beat_3_EQ_ifc_f_rd_rsp_control_first_ETC___d76 =
+  assign NOT_ifc_rg_rd_beat_00_EQ_ifc_f_rd_rsp_control__ETC___d110 =
+	     !ifc_rg_rd_beat_00_EQ_ifc_f_rd_rsp_control_firs_ETC___d103 ||
+	     CASE_ifc_f_rd_rsp_controlD_OUT_BITS_76_TO_75__ETC__q1 ;
+  assign NOT_ifc_rg_wr_beat_63_EQ_ifc_rg_awlen_64_27_28_ETC___d231 =
+	     !ifc_rg_wr_beat_63_EQ_ifc_rg_awlen_64___d227 ||
+	     CASE_ifc_rg_wr_client_id_0_ifc_v_f_reqs_0EMPT_ETC__q2 ;
+  assign ifc_rg_rd_beat_00_EQ_ifc_f_rd_rsp_control_firs_ETC___d103 =
 	     ifc_rg_rd_beat == ifc_f_rd_rsp_control$D_OUT[7:0] ;
-  assign ifc_rg_wr_beat_24_EQ_ifc_rg_awlen_25___d167 =
+  assign ifc_rg_wr_beat_63_EQ_ifc_rg_awlen_64___d227 =
 	     ifc_rg_wr_beat == ifc_rg_awlen ;
-  assign ifc_rg_wr_beat_24_ULE_ifc_rg_awlen_25___d126 =
+  assign ifc_rg_wr_beat_63_ULE_ifc_rg_awlen_64___d165 =
 	     ifc_rg_wr_beat <= ifc_rg_awlen ;
-  assign v__h2649 =
-	     ifc_rg_rd_beat_3_EQ_ifc_f_rd_rsp_control_first_ETC___d76 ?
-	       v__h2664 :
-	       v__h2409 ;
-  assign v__h2664 =
-	     (ifc_f_rd_rsp_control$D_OUT[13:11] == 3'b011) ?
-	       v__h2409 :
-	       v__h2747 ;
-  assign v__h2747 = v__h2409 >> v__h2754 ;
-  assign v__h2754 = { ifc_f_rd_rsp_control$D_OUT[10:8], 3'b0 } ;
-  assign word64___1__h2434 =
+  assign v__h3402 =
+	     ifc_rg_rd_beat_00_EQ_ifc_f_rd_rsp_control_firs_ETC___d103 ?
+	       v__h3417 :
+	       v__h3166 ;
+  assign v__h3417 =
+	     (ifc_f_rd_rsp_control$D_OUT[10:8] == 3'b011) ?
+	       v__h3166 :
+	       v__h3498 ;
+  assign v__h3498 = v__h3166 >> v__h3505 ;
+  assign v__h3505 = { ifc_f_rd_rsp_control$D_OUT[13:11], 3'b0 } ;
+  assign word64___1__h3191 =
 	     { ifc_master_xactor_f_rd_data$D_OUT[34:3],
 	       ifc_rg_rd_data_buf[31:0] } ;
-  assign x__h1718 = { 1'b0, ifc_v_f_reqs_0$D_OUT[65:64] } ;
-  assign x__h2140 = { 1'b0, ifc_v_f_reqs_1$D_OUT[65:64] } ;
-  assign x__h2999 = ifc_rg_rd_beat + 8'd1 ;
-  assign x__h3494 = { ifc_v_f_reqs_0$D_OUT[68:66], 3'b0 } ;
-  assign x__h4045 = { ifc_v_f_reqs_1$D_OUT[68:66], 3'b0 } ;
-  assign y_avValue_fst__h3407 = ifc_v_f_reqs_0$D_OUT[63:0] << x__h3494 ;
-  assign y_avValue_fst__h3960 = ifc_v_f_reqs_1$D_OUT[63:0] << x__h4045 ;
-  assign y_avValue_snd_snd_snd__h3559 =
-	     strb__h3334 << ifc_v_f_reqs_0$D_OUT[68:66] ;
-  assign y_avValue_snd_snd_snd__h4110 =
-	     strb__h3887 << ifc_v_f_reqs_1$D_OUT[68:66] ;
+  assign x__h1959 = { 1'b0, ifc_v_f_reqs_0$D_OUT[65:64] } ;
+  assign x__h2361 = { 1'b0, ifc_v_f_reqs_1$D_OUT[65:64] } ;
+  assign x__h2728 = { 1'b0, ifc_v_f_reqs_2$D_OUT[65:64] } ;
+  assign x__h3809 = ifc_rg_rd_beat + 8'd1 ;
+  assign x__h4304 = { ifc_v_f_reqs_0$D_OUT[68:66], 3'b0 } ;
+  assign x__h4855 = { ifc_v_f_reqs_1$D_OUT[68:66], 3'b0 } ;
+  assign x__h5383 = { ifc_v_f_reqs_2$D_OUT[68:66], 3'b0 } ;
+  assign y_avValue_fst__h4217 = ifc_v_f_reqs_0$D_OUT[63:0] << x__h4304 ;
+  assign y_avValue_fst__h4770 = ifc_v_f_reqs_1$D_OUT[63:0] << x__h4855 ;
+  assign y_avValue_fst__h5298 = ifc_v_f_reqs_2$D_OUT[63:0] << x__h5383 ;
+  assign y_avValue_snd_snd_snd__h4369 =
+	     strb__h4144 << ifc_v_f_reqs_0$D_OUT[68:66] ;
+  assign y_avValue_snd_snd_snd__h4920 =
+	     strb__h4697 << ifc_v_f_reqs_1$D_OUT[68:66] ;
+  assign y_avValue_snd_snd_snd__h5448 =
+	     strb__h5225 << ifc_v_f_reqs_2$D_OUT[68:66] ;
   always@(ifc_v_f_reqs_0$D_OUT)
   begin
     case (ifc_v_f_reqs_0$D_OUT[65:64])
-      2'd0: strb__h3334 = 8'h01;
-      2'd1: strb__h3334 = 8'h03;
-      2'd2: strb__h3334 = 8'h0F;
-      2'd3: strb__h3334 = 8'hFF;
+      2'd0: strb__h4144 = 8'h01;
+      2'd1: strb__h4144 = 8'h03;
+      2'd2: strb__h4144 = 8'h0F;
+      2'd3: strb__h4144 = 8'hFF;
     endcase
   end
   always@(ifc_v_f_reqs_1$D_OUT)
   begin
     case (ifc_v_f_reqs_1$D_OUT[65:64])
-      2'd0: strb__h3887 = 8'h01;
-      2'd1: strb__h3887 = 8'h03;
-      2'd2: strb__h3887 = 8'h0F;
-      2'd3: strb__h3887 = 8'hFF;
+      2'd0: strb__h4697 = 8'h01;
+      2'd1: strb__h4697 = 8'h03;
+      2'd2: strb__h4697 = 8'h0F;
+      2'd3: strb__h4697 = 8'hFF;
+    endcase
+  end
+  always@(ifc_v_f_reqs_2$D_OUT)
+  begin
+    case (ifc_v_f_reqs_2$D_OUT[65:64])
+      2'd0: strb__h5225 = 8'h01;
+      2'd1: strb__h5225 = 8'h03;
+      2'd2: strb__h5225 = 8'h0F;
+      2'd3: strb__h5225 = 8'hFF;
     endcase
   end
   always@(ifc_rg_rd_beat or
 	  ifc_rg_rd_data_buf or
-	  ifc_master_xactor_f_rd_data$D_OUT or word64___1__h2434)
+	  ifc_master_xactor_f_rd_data$D_OUT or word64___1__h3191)
   begin
     case (ifc_rg_rd_beat)
-      8'd0: v__h2409 = ifc_master_xactor_f_rd_data$D_OUT[66:3];
-      8'd1: v__h2409 = word64___1__h2434;
-      default: v__h2409 = ifc_rg_rd_data_buf;
+      8'd0: v__h3166 = ifc_master_xactor_f_rd_data$D_OUT[66:3];
+      8'd1: v__h3166 = word64___1__h3191;
+      default: v__h3166 = ifc_rg_rd_data_buf;
     endcase
   end
   always@(ifc_f_rd_rsp_control$D_OUT or
-	  ifc_v_f_rsps_0$FULL_N or ifc_v_f_rsps_1$FULL_N)
+	  ifc_v_f_rsps_0$FULL_N or
+	  ifc_v_f_rsps_1$FULL_N or ifc_v_f_rsps_2$FULL_N)
   begin
-    case (ifc_f_rd_rsp_control$D_OUT[14])
-      1'd0:
-	  CASE_ifc_f_rd_rsp_controlD_OUT_BIT_14_0_ifc_v_ETC__q1 =
+    case (ifc_f_rd_rsp_control$D_OUT[76:75])
+      2'd0:
+	  CASE_ifc_f_rd_rsp_controlD_OUT_BITS_76_TO_75__ETC__q1 =
 	      ifc_v_f_rsps_0$FULL_N;
-      1'd1:
-	  CASE_ifc_f_rd_rsp_controlD_OUT_BIT_14_0_ifc_v_ETC__q1 =
+      2'd1:
+	  CASE_ifc_f_rd_rsp_controlD_OUT_BITS_76_TO_75__ETC__q1 =
 	      ifc_v_f_rsps_1$FULL_N;
+      2'd2:
+	  CASE_ifc_f_rd_rsp_controlD_OUT_BITS_76_TO_75__ETC__q1 =
+	      ifc_v_f_rsps_2$FULL_N;
+      2'd3: CASE_ifc_f_rd_rsp_controlD_OUT_BITS_76_TO_75__ETC__q1 = 1'd1;
     endcase
   end
   always@(ifc_rg_wr_client_id or
-	  ifc_v_f_reqs_0$EMPTY_N or ifc_v_f_reqs_1$EMPTY_N)
+	  ifc_v_f_reqs_0$EMPTY_N or
+	  ifc_v_f_reqs_1$EMPTY_N or ifc_v_f_reqs_2$EMPTY_N)
   begin
     case (ifc_rg_wr_client_id)
-      1'd0:
+      2'd0:
 	  CASE_ifc_rg_wr_client_id_0_ifc_v_f_reqs_0EMPT_ETC__q2 =
 	      ifc_v_f_reqs_0$EMPTY_N;
-      1'd1:
+      2'd1:
 	  CASE_ifc_rg_wr_client_id_0_ifc_v_f_reqs_0EMPT_ETC__q2 =
 	      ifc_v_f_reqs_1$EMPTY_N;
+      2'd2:
+	  CASE_ifc_rg_wr_client_id_0_ifc_v_f_reqs_0EMPT_ETC__q2 =
+	      ifc_v_f_reqs_2$EMPTY_N;
+      2'd3: CASE_ifc_rg_wr_client_id_0_ifc_v_f_reqs_0EMPT_ETC__q2 = 1'd1;
     endcase
   end
 
@@ -1280,7 +1543,7 @@ module mkMMIO_AXI4_Adapter_2(CLK,
     ifc_rg_rd_data_buf = 64'hAAAAAAAAAAAAAAAA;
     ifc_rg_rd_rsps_pending = 4'hA;
     ifc_rg_wr_beat = 8'hAA;
-    ifc_rg_wr_client_id = 1'h0;
+    ifc_rg_wr_client_id = 2'h2;
     ifc_rg_wr_data_buf = 64'hAAAAAAAAAAAAAAAA;
     ifc_rg_wr_error = 1'h0;
     ifc_rg_wr_rsps_pending = 4'hA;
@@ -1298,13 +1561,13 @@ module mkMMIO_AXI4_Adapter_2(CLK,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_ifc_rl_rd_req && verbosity != 3'd0)
 	begin
-	  v__h1556 = $stime;
+	  v__h1797 = $stime;
 	  #0;
 	end
-    v__h1550 = v__h1556 / 32'd10;
+    v__h1791 = v__h1797 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_ifc_rl_rd_req && verbosity != 3'd0)
-	$display("%0d: %m.rl_rd_req", v__h1550);
+	$display("%0d: %m.rl_rd_req", v__h1791);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_ifc_rl_rd_req && verbosity != 3'd0)
 	$write("    AXI4_Rd_Addr {araddr %0h arlen %d ",
@@ -1333,13 +1596,13 @@ module mkMMIO_AXI4_Adapter_2(CLK,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_ifc_rl_rd_req_1 && verbosity != 3'd0)
 	begin
-	  v__h2004 = $stime;
+	  v__h2225 = $stime;
 	  #0;
 	end
-    v__h1998 = v__h2004 / 32'd10;
+    v__h2219 = v__h2225 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_ifc_rl_rd_req_1 && verbosity != 3'd0)
-	$display("%0d: %m.rl_rd_req", v__h1998);
+	$display("%0d: %m.rl_rd_req", v__h2219);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_ifc_rl_rd_req_1 && verbosity != 3'd0)
 	$write("    AXI4_Rd_Addr {araddr %0h arlen %d ",
@@ -1367,15 +1630,51 @@ module mkMMIO_AXI4_Adapter_2(CLK,
       if (WILL_FIRE_RL_ifc_rl_rd_req_1 && verbosity != 3'd0)
 	$write("}", "\n");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_ifc_rl_wr_req && verbosity != 3'd0)
+      if (WILL_FIRE_RL_ifc_rl_rd_req_2 && verbosity != 3'd0)
 	begin
-	  v__h3783 = $stime;
+	  v__h2592 = $stime;
 	  #0;
 	end
-    v__h3777 = v__h3783 / 32'd10;
+    v__h2586 = v__h2592 / 32'd10;
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_ifc_rl_rd_req_2 && verbosity != 3'd0)
+	$display("%0d: %m.rl_rd_req", v__h2586);
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_ifc_rl_rd_req_2 && verbosity != 3'd0)
+	$write("    AXI4_Rd_Addr {araddr %0h arlen %d ",
+	       ifc_v_f_reqs_2$D_OUT[129:66],
+	       8'd0);
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_ifc_rl_rd_req_2 && verbosity != 3'd0 &&
+	  ifc_v_f_reqs_2$D_OUT[65:64] == 2'd0)
+	$write("sz1");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_ifc_rl_rd_req_2 && verbosity != 3'd0 &&
+	  ifc_v_f_reqs_2$D_OUT[65:64] == 2'd1)
+	$write("sz2");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_ifc_rl_rd_req_2 && verbosity != 3'd0 &&
+	  ifc_v_f_reqs_2$D_OUT[65:64] == 2'd2)
+	$write("sz4");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_ifc_rl_rd_req_2 && verbosity != 3'd0 &&
+	  ifc_v_f_reqs_2$D_OUT[65:64] != 2'd0 &&
+	  ifc_v_f_reqs_2$D_OUT[65:64] != 2'd1 &&
+	  ifc_v_f_reqs_2$D_OUT[65:64] != 2'd2)
+	$write("sz8");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_ifc_rl_rd_req_2 && verbosity != 3'd0)
+	$write("}", "\n");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_ifc_rl_wr_req && verbosity != 3'd0)
-	$display("%0d: %m.rl_wr_req", v__h3777);
+	begin
+	  v__h4593 = $stime;
+	  #0;
+	end
+    v__h4587 = v__h4593 / 32'd10;
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_ifc_rl_wr_req && verbosity != 3'd0)
+	$display("%0d: %m.rl_wr_req", v__h4587);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_ifc_rl_wr_req && verbosity != 3'd0)
 	$write("    AXI4_Wr_Addr{awaddr %0h awlen %0d ",
@@ -1405,13 +1704,13 @@ module mkMMIO_AXI4_Adapter_2(CLK,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_ifc_rl_wr_req_1 && verbosity != 3'd0)
 	begin
-	  v__h4311 = $stime;
+	  v__h5121 = $stime;
 	  #0;
 	end
-    v__h4305 = v__h4311 / 32'd10;
+    v__h5115 = v__h5121 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_ifc_rl_wr_req_1 && verbosity != 3'd0)
-	$display("%0d: %m.rl_wr_req", v__h4305);
+	$display("%0d: %m.rl_wr_req", v__h5115);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_ifc_rl_wr_req_1 && verbosity != 3'd0)
 	$write("    AXI4_Wr_Addr{awaddr %0h awlen %0d ",
@@ -1439,17 +1738,127 @@ module mkMMIO_AXI4_Adapter_2(CLK,
       if (WILL_FIRE_RL_ifc_rl_wr_req_1 && verbosity != 3'd0)
 	$write(" incr}", "\n");
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_ifc_rl_rd_data && ifc_rg_rd_beat != 8'd0 &&
-	  ifc_rg_rd_beat != 8'd1)
+      if (WILL_FIRE_RL_ifc_rl_wr_req_2 && verbosity != 3'd0)
 	begin
-	  v__h2465 = $stime;
+	  v__h5649 = $stime;
 	  #0;
 	end
-    v__h2459 = v__h2465 / 32'd10;
+    v__h5643 = v__h5649 / 32'd10;
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_ifc_rl_wr_req_2 && verbosity != 3'd0)
+	$display("%0d: %m.rl_wr_req", v__h5643);
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_ifc_rl_wr_req_2 && verbosity != 3'd0)
+	$write("    AXI4_Wr_Addr{awaddr %0h awlen %0d ",
+	       ifc_v_f_reqs_2$D_OUT[129:66],
+	       8'd0);
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_ifc_rl_wr_req_2 && verbosity != 3'd0 &&
+	  ifc_v_f_reqs_2$D_OUT[65:64] == 2'd0)
+	$write("sz1");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_ifc_rl_wr_req_2 && verbosity != 3'd0 &&
+	  ifc_v_f_reqs_2$D_OUT[65:64] == 2'd1)
+	$write("sz2");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_ifc_rl_wr_req_2 && verbosity != 3'd0 &&
+	  ifc_v_f_reqs_2$D_OUT[65:64] == 2'd2)
+	$write("sz4");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_ifc_rl_wr_req_2 && verbosity != 3'd0 &&
+	  ifc_v_f_reqs_2$D_OUT[65:64] != 2'd0 &&
+	  ifc_v_f_reqs_2$D_OUT[65:64] != 2'd1 &&
+	  ifc_v_f_reqs_2$D_OUT[65:64] != 2'd2)
+	$write("sz8");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_ifc_rl_wr_req_2 && verbosity != 3'd0)
+	$write(" incr}", "\n");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_ifc_rl_rd_data &&
+	  ifc_master_xactor_f_rd_data$D_OUT[2:1] != 2'b0)
+	begin
+	  v__h3025 = $stime;
+	  #0;
+	end
+    v__h3019 = v__h3025 / 32'd10;
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_ifc_rl_rd_data &&
+	  ifc_master_xactor_f_rd_data$D_OUT[2:1] != 2'b0)
+	$display("%0d: ERROR: %m.rl_rd_data: ERROR", v__h3019);
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_ifc_rl_rd_data &&
+	  ifc_master_xactor_f_rd_data$D_OUT[2:1] != 2'b0)
+	$display("    AXI4 error response for client %0d, addr %0h  arsize %0h  arlen %0h",
+		 ifc_f_rd_rsp_control$D_OUT[76:75],
+		 ifc_f_rd_rsp_control$D_OUT[74:11],
+		 ifc_f_rd_rsp_control$D_OUT[10:8],
+		 ifc_f_rd_rsp_control$D_OUT[7:0]);
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_ifc_rl_rd_data &&
+	  ifc_master_xactor_f_rd_data$D_OUT[2:1] != 2'b0)
+	$write("    ");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_ifc_rl_rd_data &&
+	  ifc_master_xactor_f_rd_data$D_OUT[2:1] != 2'b0)
+	$write("AXI4_Rd_Data { ", "rid: ");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_ifc_rl_rd_data &&
+	  ifc_master_xactor_f_rd_data$D_OUT[2:1] != 2'b0)
+	$write("'h%h", ifc_master_xactor_f_rd_data$D_OUT[82:67]);
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_ifc_rl_rd_data &&
+	  ifc_master_xactor_f_rd_data$D_OUT[2:1] != 2'b0)
+	$write(", ", "rdata: ");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_ifc_rl_rd_data &&
+	  ifc_master_xactor_f_rd_data$D_OUT[2:1] != 2'b0)
+	$write("'h%h", ifc_master_xactor_f_rd_data$D_OUT[66:3]);
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_ifc_rl_rd_data &&
+	  ifc_master_xactor_f_rd_data$D_OUT[2:1] != 2'b0)
+	$write(", ", "rresp: ");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_ifc_rl_rd_data &&
+	  ifc_master_xactor_f_rd_data$D_OUT[2:1] != 2'b0)
+	$write("'h%h", ifc_master_xactor_f_rd_data$D_OUT[2:1]);
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_ifc_rl_rd_data &&
+	  ifc_master_xactor_f_rd_data$D_OUT[2:1] != 2'b0)
+	$write(", ", "rlast: ");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_ifc_rl_rd_data &&
+	  ifc_master_xactor_f_rd_data$D_OUT[2:1] != 2'b0 &&
+	  ifc_master_xactor_f_rd_data$D_OUT[0])
+	$write("True");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_ifc_rl_rd_data &&
+	  ifc_master_xactor_f_rd_data$D_OUT[2:1] != 2'b0 &&
+	  !ifc_master_xactor_f_rd_data$D_OUT[0])
+	$write("False");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_ifc_rl_rd_data &&
+	  ifc_master_xactor_f_rd_data$D_OUT[2:1] != 2'b0)
+	$write(", ", "ruser: ");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_ifc_rl_rd_data &&
+	  ifc_master_xactor_f_rd_data$D_OUT[2:1] != 2'b0)
+	$write("'h%h", 1'd0, " }");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_ifc_rl_rd_data &&
+	  ifc_master_xactor_f_rd_data$D_OUT[2:1] != 2'b0)
+	$write("\n");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_ifc_rl_rd_data && ifc_rg_rd_beat != 8'd0 &&
 	  ifc_rg_rd_beat != 8'd1)
-	$display("%0d: INTERNAL ERROR: %m.rl_rd_data", v__h2459);
+	begin
+	  v__h3222 = $stime;
+	  #0;
+	end
+    v__h3216 = v__h3222 / 32'd10;
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_ifc_rl_rd_data && ifc_rg_rd_beat != 8'd0 &&
+	  ifc_rg_rd_beat != 8'd1)
+	$display("%0d: INTERNAL ERROR: %m.rl_rd_data", v__h3216);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_ifc_rl_rd_data && ifc_rg_rd_beat != 8'd0 &&
 	  ifc_rg_rd_beat != 8'd1)
@@ -1462,29 +1871,29 @@ module mkMMIO_AXI4_Adapter_2(CLK,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_ifc_rl_rd_data && verbosity != 3'd0)
 	begin
-	  v__h3074 = $stime;
+	  v__h3884 = $stime;
 	  #0;
 	end
-    v__h3068 = v__h3074 / 32'd10;
+    v__h3878 = v__h3884 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_ifc_rl_rd_data && verbosity != 3'd0)
-	$display("%0d: %m.rl_rd_data: ", v__h3068);
+	$display("%0d: %m.rl_rd_data: ", v__h3878);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_ifc_rl_rd_data && verbosity != 3'd0)
 	$display("    [%0d] beat %0d data %0h",
-		 ifc_f_rd_rsp_control$D_OUT[14],
+		 ifc_f_rd_rsp_control$D_OUT[76:75],
 		 ifc_rg_rd_beat,
-		 v__h2649);
+		 v__h3402);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_ifc_rl_wr_data && verbosity != 3'd0)
 	begin
-	  v__h4642 = $stime;
+	  v__h5993 = $stime;
 	  #0;
 	end
-    v__h4636 = v__h4642 / 32'd10;
+    v__h5987 = v__h5993 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_ifc_rl_wr_data && verbosity != 3'd0)
-	$display("%0d: %m.rl_wr_data", v__h4636);
+	$display("%0d: %m.rl_wr_data", v__h5987);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_ifc_rl_wr_data && verbosity != 3'd0)
 	$display("    beat %0d/%0d", ifc_rg_wr_beat, ifc_rg_awlen);
@@ -1507,11 +1916,11 @@ module mkMMIO_AXI4_Adapter_2(CLK,
 	$write(", ", "wlast: ");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_ifc_rl_wr_data && verbosity != 3'd0 &&
-	  ifc_rg_wr_beat_24_EQ_ifc_rg_awlen_25___d167)
+	  ifc_rg_wr_beat_63_EQ_ifc_rg_awlen_64___d227)
 	$write("True");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_ifc_rl_wr_data && verbosity != 3'd0 &&
-	  !ifc_rg_wr_beat_24_EQ_ifc_rg_awlen_25___d167)
+	  !ifc_rg_wr_beat_63_EQ_ifc_rg_awlen_64___d227)
 	$write("False");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_ifc_rl_wr_data && verbosity != 3'd0)
@@ -1524,14 +1933,16 @@ module mkMMIO_AXI4_Adapter_2(CLK,
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_ifc_rl_wr_rsp && ifc_rg_wr_rsps_pending == 4'd0)
 	begin
-	  v__h4847 = $stime;
+	  v__h6198 = $stime;
 	  #0;
 	end
-    v__h4841 = v__h4847 / 32'd10;
+    v__h6192 = v__h6198 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_ifc_rl_wr_rsp && ifc_rg_wr_rsps_pending == 4'd0)
-	$display("%0d: %m.rl_wr_rsp: ERROR write-response when not expecting any",
-		 v__h4841);
+	$display("%0d: %m.rl_wr_rsp:", v__h6192);
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_ifc_rl_wr_rsp && ifc_rg_wr_rsps_pending == 4'd0)
+	$display("    ERROR write-response when not expecting any");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_ifc_rl_wr_rsp && ifc_rg_wr_rsps_pending == 4'd0)
 	$write("    ");
@@ -1561,16 +1972,16 @@ module mkMMIO_AXI4_Adapter_2(CLK,
 	  ifc_master_xactor_f_wr_resp$D_OUT[1:0] == 2'b0 &&
 	  verbosity != 3'd0)
 	begin
-	  v__h4942 = $stime;
+	  v__h6315 = $stime;
 	  #0;
 	end
-    v__h4936 = v__h4942 / 32'd10;
+    v__h6309 = v__h6315 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_ifc_rl_wr_rsp && ifc_rg_wr_rsps_pending != 4'd0 &&
 	  ifc_master_xactor_f_wr_resp$D_OUT[1:0] == 2'b0 &&
 	  verbosity != 3'd0)
 	$write("%0d: %m.rl_wr_rsp: pending=%0d, ",
-	       v__h4936,
+	       v__h6309,
 	       ifc_rg_wr_rsps_pending);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_ifc_rl_wr_rsp && ifc_rg_wr_rsps_pending != 4'd0 &&
@@ -1609,57 +2020,51 @@ module mkMMIO_AXI4_Adapter_2(CLK,
 	$write("\n");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_ifc_rl_wr_rsp && ifc_rg_wr_rsps_pending != 4'd0 &&
-	  ifc_master_xactor_f_wr_resp$D_OUT[1:0] != 2'b0 &&
-	  verbosity != 3'd0)
+	  ifc_master_xactor_f_wr_resp$D_OUT[1:0] != 2'b0)
 	begin
-	  v__h4993 = $stime;
+	  v__h6357 = $stime;
 	  #0;
 	end
-    v__h4987 = v__h4993 / 32'd10;
+    v__h6351 = v__h6357 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_ifc_rl_wr_rsp && ifc_rg_wr_rsps_pending != 4'd0 &&
-	  ifc_master_xactor_f_wr_resp$D_OUT[1:0] != 2'b0 &&
-	  verbosity != 3'd0)
-	$display("%0d: %m.rl_wr_rsp: ERROR", v__h4987);
+	  ifc_master_xactor_f_wr_resp$D_OUT[1:0] != 2'b0)
+	$display("%0d: %m.rl_wr_rsp", v__h6351);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_ifc_rl_wr_rsp && ifc_rg_wr_rsps_pending != 4'd0 &&
-	  ifc_master_xactor_f_wr_resp$D_OUT[1:0] != 2'b0 &&
-	  verbosity != 3'd0)
+	  ifc_master_xactor_f_wr_resp$D_OUT[1:0] != 2'b0)
+	$display("    ERROR: AXI4 write-response error");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (WILL_FIRE_RL_ifc_rl_wr_rsp && ifc_rg_wr_rsps_pending != 4'd0 &&
+	  ifc_master_xactor_f_wr_resp$D_OUT[1:0] != 2'b0)
 	$write("    ");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_ifc_rl_wr_rsp && ifc_rg_wr_rsps_pending != 4'd0 &&
-	  ifc_master_xactor_f_wr_resp$D_OUT[1:0] != 2'b0 &&
-	  verbosity != 3'd0)
+	  ifc_master_xactor_f_wr_resp$D_OUT[1:0] != 2'b0)
 	$write("AXI4_Wr_Resp { ", "bid: ");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_ifc_rl_wr_rsp && ifc_rg_wr_rsps_pending != 4'd0 &&
-	  ifc_master_xactor_f_wr_resp$D_OUT[1:0] != 2'b0 &&
-	  verbosity != 3'd0)
+	  ifc_master_xactor_f_wr_resp$D_OUT[1:0] != 2'b0)
 	$write("'h%h", ifc_master_xactor_f_wr_resp$D_OUT[17:2]);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_ifc_rl_wr_rsp && ifc_rg_wr_rsps_pending != 4'd0 &&
-	  ifc_master_xactor_f_wr_resp$D_OUT[1:0] != 2'b0 &&
-	  verbosity != 3'd0)
+	  ifc_master_xactor_f_wr_resp$D_OUT[1:0] != 2'b0)
 	$write(", ", "bresp: ");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_ifc_rl_wr_rsp && ifc_rg_wr_rsps_pending != 4'd0 &&
-	  ifc_master_xactor_f_wr_resp$D_OUT[1:0] != 2'b0 &&
-	  verbosity != 3'd0)
+	  ifc_master_xactor_f_wr_resp$D_OUT[1:0] != 2'b0)
 	$write("'h%h", ifc_master_xactor_f_wr_resp$D_OUT[1:0]);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_ifc_rl_wr_rsp && ifc_rg_wr_rsps_pending != 4'd0 &&
-	  ifc_master_xactor_f_wr_resp$D_OUT[1:0] != 2'b0 &&
-	  verbosity != 3'd0)
+	  ifc_master_xactor_f_wr_resp$D_OUT[1:0] != 2'b0)
 	$write(", ", "buser: ");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_ifc_rl_wr_rsp && ifc_rg_wr_rsps_pending != 4'd0 &&
-	  ifc_master_xactor_f_wr_resp$D_OUT[1:0] != 2'b0 &&
-	  verbosity != 3'd0)
+	  ifc_master_xactor_f_wr_resp$D_OUT[1:0] != 2'b0)
 	$write("'h%h", 1'd0, " }");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_ifc_rl_wr_rsp && ifc_rg_wr_rsps_pending != 4'd0 &&
-	  ifc_master_xactor_f_wr_resp$D_OUT[1:0] != 2'b0 &&
-	  verbosity != 3'd0)
+	  ifc_master_xactor_f_wr_resp$D_OUT[1:0] != 2'b0)
 	$write("\n");
   end
   // synopsys translate_on

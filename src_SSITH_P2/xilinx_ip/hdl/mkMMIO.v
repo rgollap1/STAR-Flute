@@ -188,7 +188,12 @@ module mkMMIO(CLK,
 		 MUX_f_single_reqs$enq_1__VAL_2,
 		 MUX_f_single_reqs$enq_1__VAL_3;
   wire [63 : 0] MUX_rg_ld_val$write_1__VAL_1;
-  wire MUX_f_single_reqs$enq_1__SEL_1, MUX_rg_ld_val$write_1__SEL_1;
+  wire MUX_f_single_reqs$enq_1__SEL_1,
+       MUX_rg_fsm_state$write_1__SEL_2,
+       MUX_rg_fsm_state$write_1__SEL_3,
+       MUX_rg_fsm_state$write_1__SEL_4,
+       MUX_rg_fsm_state$write_1__SEL_5,
+       MUX_rg_ld_val$write_1__SEL_1;
 
   // declarations used by system tasks
   // synopsys translate_off
@@ -196,10 +201,14 @@ module mkMMIO(CLK,
   reg [31 : 0] v__h800;
   reg [31 : 0] v__h2026;
   reg [31 : 0] v__h2308;
+  reg [31 : 0] v__h2530;
+  reg [31 : 0] v__h2682;
   reg [31 : 0] v__h563;
   reg [31 : 0] v__h794;
   reg [31 : 0] v__h2020;
   reg [31 : 0] v__h2302;
+  reg [31 : 0] v__h2524;
+  reg [31 : 0] v__h2676;
   // synopsys translate_on
 
   // remaining internal signals
@@ -284,38 +293,42 @@ module mkMMIO(CLK,
 							 .EMPTY_N(f_single_rsps$EMPTY_N));
 
   // rule RL_rl_read_req
-  assign CAN_FIRE_RL_rl_read_req =
-	     f_single_reqs$FULL_N && rg_fsm_state == 2'd1 &&
-	     rg_req[207:206] != 2'd1 &&
-	     (rg_req[207:206] != 2'd2 || rg_req[74:70] != 5'b00011) ;
-  assign WILL_FIRE_RL_rl_read_req = CAN_FIRE_RL_rl_read_req ;
+  assign CAN_FIRE_RL_rl_read_req = MUX_rg_fsm_state$write_1__SEL_5 ;
+  assign WILL_FIRE_RL_rl_read_req = MUX_rg_fsm_state$write_1__SEL_5 ;
 
   // rule RL_rl_read_rsp
-  assign CAN_FIRE_RL_rl_read_rsp =
-	     f_single_rsps$EMPTY_N &&
-	     (!f_single_rsps$D_OUT[64] || rg_req[207:206] == 2'd0 ||
-	      rg_req[207:206] == 2'd2 && rg_req[74:70] == 5'b00010 ||
-	      f_single_reqs$FULL_N) &&
-	     rg_fsm_state == 2'd2 ;
-  assign WILL_FIRE_RL_rl_read_rsp = CAN_FIRE_RL_rl_read_rsp ;
+  assign CAN_FIRE_RL_rl_read_rsp = MUX_rg_fsm_state$write_1__SEL_4 ;
+  assign WILL_FIRE_RL_rl_read_rsp = MUX_rg_fsm_state$write_1__SEL_4 ;
 
   // rule RL_rl_write_req
-  assign CAN_FIRE_RL_rl_write_req =
-	     f_single_reqs$FULL_N && rg_fsm_state == 2'd1 &&
-	     rg_req[207:206] == 2'd1 ;
-  assign WILL_FIRE_RL_rl_write_req = CAN_FIRE_RL_rl_write_req ;
+  assign CAN_FIRE_RL_rl_write_req = MUX_rg_fsm_state$write_1__SEL_3 ;
+  assign WILL_FIRE_RL_rl_write_req = MUX_rg_fsm_state$write_1__SEL_3 ;
 
   // rule RL_rl_AMO_SC
-  assign CAN_FIRE_RL_rl_AMO_SC =
-	     rg_fsm_state == 2'd1 && rg_req[207:206] == 2'd2 &&
-	     rg_req[74:70] == 5'b00011 ;
-  assign WILL_FIRE_RL_rl_AMO_SC = CAN_FIRE_RL_rl_AMO_SC ;
+  assign CAN_FIRE_RL_rl_AMO_SC = MUX_rg_fsm_state$write_1__SEL_2 ;
+  assign WILL_FIRE_RL_rl_AMO_SC = MUX_rg_fsm_state$write_1__SEL_2 ;
 
   // inputs to muxes for submodule ports
   assign MUX_f_single_reqs$enq_1__SEL_1 =
 	     WILL_FIRE_RL_rl_read_rsp && f_single_rsps$D_OUT[64] &&
 	     rg_req[207:206] != 2'd0 &&
 	     (rg_req[207:206] != 2'd2 || rg_req[74:70] != 5'b00010) ;
+  assign MUX_rg_fsm_state$write_1__SEL_2 =
+	     rg_fsm_state == 2'd1 && rg_req[207:206] == 2'd2 &&
+	     rg_req[74:70] == 5'b00011 ;
+  assign MUX_rg_fsm_state$write_1__SEL_3 =
+	     f_single_reqs$FULL_N && rg_fsm_state == 2'd1 &&
+	     rg_req[207:206] == 2'd1 ;
+  assign MUX_rg_fsm_state$write_1__SEL_4 =
+	     f_single_rsps$EMPTY_N &&
+	     (!f_single_rsps$D_OUT[64] || rg_req[207:206] == 2'd0 ||
+	      rg_req[207:206] == 2'd2 && rg_req[74:70] == 5'b00010 ||
+	      f_single_reqs$FULL_N) &&
+	     rg_fsm_state == 2'd2 ;
+  assign MUX_rg_fsm_state$write_1__SEL_5 =
+	     f_single_reqs$FULL_N && rg_fsm_state == 2'd1 &&
+	     rg_req[207:206] != 2'd1 &&
+	     (rg_req[207:206] != 2'd2 || rg_req[74:70] != 5'b00011) ;
   assign MUX_rg_ld_val$write_1__SEL_1 =
 	     WILL_FIRE_RL_rl_read_rsp && f_single_rsps$D_OUT[64] ;
   assign MUX_f_single_reqs$enq_1__VAL_1 =
@@ -411,7 +424,7 @@ module mkMMIO(CLK,
   // submodule f_single_rsps
   assign f_single_rsps$D_IN = mmio_client_response_put ;
   assign f_single_rsps$ENQ = EN_mmio_client_response_put ;
-  assign f_single_rsps$DEQ = CAN_FIRE_RL_rl_read_rsp ;
+  assign f_single_rsps$DEQ = MUX_rg_fsm_state$write_1__SEL_4 ;
   assign f_single_rsps$CLR = 1'b0 ;
 
   // remaining internal signals
@@ -666,7 +679,7 @@ module mkMMIO(CLK,
 		 rg_req[138:75]);
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_write_req && verbosity >= 3'd2)
-	$display("    goto MMIO_DONE");
+	$display("    => FSM_IDLE");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_AMO_SC && verbosity != 3'd0)
 	begin
@@ -687,7 +700,82 @@ module mkMMIO(CLK,
 	$display("    FAIL due to I/O address.");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_AMO_SC && verbosity != 3'd0)
-	$display("    goto MMIO_DONE");
+	$display("    => FSM_IDLE");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (EN_req && verbosity != 3'd0)
+	begin
+	  v__h2530 = $stime;
+	  #0;
+	end
+    v__h2524 = v__h2530 / 32'd10;
+    if (RST_N != `BSV_RESET_VALUE)
+      if (EN_req && verbosity != 3'd0) $display("%0d: %m.ma_req", v__h2524);
+    if (RST_N != `BSV_RESET_VALUE)
+      if (EN_req && verbosity != 3'd0) $write("    ");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (EN_req && verbosity != 3'd0) $write("MMU_Cache_Req { ", "op: ");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (EN_req && verbosity != 3'd0 && req_mmu_cache_req[207:206] == 2'd0)
+	$write("CACHE_LD");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (EN_req && verbosity != 3'd0 && req_mmu_cache_req[207:206] == 2'd1)
+	$write("CACHE_ST");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (EN_req && verbosity != 3'd0 && req_mmu_cache_req[207:206] != 2'd0 &&
+	  req_mmu_cache_req[207:206] != 2'd1)
+	$write("CACHE_AMO");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (EN_req && verbosity != 3'd0) $write(", ", "f3: ");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (EN_req && verbosity != 3'd0)
+	$write("'h%h", req_mmu_cache_req[205:203]);
+    if (RST_N != `BSV_RESET_VALUE)
+      if (EN_req && verbosity != 3'd0) $write(", ", "va: ");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (EN_req && verbosity != 3'd0)
+	$write("'h%h", req_mmu_cache_req[202:139]);
+    if (RST_N != `BSV_RESET_VALUE)
+      if (EN_req && verbosity != 3'd0) $write(", ", "st_value: ");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (EN_req && verbosity != 3'd0)
+	$write("'h%h", req_mmu_cache_req[138:75]);
+    if (RST_N != `BSV_RESET_VALUE)
+      if (EN_req && verbosity != 3'd0) $write(", ", "amo_funct7: ");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (EN_req && verbosity != 3'd0)
+	$write("'h%h", req_mmu_cache_req[74:68]);
+    if (RST_N != `BSV_RESET_VALUE)
+      if (EN_req && verbosity != 3'd0) $write(", ", "priv: ");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (EN_req && verbosity != 3'd0)
+	$write("'h%h", req_mmu_cache_req[67:66]);
+    if (RST_N != `BSV_RESET_VALUE)
+      if (EN_req && verbosity != 3'd0) $write(", ", "sstatus_SUM: ");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (EN_req && verbosity != 3'd0) $write("'h%h", req_mmu_cache_req[65]);
+    if (RST_N != `BSV_RESET_VALUE)
+      if (EN_req && verbosity != 3'd0) $write(", ", "mstatus_MXR: ");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (EN_req && verbosity != 3'd0) $write("'h%h", req_mmu_cache_req[64]);
+    if (RST_N != `BSV_RESET_VALUE)
+      if (EN_req && verbosity != 3'd0) $write(", ", "satp: ");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (EN_req && verbosity != 3'd0)
+	$write("'h%h", req_mmu_cache_req[63:0], " }");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (EN_req && verbosity != 3'd0) $write("\n");
+    if (RST_N != `BSV_RESET_VALUE)
+      if (EN_start && verbosity != 3'd0)
+	begin
+	  v__h2682 = $stime;
+	  #0;
+	end
+    v__h2676 = v__h2682 / 32'd10;
+    if (RST_N != `BSV_RESET_VALUE)
+      if (EN_start && verbosity != 3'd0)
+	$display("%0d: %m.ma_start", v__h2676);
+    if (RST_N != `BSV_RESET_VALUE)
+      if (EN_start && verbosity != 3'd0) $display("    add %0h", start_pa);
   end
   // synopsys translate_on
 endmodule  // mkMMIO

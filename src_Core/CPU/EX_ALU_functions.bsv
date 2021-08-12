@@ -808,6 +808,54 @@ function ALU_Outputs fv_ST (ALU_Inputs inputs);
    return alu_outputs;
 endfunction
 
+
+// ----------------------------------------------------------------
+// LOAD - Context
+
+function ALU_Outputs fv_LDC (ALU_Inputs inputs);
+   // Signed versions of rs1_val and rs2_val
+   let opcode = inputs.decoded_instr.opcode;
+   IntXL s_rs1_val = unpack (inputs.rs1_val);
+
+   IntXL  imm_s = extend (unpack (inputs.decoded_instr.imm12_I));
+   WordXL eaddr = pack (s_rs1_val + imm_s);
+
+   let regFileType = inputs.decoded_instr.funct3;
+
+
+
+   let alu_outputs = alu_outputs_base;
+
+   alu_outputs.control   = CONTROL_STRAIGHT
+   alu_outputs.op_stage2 = OP_Stage2_LDC;
+   alu_outputs.rd        = inputs.decoded_instr.rd;
+   alu_outputs.addr      = eaddr;
+
+   return alu_outputs;
+endfunction
+
+
+// ----------------------------------------------------------------
+// STORE
+
+function ALU_Outputs fv_STC (ALU_Inputs inputs);
+   // Signed version of rs1_val
+   IntXL  s_rs1_val = unpack (inputs.rs1_val);
+   IntXL  imm_s     = extend (unpack (inputs.decoded_instr.imm12_S));
+   WordXL eaddr     = pack (s_rs1_val + imm_s);
+
+   let opcode = inputs.decoded_instr.opcode;
+   let funct3 = inputs.decoded_instr.funct3;
+ 
+   alu_outputs.control   = CONTROL_STRAIGHT;
+   alu_outputs.op_stage2 = OP_Stage2_STC;
+   alu_outputs.addr      = eaddr;
+   alu_outputs.val2      = inputs.rs2_val;
+
+   return alu_outputs;
+endfunction
+
+
 // ----------------------------------------------------------------
 // MISC_MEM (FENCE and FENCE.I)
 // No-ops, for now

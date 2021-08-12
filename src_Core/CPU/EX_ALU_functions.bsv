@@ -88,6 +88,7 @@ typedef struct {
    RegName    rd;
    Addr       addr;           // Branch, jump: newPC
 		              // Mem ops and AMOs: mem addr
+   Addr       tag_addr;	      // Tag address for mem ops -- rgollap1
    WordXL     val1;           // OP_Stage2_ALU: result for Rd (ALU ops: result, JAL/JALR: return PC)
                               // CSRRx: rs1_val
                               // OP_Stage2_M: arg1
@@ -126,6 +127,7 @@ ALU_Outputs alu_outputs_base
 	       op_stage2   : ?,
 	       rd          : ?,
 	       addr        : ?,
+	       tag_addr	   : ?, // initializing tag_addr to remove stale values -- rgollap1
 	       val1        : ?,
 	       val2        : ?,
 `ifdef ISA_F
@@ -674,7 +676,7 @@ function ALU_Outputs fv_LD (ALU_Inputs inputs);
 
    IntXL  imm_s = extend (unpack (inputs.decoded_instr.imm12_I));
    WordXL eaddr = pack (s_rs1_val + imm_s);
-
+   WordXL tag_eaddr = pack ((eaddr >> 4) + 'h_003c_0000_0000); // computing tag address - rgollap1
    let funct3 = inputs.decoded_instr.funct3;
 
    Bool legal_LD = (   (funct3 == f3_LB) || (funct3 == f3_LBU)
@@ -706,6 +708,7 @@ function ALU_Outputs fv_LD (ALU_Inputs inputs);
    alu_outputs.op_stage2 = OP_Stage2_LD;
    alu_outputs.rd        = inputs.decoded_instr.rd;
    alu_outputs.addr      = eaddr;
+   alu_outputs.tag_addr  = tag_eaddr; // assigning computed tag address to alu outputs -- rgollap1
 `ifdef ISA_F
    // note that the destination register for this load is in the FPR
    alu_outputs.rd_in_fpr = (opcode == op_LOAD_FP);
@@ -742,7 +745,7 @@ function ALU_Outputs fv_ST (ALU_Inputs inputs);
    IntXL  s_rs1_val = unpack (inputs.rs1_val);
    IntXL  imm_s     = extend (unpack (inputs.decoded_instr.imm12_S));
    WordXL eaddr     = pack (s_rs1_val + imm_s);
-
+   WordXL tag_eaddr = pack ((eaddr >> 4) + 'h_003c_0000_0000); // computing tag address -- rgollap1
    let opcode = inputs.decoded_instr.opcode;
    let funct3 = inputs.decoded_instr.funct3;
    Bool legal_ST = (   (funct3 == f3_SB)
@@ -776,7 +779,7 @@ function ALU_Outputs fv_ST (ALU_Inputs inputs);
                                                       : CONTROL_TRAP);
    alu_outputs.op_stage2 = OP_Stage2_ST;
    alu_outputs.addr      = eaddr;
-
+   alu_outputs.tag_addr  = tag_eaddr; // assiging the comouted tag address to alu outputs -- rgollap1
    alu_outputs.val2      = inputs.rs2_val;
 
 `ifdef ISA_F

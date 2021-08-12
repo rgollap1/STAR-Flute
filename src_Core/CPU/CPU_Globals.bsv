@@ -429,6 +429,7 @@ typedef struct {
    RegName    rd;
    Addr       addr;              // Branch, jump: newPC
                                  // Mem ops and AMOs: mem addr
+   Addr       tag_addr;		 // Tag address for memory ops -- rgollap1
    WordXL     val1;              // OP_Stage2_ALU: rd_val
                                  // OP_Stage2_M
 

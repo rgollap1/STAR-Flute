@@ -180,7 +180,7 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
 					       op_stage2     : alu_outputs.op_stage2,
 					       rd            : alu_outputs.rd,
 					       addr          : alu_outputs.addr,
-					       tag_addr	     : alu_outputs.tag_addr,
+					       tag_addr	     : alu_outputs.tag_addr, // rgollap1 -- passing the computed the tag address to the execution stage
 					       val1          : alu_outputs.val1,
 					       val2          : alu_outputs.val2,
 `ifdef ISA_F
@@ -220,6 +220,7 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
 						     op_stage2: OP_Stage2_ALU,
 						     rd:        0,
 						     addr:      ?,
+						     tag_addr:  ?,  // rgollap1 -- initializing the tag address to remove stale addresses
 						     val1:      ?,
 						     val2:      ?,
 `ifdef ISA_F

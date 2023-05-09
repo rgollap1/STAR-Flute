@@ -95,8 +95,10 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
    Reg #(Data_StageD_to_Stage1) rg_stage_input <- mkRegU;
 
    Reg #(Bit #(4))              rg_cfi         <- mkRegU;
-   Reg #(Bit #(18))             rg_source_lbl     <- mkRegU; 
-
+   Reg #(Bit #(18))             rg_source_lbl  <- mkRegU; 
+   Reg #(Bit #(1))              rg_lbl_cfi     <- mkRegU;
+   
+>>>>>>> Added CFI Checks in Execute Stage
    MISA misa   = csr_regfile.read_misa;
    Bit #(2) xl = ((xlen == 32) ? misa_mxl_32 : misa_mxl_64);
 

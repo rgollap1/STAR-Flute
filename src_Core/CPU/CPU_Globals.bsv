@@ -424,7 +424,7 @@ typedef struct {
    Addr       pc;
    Instr      instr;             // For debugging. Just funct3, funct7 are
                                  // enough for functionality.
-   Bit #(8)   tag;               //rgollap1 -- Adding a tag field in the data_struct
+   Bit #(8)   tag;               // rgollap1 -- Adding a tag field in the data_struct
    Op_Stage2  op_stage2;
    RegName    rd;
    Addr       addr;              // Branch, jump: newPC
@@ -432,9 +432,10 @@ typedef struct {
    Addr       tag_addr;		 // Tag address for memory ops -- rgollap1
    WordXL     val1;              // OP_Stage2_ALU: rd_val
                                  // OP_Stage2_M
-
+   Bit #(4)   val1_tag;          // rgollap1 -- val1 data tag
    WordXL     val2;              // OP_Stage2_ST: store-val;
                                  // OP_Stage2_M and OP_Stage2_FD: arg2
+   Bit #(4)  val2_tag;           // rgollap1 -- val2 data tag
 
 `ifdef ISA_F
    // Floating point fields
@@ -515,6 +516,7 @@ typedef struct {
    Bool      rd_valid;
    RegName   rd;
    WordXL    rd_val;
+   Bit #(4)  rd_val_tag;  // rgollap1 -- data tag 
 
 `ifdef ISA_F
    Bool      upd_flags;

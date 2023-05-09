@@ -141,9 +141,9 @@ module mkCPU_StageF #(Bit #(4)  verbosity,
 		      Bit #(1)         sstatus_SUM,
 		      Bit #(1)         mstatus_MXR,
 		      WordXL           satp);
-      if (pc[3:0] == 0 && priv == 0 /*pc > 'h_2000*/) begin //rgollap1
+      if (pc[3:0] == 0 && priv == 0 && pc < 'h_0015_5555_6000) begin //rgollap1
       	 pc = pc + 4;
-//	 $display("pc:0x%0h" , pc);
+	 //$display("pc:0x%0h" , pc);
       end
       
       if (verbosity > 1) begin

@@ -48,8 +48,10 @@ import PC_Trace  :: *;
 import TV_Info   :: *;
 
 import GPR_RegFile :: *;
+import GPR_TAG_RegFile :: *; // rgollap1 -- importing the new tag register file module
 `ifdef ISA_F
 import FPR_RegFile :: *;
+import FPR_TAG_RegFile :: *; // rgollap1 -- importing the new tag register file module
 `endif
 import CSR_RegFile :: *;
 import CPU_Globals :: *;
@@ -130,8 +132,10 @@ module mkCPU (CPU_IFC);
    // ----------------
    // General purpose registers and CSRs
    GPR_RegFile_IFC  gpr_regfile  <- mkGPR_RegFile;
+   GPR_TAG_RegFile_IFC  gpr_tag_regfile  <- mkGPR_TAG_RegFile; // initializing tag register file -- rgollap1
 `ifdef ISA_F
    FPR_RegFile_IFC  fpr_regfile  <- mkFPR_RegFile;
+   FPR_TAG_RegFile_IFC  fpr_tag_regfile  <- mkFPR_TAG_RegFile; // initializing tag register file for floating point register file -- rgollap1
 `endif
 
    CSR_RegFile_IFC  csr_regfile  <- mkCSR_RegFile;
@@ -207,8 +211,10 @@ module mkCPU (CPU_IFC);
 
    CPU_Stage3_IFC stage3 <- mkCPU_Stage3 (cur_verbosity,
 					  gpr_regfile,
+					  gpr_tag_regfile,
 `ifdef ISA_F
 					  fpr_regfile,
+					  fpr_tag_regfile,
 `endif
 					  csr_regfile);
 
@@ -216,10 +222,12 @@ module mkCPU (CPU_IFC);
 
    CPU_Stage1_IFC  stage1 <- mkCPU_Stage1 (cur_verbosity,
 					   gpr_regfile,
+					   gpr_tag_regfile,
 					   stage2.out.bypass,
 					   stage3.out.bypass,
 `ifdef ISA_F
 					   fpr_regfile,
+					   fpr_tag_regfile,
 					   stage2.out.fbypass,
 					   stage3.out.fbypass,
 `endif
@@ -449,8 +457,10 @@ module mkCPU (CPU_IFC);
       $display ("================================================================");
 
       gpr_regfile.server_reset.request.put (?);
+      gpr_tag_regfile.server_reset.request.put (?);
 `ifdef ISA_F
       fpr_regfile.server_reset.request.put (?);
+      fpr_tag_regfile.server_reset.request.put (?);
 `endif
       csr_regfile.server_reset.request.put (?);
       near_mem.server_reset.request.put (?);
@@ -490,8 +500,10 @@ module mkCPU (CPU_IFC);
 
    rule rl_reset_complete (rg_state == CPU_RESET2);
       let ack_gpr <- gpr_regfile.server_reset.response.get;
+      let ack_gpr_tag <- gpr_tag_regfile.server_reset.response.get;
 `ifdef ISA_F
       let ack_fpr <- fpr_regfile.server_reset.response.get;
+      let ack_fpr_tag <- fpr_tag_regfile.server_reset.response.get;
 `endif
       let ack_csr <- csr_regfile.server_reset.response.get;
       let ack_nm  <- near_mem.server_reset.response.get;

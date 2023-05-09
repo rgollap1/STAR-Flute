@@ -288,8 +288,8 @@ module mkBranch_Predictor (Branch_Predictor_IFC);
 
       	 pred_pc = rg_pc + (is_i32_not_i16 ? 4 : 2);
 
-	 if (/* pred_pc > 'h_2000 */ cur_priv == 0 && pred_pc[3:0] == 0)
-	    pred_pc = pred_pc + 4;
+/*	 if (pred_pc > 'h_2000 && cur_priv == 0 && pred_pc[3:0] == 0)
+	    pred_pc = pred_pc + 4;*/
       end
       return pred_pc;
    endmethod

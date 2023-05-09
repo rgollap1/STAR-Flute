@@ -34,8 +34,10 @@ import ISA_Decls        :: *;
 import CPU_Globals      :: *;
 import Near_Mem_IFC     :: *;
 import GPR_RegFile      :: *;
+import GPR_TAG_RegFile      :: *;
 `ifdef ISA_F
 import FPR_RegFile      :: *;
+import FPR_TAG_RegFile      :: *;
 `endif
 import CSR_RegFile      :: *;
 import EX_ALU_functions :: *;
@@ -72,10 +74,12 @@ endinterface
 
 module mkCPU_Stage1 #(Bit #(4)         verbosity,
 		      GPR_RegFile_IFC  gpr_regfile,
+		      GPR_TAG_RegFile_IFC  gpr_tag_regfile,
 		      Bypass           bypass_from_stage2,
 		      Bypass           bypass_from_stage3,
 `ifdef ISA_F
 		      FPR_RegFile_IFC  fpr_regfile,
+		      FPR_TAG_RegFile_IFC  fpr_tag_regfile,
 		      FBypass          fbypass_from_stage2,
 		      FBypass          fbypass_from_stage3,
 `endif
@@ -89,6 +93,9 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
 
    Reg #(Bool)                  rg_full        <- mkReg (False);
    Reg #(Data_StageD_to_Stage1) rg_stage_input <- mkRegU;
+
+   Reg #(Bit #(4))              rg_cfi         <- mkRegU;
+   Reg #(Bit #(18))             rg_source_lbl     <- mkRegU; 
 
    MISA misa   = csr_regfile.read_misa;
    Bit #(2) xl = ((xlen == 32) ? misa_mxl_32 : misa_mxl_64);
@@ -116,6 +123,9 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
    Bool rs1_busy = (busy1a || busy1b);
    Word rs1_val_bypassed = ((rs1 == 0) ? 0 : rs1b);
 
+   // Register rs1 tag read and bypass
+   let rs1_val_tag = gpr_tag_regfile.read_rs1 (rs1); //rgollap1 - val1 data tag
+
    // Register rs2 read and bypass
    let rs2 = decoded_instr.rs2;
    let rs2_val = gpr_regfile.read_rs2 (rs2);
@@ -123,6 +133,10 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
    match { .busy2b, .rs2b } = fn_gpr_bypass (bypass_from_stage2, rs2, rs2a);
    Bool rs2_busy = (busy2a || busy2b);
    Word rs2_val_bypassed = ((rs2 == 0) ? 0 : rs2b);
+
+
+   // Register rs2 tag read and bypass
+   let rs2_val_tag = gpr_tag_regfile.read_rs2 (rs2); //rgollap1 - val2 data tag
 
 `ifdef ISA_F
    // FP Register rs1 read and bypass
@@ -203,13 +217,55 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
    function Output_Stage1 fv_out;
       Output_Stage1 output_stage1 = ?;
 
+      if (rg_tag == CAL) begin // rgollap1 - function call registered 
+      	 if (rg_stage_input.tag == TFC) // function call target
+	    rg_tag = 0
+	 else
+            rg_stage_input.exc = True // -- ravitheg Setting CPU Trap (Exception if check fails)
+      end
+
+      else if (rg_tag == RET) begin // rgollap1 - function return registered
+         if (rg_stage_input.tag == TFR) // function return target
+            rg_tag = 0
+         else
+            rg_stage_input.exc = True // -- ravitheg Setting CPU Trap (Exception if check fails)
+      end
+
+      else if (rg_tag == 0) begin // rgollap1 - Checkking for a fucntion call otr return
+         if (rg_stage_input.tag == CAL) && (rg_state_input.tag == RET) // function return target
+            rg_tag = rg_state_input.tag
+	 else if (rg_stage_input.tag == LBL) // checking for fucntion label
+	    if (rg_state_input.instr[31] == 0) begin // checking if the lbl is source lbl not a dest lbl encountered in a pass through
+	       rg_tag = LBL 
+	       rg_source_lbl = rg_state_input.instr[13:30]
+	    end
+      end
+
+      else if (rg_tag == LBL) begin // rgollap1 - checking for intermediate instruction or target instrtuction after source lbl
+      	 if (rg_lbl_cfi == 0) begin
+      	    if (rg_stage_input.tag == CAL) || (rg_stage_input.tag == RET)
+	       rg_lbl_cfi = rg_stage_input.tag
+	    else
+	       rg_stage_input.exc = True // -- ravitheg Setting CPU Trap 
+	 end
+	 else if  (rg_lbl_cfi == 1) begin
+	    if (rg_stage_input.tag == LBL) && (rg_stage_input.tag == 1) && (rg_stage_input.instr[13:30] == rg_source_lbl)
+	       rg_lbl_cfi = 0
+	       rg_tag = 0
+	       rg_source_lbl = 0
+	    else
+	       rg_stage_input.exc = True // -- ravitheg Setting CPU Trap
+	 end
+	 
+
+
       // This stage is empty
       if (! rg_full) begin
 	 output_stage1.ostatus = OSTATUS_EMPTY;
       end
 
       // Wrong branch-prediction epoch: discard instruction (convert into a NOOP)
-      else if (rg_stage_input.epoch != cur_epoch) begin
+      else if (rg_stage_input.epoch != cur_epoch || alu_outputs.isNop ) begin
 	 output_stage1.ostatus = OSTATUS_PIPE;
 	 output_stage1.control = CONTROL_DISCARD;
 
@@ -294,8 +350,6 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
 
 	 let fall_through_pc = rg_stage_input.pc + (rg_stage_input.is_i32_not_i16 ? 4 : 2);
 
-	 if (fall_through_pc[3:0] == 0 /*&& fall_through_pc > 'h_2000 */ && cur_priv == 0)
-	    fall_through_pc = fall_through_pc + 4; // rgollap1
 
 	 let next_pc = ((alu_outputs.control == CONTROL_BRANCH)
 			? alu_outputs.addr

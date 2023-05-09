@@ -37,8 +37,10 @@ import Cur_Cycle :: *;
 
 import ISA_Decls   :: *;
 import GPR_RegFile :: *;
+import GPR_TAG_RegFile :: *;
 `ifdef ISA_F
 import FPR_RegFile :: *;
+import FPR_TAG_RegFile :: *;
 `endif
 import CSR_RegFile :: *;
 import CPU_Globals :: *;
@@ -77,8 +79,10 @@ endinterface
 
 module mkCPU_Stage3 #(Bit #(4)         verbosity,
 		      GPR_RegFile_IFC  gpr_regfile,
+		      GPR_TAG_RegFile_IFC  gpr_tag_regfile,
 `ifdef ISA_F
 		      FPR_RegFile_IFC  fpr_regfile,
+		      FPR_TAG_RegFile_IFC  fpr_tag_regfile,
 `endif
 		      CSR_RegFile_IFC  csr_regfile)
                     (CPU_Stage3_IFC);

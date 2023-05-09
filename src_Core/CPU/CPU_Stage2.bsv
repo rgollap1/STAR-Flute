@@ -629,7 +629,7 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 			mstatus_MXR,
 			csr_regfile.read_satp);
 
-	   if(x.priv == 0 && (cache_op == CACHE_LD || cache_op == CACHE_ST) && !op_stage2_amo /*&& x.addr < 'h_003c_0000_0000*/) begin // rgollap1
+	   if(x.priv == 0 && (cache_op == CACHE_LD || cache_op == CACHE_ST) && !op_stage2_amo && x.addr < 'h_003c_0000_0000) begin // rgollap1
 
 		
 		dtcache.req (cache_op,

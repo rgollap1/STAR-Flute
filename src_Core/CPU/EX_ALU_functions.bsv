@@ -89,6 +89,7 @@ typedef struct {
    Addr       addr;           // Branch, jump: newPC
 		              // Mem ops and AMOs: mem addr
    Addr       tag_addr;	      // Tag address for mem ops -- rgollap1
+   Bool       isNop;          // bool check to skip tag instructions  -- rgollap1
    WordXL     val1;           // OP_Stage2_ALU: result for Rd (ALU ops: result, JAL/JALR: return PC)
                               // CSRRx: rs1_val
                               // OP_Stage2_M: arg1
@@ -128,6 +129,7 @@ ALU_Outputs alu_outputs_base
 	       rd          : ?,
 	       addr        : ?,
 	       tag_addr	   : ?, // initializing tag_addr to remove stale values -- rgollap1
+	       isNop       : False, // rgollap1
 	       val1        : ?,
 	       val2        : ?,
 `ifdef ISA_F
@@ -157,9 +159,6 @@ function Addr fall_through_pc (ALU_Inputs  inputs);
       next_pc = inputs.pc + 2;
 `endif
 
-   if (inputs.cur_priv == u_Priv_Mode && next_pc[3:0] == 0 /*&& next_pc > 'h_2000*/)
-      next_pc = next_pc + 4; // rgollap1
-      
    return next_pc;
 endfunction
 
@@ -810,7 +809,7 @@ endfunction
 
 
 // ----------------------------------------------------------------
-// LOAD - Context
+// LOAD - Context  --rgollap1
 
 function ALU_Outputs fv_LDC (ALU_Inputs inputs);
    // Signed versions of rs1_val and rs2_val
@@ -826,17 +825,17 @@ function ALU_Outputs fv_LDC (ALU_Inputs inputs);
 
    let alu_outputs = alu_outputs_base;
 
-   alu_outputs.control   = CONTROL_STRAIGHT
-   alu_outputs.op_stage2 = OP_Stage2_LDC;
+   alu_outputs.control   = CONTROL_STRAIGHT;
+   alu_outputs.op_stage2 = OP_Stage2_LD;
    alu_outputs.rd        = inputs.decoded_instr.rd;
    alu_outputs.addr      = eaddr;
-
+   alu_outputs.isNop = True;
    return alu_outputs;
 endfunction
 
 
 // ----------------------------------------------------------------
-// STORE
+// STORE - Context  -- rgollap1
 
 function ALU_Outputs fv_STC (ALU_Inputs inputs);
    // Signed version of rs1_val
@@ -846,14 +845,32 @@ function ALU_Outputs fv_STC (ALU_Inputs inputs);
 
    let opcode = inputs.decoded_instr.opcode;
    let funct3 = inputs.decoded_instr.funct3;
- 
+
+   let alu_outputs = alu_outputs_base;
+
    alu_outputs.control   = CONTROL_STRAIGHT;
-   alu_outputs.op_stage2 = OP_Stage2_STC;
+   alu_outputs.op_stage2 = OP_Stage2_ST;
    alu_outputs.addr      = eaddr;
    alu_outputs.val2      = inputs.rs2_val;
+   alu_outputs.isNop = True;
 
    return alu_outputs;
 endfunction
+
+
+
+// ----------------------------------------------------------------
+// TAG
+
+function ALU_Outputs fv_TAG (ALU_Inputs inputs);
+   // Signed version of rs1_val
+   let alu_outputs = alu_outputs_base;
+
+    alu_outputs.isNop = True;
+
+   return alu_outputs;
+endfunction
+
 
 
 // ----------------------------------------------------------------
@@ -1126,7 +1143,7 @@ function ALU_Outputs fv_ALU (ALU_Inputs inputs);
 
    else if (inputs.decoded_instr.opcode == op_JAL)
       alu_outputs = fv_JAL (inputs);
-
+   
    else if (inputs.decoded_instr.opcode == op_JALR)
       alu_outputs = fv_JALR (inputs);
 
@@ -1207,6 +1224,15 @@ function ALU_Outputs fv_ALU (ALU_Inputs inputs);
 
    else if (inputs.decoded_instr.opcode == op_STORE)
       alu_outputs = fv_ST (inputs);
+
+   else if (inputs.decoded_instr.opcode == op_TAG)   // rgollap1 -- proccessing the tag instruction if need be
+      alu_outputs = fv_TAG (inputs);
+
+   else if (inputs.decoded_instr.opcode == op_LOAD_CONTEXT)
+      alu_outputs = fv_LDC (inputs);
+
+   else if (inputs.decoded_instr.opcode == op_STORE_CONTEXT)
+      alu_outputs = fv_STC (inputs);
 
    else if (inputs.decoded_instr.opcode == op_MISC_MEM)
       alu_outputs = fv_MISC_MEM (inputs);

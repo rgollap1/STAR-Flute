@@ -46,6 +46,8 @@ typedef struct {
    Decoded_Instr  decoded_instr;
    WordXL         rs1_val;
    WordXL         rs2_val;
+   Bit #(4)       rs1_val_tag;
+   Bit #(4)       rs2_val_tag;
    WordXL         mstatus;
 `ifdef ISA_F
    Bit #(3)       frm;
@@ -94,10 +96,11 @@ typedef struct {
                               // CSRRx: rs1_val
                               // OP_Stage2_M: arg1
                               // OP_Stage2_AMO: funct7
-
+   Bit #(4)   val1_tag;       // tag for val1
    WordXL     val2;           // Branch: branch target (for Tandem Verification)
 		              // OP_Stage2_ST: store-val
                               // OP_Stage2_M: arg2
+   Bit #(4)   val2_tag;       // tag for val2
 `ifdef ISA_F
    WordFL     fval1;          // OP_Stage2_FD: arg1
    WordFL     fval2;          // OP_Stage2_FD: arg2
@@ -132,6 +135,8 @@ ALU_Outputs alu_outputs_base
 	       isNop       : False, // rgollap1
 	       val1        : ?,
 	       val2        : ?,
+	       val1_tag    : ?,
+	       val2_tag    : ?,
 `ifdef ISA_F
 	       fval1       : ?,
 	       fval2       : ?,

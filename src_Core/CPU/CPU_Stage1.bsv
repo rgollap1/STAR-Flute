@@ -34,7 +34,8 @@ import ISA_Decls        :: *;
 import CPU_Globals      :: *;
 import Near_Mem_IFC     :: *;
 import GPR_RegFile      :: *;
-import GPR_TAG_RegFile      :: *;
+import GPR_TAG_RegFile  :: *;
+import TPRF_RegFile     :: *;
 `ifdef ISA_F
 import FPR_RegFile      :: *;
 import FPR_TAG_RegFile      :: *;
@@ -75,13 +76,21 @@ endinterface
 module mkCPU_Stage1 #(Bit #(4)         verbosity,
 		      GPR_RegFile_IFC  gpr_regfile,
 		      GPR_TAG_RegFile_IFC  gpr_tag_regfile,
+		      TPRF_RegFile_IFC tprf_tag_regfile,		      
 		      Bypass           bypass_from_stage2,
+		      Bypass_Tag       bypass_tag_from_stage2,
+		      Bypass_TPRF      bypass_tprf_from_stage2,
+		      Bypass_LBL       bypass_lbl_from_stage2,
 		      Bypass           bypass_from_stage3,
+		      Bypass_Tag       bypass_tag_from_stage3,
+
 `ifdef ISA_F
 		      FPR_RegFile_IFC  fpr_regfile,
 		      FPR_TAG_RegFile_IFC  fpr_tag_regfile,
 		      FBypass          fbypass_from_stage2,
 		      FBypass          fbypass_from_stage3,
+                      FBypass_Tag      fbypass_tag_from_stage2,
+                      FBypass_Tag      fbypass_tag_from_stage3,
 `endif
 		      CSR_RegFile_IFC  csr_regfile,
 		      Epoch            cur_epoch,
@@ -127,7 +136,11 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
 
    // Register rs1 tag read and bypass
    let rs1_val_tag = gpr_tag_regfile.read_rs1 (rs1); //rgollap1 - val1 data tag
-
+   match { .busyt1a, .rst1a } = fn_gpr_tag_bypass (bypass_tag_from_stage3, rs1, rs1_val_tag);
+   match { .busyt1b, .rst1b } = fn_gpr_tag_bypass (bypass_tag_from_stage2, rs1, rs1ta);
+   Bool rs1_tag_busy = (busyt1a || busyt1b);
+   Word rs1_val_tag_bypassed = ((rs1 == 0) ? 0 : rs1tb);
+   
    // Register rs2 read and bypass
    let rs2 = decoded_instr.rs2;
    let rs2_val = gpr_regfile.read_rs2 (rs2);
@@ -136,10 +149,23 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
    Bool rs2_busy = (busy2a || busy2b);
    Word rs2_val_bypassed = ((rs2 == 0) ? 0 : rs2b);
 
-
    // Register rs2 tag read and bypass
    let rs2_val_tag = gpr_tag_regfile.read_rs2 (rs2); //rgollap1 - val2 data tag
+   match { .busyt2a, .rst2a } = fn_gpr_tag_bypass (bypass_tag_from_stage3, rs2, rs2_val_tag);
+   match { .busyt2b, .rst2b } = fn_gpr_tag_bypass (bypass_tag_from_stage2, rs2, rst2a);
+   Bool rs2_busy = (busy2ta || busy2tb);
+   Word rs2_val_tag_bypassed = ((rs2 == 0) ? 0 : rst2b);
 
+   let rs_cfi = 1
+   let cfi_val = tprf_regfile.read_rs1 (rs_cfi); //rgollap1 - cfi status
+   match { .busycfi, .rscfi } = fn_tprf_bypass (bypass_tprf_from_stage2, rs_cfi, cfi_val);
+   rg_cfi = rscfi;
+
+   let rs_lbl = 2
+   let cfi_lbl = tprf_regfile.read_rs2 (rs_lbl); //rgollap1 - cfi lbl
+   match { .busylbl, .rslbl } = fn_lbl_bypass (bypass_tprf_from_stage2, rs_lbl, cfi_lbl);
+   rg_source_lbl = rslbl;   
+   
 `ifdef ISA_F
    // FP Register rs1 read and bypass
    let frs1_val = fpr_regfile.read_rs1 (rs1);
@@ -176,6 +202,8 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
 				decoded_instr  : rg_stage_input.decoded_instr,
 				rs1_val        : rs1_val_bypassed,
 				rs2_val        : rs2_val_bypassed,
+				rs1_val_tag    : rs1_val_tag_bypassed,
+				rs2_val_tag    : rs2_val_tag_bypassed,
 `ifdef ISA_F
 				frs1_val       : frs1_val_bypassed,
 				frs2_val       : frs2_val_bypassed,
@@ -199,6 +227,10 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
 					       tag_addr	     : alu_outputs.tag_addr, // rgollap1 -- passing the computed the tag address to the execution stage
 					       val1          : alu_outputs.val1,
 					       val2          : alu_outputs.val2,
+					       val1_tag      : alu_outputs.val1_tag,
+					       val2_tag      : alu_outputs.val2_tag,
+					       val_tchk      : rg_cfi,
+					       val_lbl       : rg_source_lbl,
 `ifdef ISA_F
 					       fval1         : alu_outputs.fval1,
 					       fval2         : alu_outputs.fval2,
@@ -219,48 +251,46 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
    function Output_Stage1 fv_out;
       Output_Stage1 output_stage1 = ?;
 
-      if (rg_tag == CAL) begin // rgollap1 - function call registered 
+      if (rg_cfi == CAL) begin // rgollap1 - function call registered 
       	 if (rg_stage_input.tag == TFC) // function call target
-	    rg_tag = 0
+	    rg_cfi = 0
 	 else
             rg_stage_input.exc = True // -- ravitheg Setting CPU Trap (Exception if check fails)
       end
 
-      else if (rg_tag == RET) begin // rgollap1 - function return registered
+      else if (rg_cfi == RET) begin // rgollap1 - function return registered
          if (rg_stage_input.tag == TFR) // function return target
-            rg_tag = 0
+            rg_cfi = 0
          else
             rg_stage_input.exc = True // -- ravitheg Setting CPU Trap (Exception if check fails)
       end
 
-      else if (rg_tag == 0) begin // rgollap1 - Checkking for a fucntion call otr return
-         if (rg_stage_input.tag == CAL) && (rg_state_input.tag == RET) // function return target
-            rg_tag = rg_state_input.tag
-	 else if (rg_stage_input.tag == LBL) // checking for fucntion label
+      else if (rg_cfi == 0) begin // rgollap1 - Checking for a fucntion call otr return
+         if (rg_stage_input.tag == CAL) || (rg_state_input.tag == RET) // function call or function return
+            rg_cfi = rg_state_input.tag
+	 else if (rg_stage_input.tag == LBL) // checking for function label
 	    if (rg_state_input.instr[31] == 0) begin // checking if the lbl is source lbl not a dest lbl encountered in a pass through
-	       rg_tag = LBL 
+	       rg_cfi = LBL_SRC 
 	       rg_source_lbl = rg_state_input.instr[13:30]
 	    end
       end
 
-      else if (rg_tag == LBL) begin // rgollap1 - checking for intermediate instruction or target instrtuction after source lbl
-      	 if (rg_lbl_cfi == 0) begin
-      	    if (rg_stage_input.tag == CAL) || (rg_stage_input.tag == RET)
-	       rg_lbl_cfi = rg_stage_input.tag
-	    else
-	       rg_stage_input.exc = True // -- ravitheg Setting CPU Trap 
-	 end
-	 else if  (rg_lbl_cfi == 1) begin
-	    if (rg_stage_input.tag == LBL) && (rg_stage_input.tag == 1) && (rg_stage_input.instr[13:30] == rg_source_lbl)
-	       rg_lbl_cfi = 0
-	       rg_tag = 0
+      else if (rg_cfi == LBL_SRC) begin // rgollap1 - checking for intermediate instruction or target instrtuction after source lbl
+      	   if (rg_stage_input.tag == CAL) || (rg_stage_input.tag == RET)
+	       rg_cfi = LBL_CFI
+ 	   else
+	      rg_stage_input.exc = True // -- ravitheg Setting CPU Trap 
+      end
+
+      else if  (rg_cfi == LBL_CFI) begin
+	    if (rg_stage_input.tag == LBL) && (rg_stage_input.instr[13:30] == rg_source_lbl)
+	       rg_cfi = 0
 	       rg_source_lbl = 0
 	    else
 	       rg_stage_input.exc = True // -- ravitheg Setting CPU Trap
 	 end
+      end
 	 
-
-
       // This stage is empty
       if (! rg_full) begin
 	 output_stage1.ostatus = OSTATUS_EMPTY;
@@ -281,6 +311,8 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
 						     tag_addr:  ?,  // rgollap1 -- initializing the tag address to remove stale addresses
 						     val1:      ?,
 						     val2:      ?,
+						     val_tchk   ?,
+						     val_lbl    ?,
 `ifdef ISA_F
 						     fval1           : ?,
 						     fval2           : ?,
@@ -358,6 +390,8 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
 			: fall_through_pc);
 	 let redirect = (next_pc != rg_stage_input.pred_pc);
 
+         data_to_stage2.val_tchk      = rg_cfi;
+	 data_to_stage2.val_lbl       = rg_source_lbl;
 	 output_stage1.ostatus        = ostatus;
 	 output_stage1.control        = alu_outputs.control;
 	 output_stage1.trap_info      = trap_info;

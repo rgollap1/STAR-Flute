@@ -123,6 +123,27 @@ typedef struct {
    } Bypass
 deriving (Bits);
 
+typedef struct {
+   Bypass_State  bypass_state;
+   RegName       rd;
+   Word          rd_val;
+   } Bypass_Tag
+deriving (Bits);
+
+typedef struct {
+   Bypass_State  bypass_state;
+   RegName       rd;
+   Word          rd_val;
+   } Bypass_TPRF
+deriving (Bits);
+
+typedef struct {
+   Bypass_State  bypass_state;
+   RegName       rd;
+   Word          rd_val;
+   } Bypass_LBL
+deriving (Bits);
+
 instance FShow #(Bypass);
    function Fmt fshow (Bypass x);
       let fmt0 = $format ("Bypass {");
@@ -142,6 +163,13 @@ typedef struct {
    RegName       rd;
    WordFL        rd_val;
    } FBypass
+deriving (Bits);
+
+typedef struct {
+   Bypass_State  bypass_state;
+   RegName       rd;
+   WordFL        rd_val;
+   } FBypass_Tag
 deriving (Bits);
 
 instance FShow #(FBypass);
@@ -165,10 +193,26 @@ Bypass no_bypass = Bypass {bypass_state: BYPASS_RD_NONE,
 			   rd: ?,
 			   rd_val: ? };
 
+Bypass no_bypass_tag = Bypass_Tag {bypass_state: BYPASS_RD_NONE,
+                           rd: ?,
+                           rd_val: ? };
+			   
+Bypass no_bypass_tprf = Bypass_TPRF {bypass_state: BYPASS_RD_NONE,
+                           rd: ?,
+                           rd_val: ? };
+			   
+Bypass no_bypass_tprf = Bypass_LBL {bypass_state: BYPASS_RD_NONE,
+                           rd: ?,
+                           rd_val: ? };
+			   
 `ifdef ISA_F
 FBypass no_fbypass = FBypass {bypass_state: BYPASS_RD_NONE,
-			      rd: ?,
+			      rd: ?,e
 			      rd_val: ? };
+
+FBypass no_fbypass = FBypass_Tag {bypass_state: BYPASS_RD_NONE,
+                              rd: ?,e
+                              rd_val: ? };
 `endif
 
 // ----------------
@@ -184,6 +228,31 @@ function Tuple2 #(Bool, Word) fn_gpr_bypass (Bypass bypass, RegName rd, Word rd_
    return tuple2 (busy, val);
 endfunction
 
+function Tuple2 #(Bool, Word) fn_tag_bypass (Bypass_Tag bypass, RegName rd, Word rd_val);
+   Bool   busy = ((bypass.bypass_state == BYPASS_RD) && (bypass.rd == rd));
+   WordXL val  = (  ((bypass.bypass_state == BYPASS_RD_RDVAL) && (bypass.rd == rd))
+                  ? bypass.rd_val
+                  : rd_val);
+   return tuple2 (busy, val);
+endfunction
+
+function Tuple2 #(Bool, Word) fn_tprf_bypass (Bypass_TPRF bypass, RegName rd, Word rd_val);
+   Bool   busy = ((bypass.bypass_state == BYPASS_RD) && (bypass.rd == rd));
+   WordXL val  = (  ((bypass.bypass_state == BYPASS_RD_RDVAL) && (bypass.rd == rd))
+                  ? bypass.rd_val
+                  : rd_val);
+   return tuple2 (busy, val);
+
+function Tuple2 #(Bool, Word) fn_lbl_bypass (Bypass_LBL bypass, RegName rd, Word rd_val);
+   Bool   busy = ((bypass.bypass_state == BYPASS_RD) && (bypass.rd == rd));
+   WordXL val  = (  ((bypass.bypass_state == BYPASS_RD_RDVAL) && (bypass.rd == rd))
+                  ? bypass.rd_val
+                  : rd_val);
+   return tuple2 (busy, val);
+endfunction
+
+endfunction
+
 `ifdef ISA_F
 // FBypass functions for FPRs
 // Returns '(busy, val)'
@@ -196,6 +265,15 @@ function Tuple2 #(Bool, WordFL) fn_fpr_bypass (FBypass bypass, RegName rd, WordF
 		: rd_val);
    return tuple2 (busy, val);
 endfunction
+
+function Tuple2 #(Bool, WordFL) fn_fpr_tag_bypass (FBypass_Tag bypass, RegName rd, WordFL rd_val);
+   Bool busy = ((bypass.bypass_state == BYPASS_RD) && (bypass.rd == rd));
+   WordFL val= (  ((bypass.bypass_state == BYPASS_RD_RDVAL) && (bypass.rd == rd))
+                ? bypass.rd_val
+                : rd_val);
+   return tuple2 (busy, val);
+endfunction
+
 `endif
 
 // ================================================================
@@ -436,6 +514,8 @@ typedef struct {
    WordXL     val2;              // OP_Stage2_ST: store-val;
                                  // OP_Stage2_M and OP_Stage2_FD: arg2
    Bit #(4)  val2_tag;           // rgollap1 -- val2 data tag
+   Bit #(4)  val_tchk;           // CFI status val
+   WordXL    val_lbl;            // CFI label
 
 `ifdef ISA_F
    // Floating point fields
@@ -478,8 +558,12 @@ typedef struct {
 
    // feedback
    Bypass                 bypass;
+   Bypass_Tag             bypass_tag;
+   Bypass_TPRF            bypass_tprf;
+   Bypass_LBL             bypass_lbl;
 `ifdef ISA_F
    FBypass                fbypass;
+   FBypass                fbypass_tag;
 `endif
 
    // feedforward data
@@ -516,13 +600,16 @@ typedef struct {
    Bool      rd_valid;
    RegName   rd;
    WordXL    rd_val;
-   Bit #(4)  rd_val_tag;  // rgollap1 -- data tag 
+   Bit #(4)  rd_val_tag;  // rgollap1 -- data tag
+   Bit #(4)  cfi_tchk; // rgollap1 -- cfi status check
+   WordXL    cfi_lbl; // rgollap1 ==  CFI Label
 
 `ifdef ISA_F
    Bool      upd_flags;
    Bool      rd_in_fpr;
    Bit #(5)  fpr_flags;
    WordFL    frd_val;
+   bit #(4)  frd_val_tag;
 `endif
 
 `ifdef INCLUDE_TANDEM_VERIF
@@ -555,8 +642,13 @@ endinstance
 typedef struct {
    Stage_OStatus  ostatus;
    Bypass         bypass;
+   Bypass_Tag             bypass_tag;
+   Bypass_TPRF            bypass_tprf;
+   Bypass_LBL             bypass_lbl;
+
 `ifdef ISA_F
    FBypass        fbypass;
+   FBypass_Tag    fbypass_tag;     
 `endif
 
 `ifdef INCLUDE_TANDEM_VERIF

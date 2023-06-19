@@ -435,6 +435,9 @@ Bit #(3) f3_SCD	= 3'b011;
 
 Opcode op_TAG = 7'b00_010_11;
 
+// ------------
+// Instructions Tags
+
 Bit #(4) GEN = 0000;
 Bit #(4) CAL = 1010;
 Bit #(4) RET = 1011;
@@ -442,6 +445,14 @@ Bit #(4) TFC = 1100;
 Bit #(4) TRF = 1101;
 Bit #(4) TIJ = 1110;
 Bit #(4) LBL = 1111;
+
+// -----------
+// Memory Tags
+
+Bit #(2) DT = 00;
+Bit #(2) CP = 01;
+Bit #(2) DP = 10;
+Bit #(2) RT = 11;
 
 // ================================================================
 // Memory Model

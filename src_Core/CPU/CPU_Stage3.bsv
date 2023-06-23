@@ -207,8 +207,8 @@ module mkCPU_Stage3 #(Bit #(4)         verbosity,
             // Write to GPR in a non-FD system
             gpr_regfile.write_rd (rg_stage3.rd, rg_stage3.rd_val);
 `endif
-	    tprf_regfile.write_rd (0, rg_state3.cfi_tchk);
-            tprf_regfile.write_rd1 (0, rg_state3.cfi_lbl);
+	    tprf_regfile.write_rd (1, rg_state3.cfi_tchk);
+            tprf_regfile.write_rd1 (2, rg_state3.cfi_lbl);
 	    
 	    if (verbosity > 1)
 `ifdef ISA_F

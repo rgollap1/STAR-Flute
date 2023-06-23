@@ -322,8 +322,8 @@ function ALU_Outputs fv_JAL (ALU_Inputs inputs);
    alu_outputs.val1      = extend (ret_pc);
    alu_outputs.cf_info   = cf_info;
 
-   if inputs.tag == CAL begin
-      alu_outputs.val1_tag = RA
+   if inputs.tag == itag_CAL begin
+      alu_outputs.val1_tag = dtag_RA
    end
 
 `ifdef INCLUDE_TANDEM_VERIF
@@ -374,12 +374,12 @@ function ALU_Outputs fv_JALR (ALU_Inputs inputs);
    alu_outputs.val1      = extend (ret_pc);
    alu_outputs.cf_info   = cf_info;
 
-   if inputs.tag == CAL begin
-      alu_outputs.val1_tag = RA
+   if inputs.tag == itag_CAL begin
+      alu_outputs.val1_tag = dtag_RA
    end
   
-   if inputs.tag == RET && inputs.rs1_val_tag != RA begin
-     alu_outputs.exc_code = RAPVIOLATION
+   if inputs.tag == itag_RET && inputs.rs1_val_tag != dtag_RA begin
+     alu_outputs.exc_code = excep_RAP
    end
 `ifdef INCLUDE_TANDEM_VERIF
    // Normal trace output (if no trap)

@@ -49,6 +49,7 @@ import TV_Info   :: *;
 
 import GPR_RegFile :: *;
 import GPR_TAG_RegFile :: *; // rgollap1 -- importing the new tag register file module
+import TPRF_RegFile :: *;
 `ifdef ISA_F
 import FPR_RegFile :: *;
 import FPR_TAG_RegFile :: *; // rgollap1 -- importing the new tag register file module
@@ -133,6 +134,7 @@ module mkCPU (CPU_IFC);
    // General purpose registers and CSRs
    GPR_RegFile_IFC  gpr_regfile  <- mkGPR_RegFile;
    GPR_TAG_RegFile_IFC  gpr_tag_regfile  <- mkGPR_TAG_RegFile; // initializing tag register file -- rgollap1
+   TPRF_RegFile_IFC  tprf_regfile  <- mkTPRF_RegFile;
 `ifdef ISA_F
    FPR_RegFile_IFC  fpr_regfile  <- mkFPR_RegFile;
    FPR_TAG_RegFile_IFC  fpr_tag_regfile  <- mkFPR_TAG_RegFile; // initializing tag register file for floating point register file -- rgollap1
@@ -212,6 +214,7 @@ module mkCPU (CPU_IFC);
    CPU_Stage3_IFC stage3 <- mkCPU_Stage3 (cur_verbosity,
 					  gpr_regfile,
 					  gpr_tag_regfile,
+					  tprf_tag_regile,
 `ifdef ISA_F
 					  fpr_regfile,
 					  fpr_tag_regfile,
@@ -225,6 +228,12 @@ module mkCPU (CPU_IFC);
 					   gpr_tag_regfile,
 					   stage2.out.bypass,
 					   stage3.out.bypass,
+					   stage2.out.bypass_tag,
+					   stage3.out.bypass_tag,
+					   stage2.out.bypass_tchk,
+                                           stage3.out.bypass_tchk,
+					   stage2.out.bypass_lbl,
+                                           stage3.out.bypass_lbl,
 `ifdef ISA_F
 					   fpr_regfile,
 					   fpr_tag_regfile,

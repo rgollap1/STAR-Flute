@@ -83,14 +83,14 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
 		      Bypass_LBL       bypass_lbl_from_stage2,
 		      Bypass           bypass_from_stage3,
 		      Bypass_Tag       bypass_tag_from_stage3,
+                      Bypass_TPRF      bypass_tprf_from_stage3,
+                      Bypass_LBL       bypass_lbl_from_stage3,
 
 `ifdef ISA_F
 		      FPR_RegFile_IFC  fpr_regfile,
 		      FPR_TAG_RegFile_IFC  fpr_tag_regfile,
 		      FBypass          fbypass_from_stage2,
 		      FBypass          fbypass_from_stage3,
-                      FBypass_Tag      fbypass_tag_from_stage2,
-                      FBypass_Tag      fbypass_tag_from_stage3,
 `endif
 		      CSR_RegFile_IFC  csr_regfile,
 		      Epoch            cur_epoch,
@@ -107,7 +107,6 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
    Reg #(Bit #(18))             rg_source_lbl  <- mkRegU; 
    Reg #(Bit #(1))              rg_lbl_cfi     <- mkRegU;
    
->>>>>>> Added CFI Checks in Execute Stage
    MISA misa   = csr_regfile.read_misa;
    Bit #(2) xl = ((xlen == 32) ? misa_mxl_32 : misa_mxl_64);
 
@@ -158,13 +157,17 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
 
    let rs_cfi = 1
    let cfi_val = tprf_regfile.read_rs1 (rs_cfi); //rgollap1 - cfi status
-   match { .busycfi, .rscfi } = fn_tprf_bypass (bypass_tprf_from_stage2, rs_cfi, cfi_val);
-   rg_cfi = rscfi;
+   match { .busycfia, .rscfia } = fn_tprf_bypass (bypass_tprf_from_stage3, 1, cfi_val);
+   match { .busycfib, .rscfib } = fn_tprf_tag_bypass (bypass_tprf_from_stage2, 1, rscfia);
+   Bool rscfi_busy = (busycfia || busycfib);
+   Word rg_cfi = rscfib;
 
-   let rs_lbl = 2
-   let cfi_lbl = tprf_regfile.read_rs2 (rs_lbl); //rgollap1 - cfi lbl
-   match { .busylbl, .rslbl } = fn_lbl_bypass (bypass_tprf_from_stage2, rs_lbl, cfi_lbl);
-   rg_source_lbl = rslbl;   
+   let rs_lbl = 2   
+   let cfi_lbl = tprf_regfile.read_rs1 (rs_lbl); //rgollap1 - cfi status
+   match { .busylbla, .rslbla } = fn_tprf_bypass (bypass_tprf_from_stage3, 2, cfi_lbl);
+   match { .busylblb, .rslblb } = fn_tprf_tag_bypass (bypass_tprf_from_stage2, 2, rslbla);
+   Bool rslbl_busy = (busylbla || busylblb);
+   Word rg_cfi = rsclblb;
    
 `ifdef ISA_F
    // FP Register rs1 read and bypass
@@ -251,43 +254,45 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
    function Output_Stage1 fv_out;
       Output_Stage1 output_stage1 = ?;
 
-      if (rg_cfi == CAL) begin // rgollap1 - function call registered 
-      	 if (rg_stage_input.tag == TFC) // function call target
+      if (rg_cfi == TCHK_CAL) begin // rgollap1 - function call registered 
+      	 if (rg_stage_input.tag == itag_TFC) // function call target
 	    rg_cfi = 0
 	 else
-            rg_stage_input.exc = True // -- ravitheg Setting CPU Trap (Exception if check fails)
+            rg_stage_input.exc = excep_CFI // -- ravitheg Setting CPU Trap (Exception if check fails)
       end
 
-      else if (rg_cfi == RET) begin // rgollap1 - function return registered
-         if (rg_stage_input.tag == TFR) // function return target
+      else if (rg_cfi == TCHK_RET) begin // rgollap1 - function return registered
+         if (rg_stage_input.tag == itag_TFR) // function return target
             rg_cfi = 0
          else
-            rg_stage_input.exc = True // -- ravitheg Setting CPU Trap (Exception if check fails)
+            rg_stage_input.exc = excep_RAP // -- ravitheg Setting CPU Trap (Exception if check fails)
       end
 
       else if (rg_cfi == 0) begin // rgollap1 - Checking for a fucntion call otr return
-         if (rg_stage_input.tag == CAL) || (rg_state_input.tag == RET) // function call or function return
-            rg_cfi = rg_state_input.tag
-	 else if (rg_stage_input.tag == LBL) // checking for function label
+         if (rg_stage_input.tag == itag_CAL)
+	    rg_cfi = TCHK_CAL
+	 else if (rg_state_input.tag ==itag_RET) // function call or function return
+            rg_cfi = TCHK_RET
+	 else if (rg_stage_input.tag == itag_LBL) // checking for function label
 	    if (rg_state_input.instr[31] == 0) begin // checking if the lbl is source lbl not a dest lbl encountered in a pass through
-	       rg_cfi = LBL_SRC 
+	       rg_cfi = TCHK_LBL_SRC 
 	       rg_source_lbl = rg_state_input.instr[13:30]
 	    end
       end
 
-      else if (rg_cfi == LBL_SRC) begin // rgollap1 - checking for intermediate instruction or target instrtuction after source lbl
-      	   if (rg_stage_input.tag == CAL) || (rg_stage_input.tag == RET)
-	       rg_cfi = LBL_CFI
+      else if (rg_cfi == TCHK_LBL_SRC) begin // rgollap1 - checking for intermediate instruction or target instrtuction after source lbl
+      	   if (rg_stage_input.tag == itag_CAL) || (rg_stage_input.tag == itag_RET)
+	       rg_cfi = TCHK_LBL_CFI
  	   else
-	      rg_stage_input.exc = True // -- ravitheg Setting CPU Trap 
+	      rg_stage_input.exc = excep_CFI // -- ravitheg Setting CPU Trap 
       end
 
-      else if  (rg_cfi == LBL_CFI) begin
-	    if (rg_stage_input.tag == LBL) && (rg_stage_input.instr[13:30] == rg_source_lbl)
+      else if  (rg_cfi == TCHK_LBL_CFI) begin
+	    if (rg_stage_input.tag == itag_LBL) && (rg_stage_input.instr[13:30] == rg_source_lbl)
 	       rg_cfi = 0
 	       rg_source_lbl = 0
 	    else
-	       rg_stage_input.exc = True // -- ravitheg Setting CPU Trap
+	       rg_stage_input.exc = exec_CFI // -- ravitheg Setting CPU Trap
 	 end
       end
 	 

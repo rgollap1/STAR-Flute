@@ -322,6 +322,10 @@ function ALU_Outputs fv_JAL (ALU_Inputs inputs);
    alu_outputs.val1      = extend (ret_pc);
    alu_outputs.cf_info   = cf_info;
 
+   if inputs.tag == CAL begin
+      alu_outputs.val1_tag = RA
+   end
+
 `ifdef INCLUDE_TANDEM_VERIF
    // Normal trace output (if no trap)
    alu_outputs.trace_data = mkTrace_I_RD (next_pc,
@@ -360,7 +364,7 @@ function ALU_Outputs fv_JALR (ALU_Inputs inputs);
 			    taken       : True,
 			    fallthru_PC : ret_pc,
 			    taken_PC    : next_pc };
-
+   
    let alu_outputs = alu_outputs_base;
    alu_outputs.control   = (misaligned_target ? CONTROL_TRAP : CONTROL_BRANCH);
    alu_outputs.exc_code  = exc_code_INSTR_ADDR_MISALIGNED;
@@ -370,6 +374,13 @@ function ALU_Outputs fv_JALR (ALU_Inputs inputs);
    alu_outputs.val1      = extend (ret_pc);
    alu_outputs.cf_info   = cf_info;
 
+   if inputs.tag == CAL begin
+      alu_outputs.val1_tag = RA
+   end
+  
+   if inputs.tag == RET && inputs.rs1_val_tag != RA begin
+     alu_outputs.exc_code = RAPVIOLATION
+   end
 `ifdef INCLUDE_TANDEM_VERIF
    // Normal trace output (if no trap)
    alu_outputs.trace_data = mkTrace_I_RD (next_pc,

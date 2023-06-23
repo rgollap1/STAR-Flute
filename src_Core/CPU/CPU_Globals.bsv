@@ -201,7 +201,7 @@ Bypass no_bypass_tprf = Bypass_TPRF {bypass_state: BYPASS_RD_NONE,
                            rd: ?,
                            rd_val: ? };
 			   
-Bypass no_bypass_tprf = Bypass_LBL {bypass_state: BYPASS_RD_NONE,
+Bypass no_bypass_lbl = Bypass_LBL {bypass_state: BYPASS_RD_NONE,
                            rd: ?,
                            rd_val: ? };
 			   

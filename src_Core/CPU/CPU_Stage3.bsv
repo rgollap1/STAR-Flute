@@ -42,6 +42,7 @@ import GPR_TAG_RegFile :: *;
 import FPR_RegFile :: *;
 import FPR_TAG_RegFile :: *;
 `endif
+import TPRF_RegFile :: *;
 import CSR_RegFile :: *;
 import CPU_Globals :: *;
 
@@ -80,6 +81,7 @@ endinterface
 module mkCPU_Stage3 #(Bit #(4)         verbosity,
 		      GPR_RegFile_IFC  gpr_regfile,
 		      GPR_TAG_RegFile_IFC  gpr_tag_regfile,
+		      TPRF_REGFILE_IFC tprf_regfile,
 `ifdef ISA_F
 		      FPR_RegFile_IFC  fpr_regfile,
 		      FPR_TAG_RegFile_IFC  fpr_tag_regfile,
@@ -101,6 +103,19 @@ module mkCPU_Stage3 #(Bit #(4)         verbosity,
 			     // WordXL        WordXL
 			     rd_val:       rg_stage3.rd_val
 			     };
+   let bypass_base_tag = Bypass_Tag {bypass_state: BYPASS_RD_RDVAL,
+                             rd:           rg_stage3.rd,
+                             rd_val:       rg_stage3.rd_val_tag
+                             };
+   let bypass_base_tchk = Bypass_TCHK {bypass_state: BYPASS_RD_RDVAL,
+                             rd:           0,
+                             rd_val:       rg_stage3.cfi_tchk
+                             };
+
+   let bypass_base_lbl = Bypass_LBL {bypass_state: BYPASS_RD_RDVAL,
+                             rd:           1,
+                             rd_val:       rg_stage3.cfi_lbl
+                             };
 
 `ifdef ISA_F
    let fbypass_base = FBypass {bypass_state: BYPASS_RD_NONE,
@@ -121,6 +136,10 @@ module mkCPU_Stage3 #(Bit #(4)         verbosity,
 
    function Output_Stage3 fv_out;
       let bypass = bypass_base;
+      let bypass_tag = bypass_base_tag;
+      let bypass_tchk = bypass_base_tchk;
+      let bypass_lbl = bypass_base_lbl;
+      
 `ifdef ISA_F
       let fbypass = fbypass_base;
       if (rg_stage3.rd_in_fpr) begin
@@ -137,6 +156,7 @@ module mkCPU_Stage3 #(Bit #(4)         verbosity,
       bypass.bypass_state = (rg_full && rg_stage3.rd_valid) ? BYPASS_RD_RDVAL
                                                             : BYPASS_RD_NONE;
 `endif
+							       
 
 `ifdef INCLUDE_TANDEM_VERIF
       let trace_data = rg_stage3.trace_data;
@@ -154,7 +174,10 @@ module mkCPU_Stage3 #(Bit #(4)         verbosity,
 `endif
 
       return Output_Stage3 {ostatus: (rg_full ? OSTATUS_PIPE : OSTATUS_EMPTY),
-			    bypass : bypass
+			    bypass : bypass,
+			    bypass_tag : bypass_tag,
+			    bypass_tchk : bypass_tchk,
+			    bypass_lbl : bypass_lbl
 `ifdef ISA_F
 			    , fbypass: fbypass
 `endif
@@ -179,11 +202,14 @@ module mkCPU_Stage3 #(Bit #(4)         verbosity,
             else
                // Write to GPR
                gpr_regfile.write_rd (rg_stage3.rd, rg_stage3.rd_val);
+	       gpr_tag_regfile.write_rd (rg_stage3.rd, rg_stage3.rd_val_tag);
 `else
             // Write to GPR in a non-FD system
             gpr_regfile.write_rd (rg_stage3.rd, rg_stage3.rd_val);
 `endif
-
+	    tprf_regfile.write_rd (0, rg_state3.cfi_tchk);
+            tprf_regfile.write_rd1 (0, rg_state3.cfi_lbl);
+	    
 	    if (verbosity > 1)
 `ifdef ISA_F
                if (rg_stage3.rd_in_fpr)

@@ -103,9 +103,8 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
    Reg #(Bool)                  rg_full        <- mkReg (False);
    Reg #(Data_StageD_to_Stage1) rg_stage_input <- mkRegU;
 
-   Reg #(Bit #(4))              rg_cfi         <- mkRegU;
-   Reg #(Bit #(18))             rg_source_lbl  <- mkRegU; 
-   Reg #(Bit #(1))              rg_lbl_cfi     <- mkRegU;
+   let rg_cfi        = 0;
+   let rg_source_lbl = 0; 
    
    MISA misa   = csr_regfile.read_misa;
    Bit #(2) xl = ((xlen == 32) ? misa_mxl_32 : misa_mxl_64);
@@ -135,10 +134,10 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
 
    // Register rs1 tag read and bypass
    let rs1_val_tag = gpr_tag_regfile.read_rs1 (rs1); //rgollap1 - val1 data tag
-   match { .busyt1a, .rst1a } = fn_gpr_tag_bypass (bypass_tag_from_stage3, rs1, rs1_val_tag);
-   match { .busyt1b, .rst1b } = fn_gpr_tag_bypass (bypass_tag_from_stage2, rs1, rs1ta);
+   match { .busyt1a, .rst1a } = fn_tag_bypass (bypass_tag_from_stage3, rs1, rs1_val_tag);
+   match { .busyt1b, .rst1b } = fn_tag_bypass (bypass_tag_from_stage2, rs1, rst1a);
    Bool rs1_tag_busy = (busyt1a || busyt1b);
-   Word rs1_val_tag_bypassed = ((rs1 == 0) ? 0 : rs1tb);
+   Bit #(4) rs1_val_tag_bypassed = ((rs1 == 0) ? 0 : rst1b);
    
    // Register rs2 read and bypass
    let rs2 = decoded_instr.rs2;
@@ -150,24 +149,24 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
 
    // Register rs2 tag read and bypass
    let rs2_val_tag = gpr_tag_regfile.read_rs2 (rs2); //rgollap1 - val2 data tag
-   match { .busyt2a, .rst2a } = fn_gpr_tag_bypass (bypass_tag_from_stage3, rs2, rs2_val_tag);
-   match { .busyt2b, .rst2b } = fn_gpr_tag_bypass (bypass_tag_from_stage2, rs2, rst2a);
-   Bool rs2_busy = (busy2ta || busy2tb);
-   Word rs2_val_tag_bypassed = ((rs2 == 0) ? 0 : rst2b);
+   match { .busyt2a, .rst2a } = fn_tag_bypass (bypass_tag_from_stage3, rs2, rs2_val_tag);
+   match { .busyt2b, .rst2b } = fn_tag_bypass (bypass_tag_from_stage2, rs2, rst2a);
+   Bool rs2_tag_busy = (busyt2a || busyt2b);
+   Bit #(4) rs2_val_tag_bypassed = ((rs2 == 0) ? 0 : rst2b);
 
-   let rs_cfi = 1
-   let cfi_val = tprf_regfile.read_rs1 (rs_cfi); //rgollap1 - cfi status
+   let rs_cfi = 1;
+   let cfi_val = tprf_tag_regfile.read_rs1 (rs_cfi); //rgollap1 - cfi status
    match { .busycfia, .rscfia } = fn_tprf_bypass (bypass_tprf_from_stage3, 1, cfi_val);
-   match { .busycfib, .rscfib } = fn_tprf_tag_bypass (bypass_tprf_from_stage2, 1, rscfia);
+   match { .busycfib, .rscfib } = fn_tprf_bypass (bypass_tprf_from_stage2, 1, rscfia);
    Bool rscfi_busy = (busycfia || busycfib);
-   Word rg_cfi = rscfib;
+   rg_cfi = rscfib[2:0];
 
-   let rs_lbl = 2   
-   let cfi_lbl = tprf_regfile.read_rs1 (rs_lbl); //rgollap1 - cfi status
-   match { .busylbla, .rslbla } = fn_tprf_bypass (bypass_tprf_from_stage3, 2, cfi_lbl);
-   match { .busylblb, .rslblb } = fn_tprf_tag_bypass (bypass_tprf_from_stage2, 2, rslbla);
+   let rs_lbl = 2;  
+   let cfi_lbl = tprf_tag_regfile.read_rs2 (rs_lbl); //rgollap1 - cfi label
+   match { .busylbla, .rslbla } = fn_lbl_bypass (bypass_lbl_from_stage3, 2, cfi_lbl);
+   match { .busylblb, .rslblb } = fn_lbl_bypass (bypass_lbl_from_stage2, 2, rslbla);
    Bool rslbl_busy = (busylbla || busylblb);
-   Word rg_cfi = rsclblb;
+   rg_source_lbl = rslblb;
    
 `ifdef ISA_F
    // FP Register rs1 read and bypass
@@ -205,8 +204,8 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
 				decoded_instr  : rg_stage_input.decoded_instr,
 				rs1_val        : rs1_val_bypassed,
 				rs2_val        : rs2_val_bypassed,
-				rs1_val_tag    : rs1_val_tag_bypassed,
-				rs2_val_tag    : rs2_val_tag_bypassed,
+				rs1_val_tag    : rs1_val_tag_bypassed[3:0],
+				rs2_val_tag    : rs2_val_tag_bypassed[3:0],
 `ifdef ISA_F
 				frs1_val       : frs1_val_bypassed,
 				frs2_val       : frs2_val_bypassed,
@@ -232,8 +231,8 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
 					       val2          : alu_outputs.val2,
 					       val1_tag      : alu_outputs.val1_tag,
 					       val2_tag      : alu_outputs.val2_tag,
-					       val_tchk      : rg_cfi,
-					       val_lbl       : rg_source_lbl,
+					       cfi_tprf      : zeroExtend (rg_cfi),
+					       cfi_lbl       : zeroExtend (rg_source_lbl),
 `ifdef ISA_F
 					       fval1         : alu_outputs.fval1,
 					       fval2         : alu_outputs.fval2,
@@ -253,47 +252,51 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
 
    function Output_Stage1 fv_out;
       Output_Stage1 output_stage1 = ?;
-
-      if (rg_cfi == TCHK_CAL) begin // rgollap1 - function call registered 
+      
+      let cfi_status = 0;
+      let cfi_label = 0;
+      let cfi_exec_code = 0;
+     
+      if (rg_cfi == cfi_TCHK_CAL) begin // rgollap1 - function call registered 
       	 if (rg_stage_input.tag == itag_TFC) // function call target
-	    rg_cfi = 0
+	    cfi_status = 0;
 	 else
-            rg_stage_input.exc = excep_CFI // -- ravitheg Setting CPU Trap (Exception if check fails)
+            cfi_exec_code = excep_CFI; // -- ravitheg Setting CPU Trap (Exception if check fails)
       end
 
-      else if (rg_cfi == TCHK_RET) begin // rgollap1 - function return registered
+      else if (rg_cfi == cfi_TCHK_RET) begin // rgollap1 - function return registered
          if (rg_stage_input.tag == itag_TFR) // function return target
-            rg_cfi = 0
+            cfi_status = 0;
          else
-            rg_stage_input.exc = excep_RAP // -- ravitheg Setting CPU Trap (Exception if check fails)
+            cfi_exec_code = excep_RAP; // -- ravitheg Setting CPU Trap (Exception if check fails)
       end
 
       else if (rg_cfi == 0) begin // rgollap1 - Checking for a fucntion call otr return
          if (rg_stage_input.tag == itag_CAL)
-	    rg_cfi = TCHK_CAL
-	 else if (rg_state_input.tag ==itag_RET) // function call or function return
-            rg_cfi = TCHK_RET
+	    cfi_status = cfi_TCHK_CAL;
+	 else if (rg_stage_input.tag == itag_RET) // function call or function return
+            cfi_status = cfi_TCHK_RET;
 	 else if (rg_stage_input.tag == itag_LBL) // checking for function label
-	    if (rg_state_input.instr[31] == 0) begin // checking if the lbl is source lbl not a dest lbl encountered in a pass through
-	       rg_cfi = TCHK_LBL_SRC 
-	       rg_source_lbl = rg_state_input.instr[13:30]
+            if (rg_stage_input.instr[31] == 0) begin // checking if the lbl is source lbl not a dest lbl encountered in a pass through
+	       cfi_status = cfi_TCHK_LBL_SRC; 
+	       cfi_label = rg_stage_input.instr[30:13];
 	    end
       end
 
-      else if (rg_cfi == TCHK_LBL_SRC) begin // rgollap1 - checking for intermediate instruction or target instrtuction after source lbl
-      	   if (rg_stage_input.tag == itag_CAL) || (rg_stage_input.tag == itag_RET)
-	       rg_cfi = TCHK_LBL_CFI
+      else if (rg_cfi == cfi_TCHK_LBL_SRC) begin // rgollap1 - checking for intermediate instruction or target instrtuction after source lbl
+      	   if (rg_stage_input.tag == itag_CAL || rg_stage_input.tag == itag_RET)
+	       cfi_status = cfi_TCHK_LBL_CFI;
  	   else
-	      rg_stage_input.exc = excep_CFI // -- ravitheg Setting CPU Trap 
+	      cfi_exec_code = excep_CFI; // -- ravitheg Setting CPU Trap 
       end
 
-      else if  (rg_cfi == TCHK_LBL_CFI) begin
-	    if (rg_stage_input.tag == itag_LBL) && (rg_stage_input.instr[13:30] == rg_source_lbl)
-	       rg_cfi = 0
-	       rg_source_lbl = 0
+      else if  (rg_cfi == cfi_TCHK_LBL_CFI) begin
+	    if (rg_stage_input.tag == itag_LBL && rg_stage_input.instr[30:13] == rg_source_lbl[17:0]) begin
+	       cfi_status = 0;
+	       cfi_label = 0;
+	    end
 	    else
-	       rg_stage_input.exc = exec_CFI // -- ravitheg Setting CPU Trap
-	 end
+	       cfi_exec_code = excep_CFI; // -- ravitheg Setting CPU Trap
       end
 	 
       // This stage is empty
@@ -316,8 +319,10 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
 						     tag_addr:  ?,  // rgollap1 -- initializing the tag address to remove stale addresses
 						     val1:      ?,
 						     val2:      ?,
-						     val_tchk   ?,
-						     val_lbl    ?,
+						     val1_tag:  ?,
+						     val2_tag:  ?,
+						     cfi_tprf:  ?,
+						     cfi_lbl:   ?,
 `ifdef ISA_F
 						     fval1           : ?,
 						     fval2           : ?,
@@ -395,8 +400,8 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
 			: fall_through_pc);
 	 let redirect = (next_pc != rg_stage_input.pred_pc);
 
-         data_to_stage2.val_tchk      = rg_cfi;
-	 data_to_stage2.val_lbl       = rg_source_lbl;
+         output_stage1.data_to_stage2.cfi_tprf  = zeroExtend (cfi_status);
+	 output_stage1.data_to_stage2.cfi_lbl   = zeroExtend (cfi_label);
 	 output_stage1.ostatus        = ostatus;
 	 output_stage1.control        = alu_outputs.control;
 	 output_stage1.trap_info      = trap_info;

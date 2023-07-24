@@ -126,7 +126,7 @@ deriving (Bits);
 typedef struct {
    Bypass_State  bypass_state;
    RegName       rd;
-   Word          rd_val;
+   Bit #(4)      rd_val;
    } Bypass_Tag
 deriving (Bits);
 
@@ -193,25 +193,25 @@ Bypass no_bypass = Bypass {bypass_state: BYPASS_RD_NONE,
 			   rd: ?,
 			   rd_val: ? };
 
-Bypass no_bypass_tag = Bypass_Tag {bypass_state: BYPASS_RD_NONE,
+Bypass_Tag no_bypass_tag = Bypass_Tag {bypass_state: BYPASS_RD_NONE,
                            rd: ?,
                            rd_val: ? };
 			   
-Bypass no_bypass_tprf = Bypass_TPRF {bypass_state: BYPASS_RD_NONE,
+Bypass_TPRF no_bypass_tprf = Bypass_TPRF {bypass_state: BYPASS_RD_NONE,
                            rd: ?,
                            rd_val: ? };
 			   
-Bypass no_bypass_lbl = Bypass_LBL {bypass_state: BYPASS_RD_NONE,
+Bypass_LBL no_bypass_lbl = Bypass_LBL {bypass_state: BYPASS_RD_NONE,
                            rd: ?,
                            rd_val: ? };
 			   
 `ifdef ISA_F
 FBypass no_fbypass = FBypass {bypass_state: BYPASS_RD_NONE,
-			      rd: ?,e
+			      rd: ?,
 			      rd_val: ? };
 
-FBypass no_fbypass = FBypass_Tag {bypass_state: BYPASS_RD_NONE,
-                              rd: ?,e
+FBypass_Tag no_fbypass_tag = FBypass_Tag {bypass_state: BYPASS_RD_NONE,
+                              rd: ?,
                               rd_val: ? };
 `endif
 
@@ -228,9 +228,9 @@ function Tuple2 #(Bool, Word) fn_gpr_bypass (Bypass bypass, RegName rd, Word rd_
    return tuple2 (busy, val);
 endfunction
 
-function Tuple2 #(Bool, Word) fn_tag_bypass (Bypass_Tag bypass, RegName rd, Word rd_val);
+function Tuple2 #(Bool, Bit #(4)) fn_tag_bypass (Bypass_Tag bypass, RegName rd, Bit #(4) rd_val);
    Bool   busy = ((bypass.bypass_state == BYPASS_RD) && (bypass.rd == rd));
-   WordXL val  = (  ((bypass.bypass_state == BYPASS_RD_RDVAL) && (bypass.rd == rd))
+   Bit #(4) val  = (  ((bypass.bypass_state == BYPASS_RD_RDVAL) && (bypass.rd == rd))
                   ? bypass.rd_val
                   : rd_val);
    return tuple2 (busy, val);
@@ -242,6 +242,7 @@ function Tuple2 #(Bool, Word) fn_tprf_bypass (Bypass_TPRF bypass, RegName rd, Wo
                   ? bypass.rd_val
                   : rd_val);
    return tuple2 (busy, val);
+endfunction
 
 function Tuple2 #(Bool, Word) fn_lbl_bypass (Bypass_LBL bypass, RegName rd, Word rd_val);
    Bool   busy = ((bypass.bypass_state == BYPASS_RD) && (bypass.rd == rd));
@@ -249,8 +250,6 @@ function Tuple2 #(Bool, Word) fn_lbl_bypass (Bypass_LBL bypass, RegName rd, Word
                   ? bypass.rd_val
                   : rd_val);
    return tuple2 (busy, val);
-endfunction
-
 endfunction
 
 `ifdef ISA_F
@@ -514,8 +513,8 @@ typedef struct {
    WordXL     val2;              // OP_Stage2_ST: store-val;
                                  // OP_Stage2_M and OP_Stage2_FD: arg2
    Bit #(4)  val2_tag;           // rgollap1 -- val2 data tag
-   Bit #(4)  val_tchk;           // CFI status val
-   WordXL    val_lbl;            // CFI label
+   WordXL    cfi_tprf;           // CFI status val
+   WordXL    cfi_lbl;            // CFI label
 
 `ifdef ISA_F
    // Floating point fields
@@ -601,15 +600,15 @@ typedef struct {
    RegName   rd;
    WordXL    rd_val;
    Bit #(4)  rd_val_tag;  // rgollap1 -- data tag
-   Bit #(4)  cfi_tchk; // rgollap1 -- cfi status check
-   WordXL    cfi_lbl; // rgollap1 ==  CFI Label
+   WordXL    cfi_tprf; // rgollap1 -- cfi status check
+   WordXL    cfi_lbl; // rgollap1 --  CFI Label
 
 `ifdef ISA_F
    Bool      upd_flags;
    Bool      rd_in_fpr;
    Bit #(5)  fpr_flags;
    WordFL    frd_val;
-   bit #(4)  frd_val_tag;
+   Bit #(4)  frd_val_tag;
 `endif
 
 `ifdef INCLUDE_TANDEM_VERIF
@@ -642,9 +641,9 @@ endinstance
 typedef struct {
    Stage_OStatus  ostatus;
    Bypass         bypass;
-   Bypass_Tag             bypass_tag;
-   Bypass_TPRF            bypass_tprf;
-   Bypass_LBL             bypass_lbl;
+   Bypass_Tag     bypass_tag;
+   Bypass_TPRF    bypass_tprf;
+   Bypass_LBL     bypass_lbl;
 
 `ifdef ISA_F
    FBypass        fbypass;

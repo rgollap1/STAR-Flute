@@ -138,12 +138,13 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 
    let bypass_base_tprf = Bypass_TPRF {bypass_state: BYPASS_RD_NONE,
                              rd:           1,
-                             rd_val:       rg_stage2.val1_tchk			     
+                             rd_val:       rg_stage2.cfi_tprf
+			     };
 
    let bypass_base_lbl = Bypass_LBL {bypass_state: BYPASS_RD_NONE,
                              rd:           2,
-                             rd_val:       rg_stage2.val1_lbl
-                             };      };
+                             rd_val:       rg_stage2.cfi_lbl
+                             };
 
 
 `ifdef ISA_F
@@ -162,10 +163,10 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 						    rd:         rg_stage2.rd,
 						    rd_val:     rg_stage2.val1,
 						    rd_val_tag: rg_stage2.val1_tag,
-						    cfi_tchk:   rg_stage2.cfi_tchk,
+						    cfi_tprf:   rg_stage2.cfi_tprf,
 						    cfi_lbl:    rg_stage2.cfi_lbl,
 `ifdef ISA_F
-						    , rd_in_fpr:  False,
+						    rd_in_fpr:  False,
 						    upd_flags:  False,
 						    fpr_flags:  0,
 						    frd_val:    rg_stage2.fval1
@@ -228,10 +229,10 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 	 output_stage2 = Output_Stage2 {ostatus         : OSTATUS_EMPTY,
 					trap_info       : ?,
 					data_to_stage3  : ?,
-					bypass          : no_bypassl,
-					bypass_tag      : no_bypass,
-					bypass_tchk     : no_bypass,
-					bypass_lbl      : no_bypass
+					bypass          : no_bypass,
+					bypass_tag      : no_bypass_tag,
+					bypass_tprf     : no_bypass_tprf,
+					bypass_lbl      : no_bypass_lbl
 `ifdef ISA_F
 					, fbypass       : no_fbypass
 `endif
@@ -249,8 +250,8 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
          let bypass_tag = bypass_base_tag;
          bypass_tag.bypass_state = BYPASS_RD_RDVAL;
 
-         let bypass_tchk = bypass_base_tchk;
-         bypass_tchk.bypass_state = BYPASS_RD_RDVAL;
+         let bypass_tprf = bypass_base_tprf;
+         bypass_tprf.bypass_state = BYPASS_RD_RDVAL;
 
          let bypass_lbl = bypass_base_lbl;
          bypass_lbl.bypass_state = BYPASS_RD_RDVAL;
@@ -258,9 +259,9 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 	 output_stage2 = Output_Stage2 {ostatus         : OSTATUS_PIPE,
 					trap_info       : ?,
 					data_to_stage3  : data_to_stage3,
-					bypass          : bypass
+					bypass          : bypass,
                                         bypass_tag      : bypass_tag,
-                                        bypass_tchk     : bypass_tchk,
+                                        bypass_tprf     : bypass_tprf,
                                         bypass_lbl      : bypass_lbl
 `ifdef ISA_F
 					, fbypass       : no_fbypass
@@ -289,16 +290,16 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 
 
 	    WordXL result = truncate (dcache.word64); 
-            Bit #(8) result_tag = truncate (dtcache.word64); // this needs to be fixed, need a new fucntion to pick the right 8 bits out of the fetched 64
+            Bit #(4) result_tag = truncate (dtcache.word64); // this needs to be fixed, need a new fucntion to pick the right 8 bits out of the fetched 64
             let funct3 = instr_funct3 (rg_stage2.instr);
 
 	    let data_to_stage3 = data_to_stage3_base;
 	    data_to_stage3.rd_valid = (ostatus == OSTATUS_PIPE);
 
 	    if (rg_stage2.priv == 0 && ostatus == OSTATUS_PIPE && rg_stage2.op_stage2 == OP_Stage2_LD) begin // rgollap1
-	       if rg_state2.tag == itag_RET && result_tag != dtag_RA begin
-	       	  trap_info_dtmem.exc_code = excep_RAP;
-		  data_to_stage3.rd_valid = OSTATUS_NONPIPE;
+	       if (rg_stage2.tag == itag_RET && result_tag != dtag_RA) begin
+	       	  //trap_info_dtmem.exc_code = excep_RAP; -- Disabling Exceptions for now.
+		  data_to_stage3.rd_valid = False;
 	       end
 	       	  data_to_stage3.rd_valid = (ostatus1 == OSTATUS_PIPE);
             end
@@ -336,7 +337,7 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 
             let bypass_tag = bypass_base_tag;
 
- 	    let bypass_tchk = bypass_base_tchk;
+ 	    let bypass_tprf = bypass_base_tprf;
 
             let bypass_lbl = bypass_base_lbl;
 
@@ -375,7 +376,7 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 		  // (the bypassing is effectively delayed until the next stage).
 		  bypass.bypass_state = BYPASS_RD;
 		  bypass_tag.bypass_state = BYPASS_RD;
-		  bypass_tchk.bypass_state = BYPASS_RD;
+		  bypass_tprf.bypass_state = BYPASS_RD;
 		  bypass_lbl.bypass_state = BYPASS_RD;
 	       end
 	    end
@@ -404,7 +405,7 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 					   data_to_stage3  : data_to_stage3,
 					   bypass          : bypass,
 					   bypass_tag      : bypass_tag,
-					   bypass_tchk     : bypass_tchk,
+					   bypass_tprf     : bypass_tprf,
 					   bypass_lbl      : bypass_lbl
 `ifdef ISA_F
 					   , fbypass       : fbypass
@@ -416,9 +417,9 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 	    	output_stage2 = Output_Stage2 {ostatus         : ostatus1,
 					       trap_info       : trap_info_dtmem,
 					       data_to_stage3  : data_to_stage3,
-					       bypass          : bypasss,
+					       bypass          : bypass,
                                                bypass_tag      : bypass_tag,
-                                               bypass_tchk     : bypass_tchk,
+                                               bypass_tprf     : bypass_tprf,
                                                bypass_lbl      : bypass_lbl
 `ifdef ISA_F
 	     				       , fbypass       : fbypass
@@ -460,9 +461,9 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 					trap_info       : trap_info_dmem,
 					data_to_stage3  : data_to_stage3,
 					bypass          : no_bypass,
-                                        bypass_tag      : no_bypass,
-                                        bypass_tchk     : no_bypass,
-                                        bypass_lbl      : no_bypass
+                                        bypass_tag      : no_bypass_tag,
+                                        bypass_tprf     : no_bypass_tprf,
+                                        bypass_lbl      : no_bypass_lbl
 `ifdef ISA_F
 					, fbypass       : no_fbypass
 `endif
@@ -474,9 +475,9 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 					       trap_info       : trap_info_dtmem,
 					       data_to_stage3  : data_to_stage3,
 					       bypass          : no_bypass,
-                                               bypass_tag      : no_bypass,
-                                               bypass_tchk     : no_bypass,
-                                               bypass_lbl      : no_bypass
+                                               bypass_tag      : no_bypass_tag,
+                                               bypass_tprf     : no_bypass_tprf,
+                                               bypass_lbl      : no_bypass_lbl
 `ifdef ISA_F
 	     				       , fbypass       : no_fbypass
 `endif
@@ -503,8 +504,8 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
          let bypass_tag = bypass_base_tag;
          bypass_tag.bypass_state = bypass.bypass_state;
          
-         let bypass_tchk = bypass_base_tchk;
-         bypass_tchk.bypass_state = bypass.bypass_state;
+         let bypass_tprf = bypass_base_tprf;
+         bypass_tprf.bypass_state = bypass.bypass_state;
 
          let bypass_lbl = bypass_base_lbl;
          bypass_lbl.bypass_state = bypass.bypass_state;
@@ -521,7 +522,7 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 					data_to_stage3  : data_to_stage3,
 					bypass          : bypass,
 					bypass_tag      : bypass_tag,
-					bypass_tchk     : bypass_tchk,
+					bypass_tprf     : bypass_tprf,
 					bypass_lbl      : bypass_lbl
 `ifdef ISA_F
 					, fbypass         : no_fbypass
@@ -548,8 +549,8 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
          let bypass_tag = bypass_base_tag;
          bypass_tag.bypass_state = bypass.bypass_state;
 
-         let bypass_tchk = bypass_base_tchk;
-         bypass_tchk.bypass_state = bypass.bypass_state;
+         let bypass_tprf = bypass_base_tprf;
+         bypass_tprf.bypass_state = bypass.bypass_state;
 
          let bypass_lbl = bypass_base_lbl;
          bypass_lbl.bypass_state = bypass.bypass_state;
@@ -566,7 +567,7 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 					data_to_stage3  : data_to_stage3,
 					bypass          : bypass,
                                         bypass_tag      : bypass_tag,
-                                        bypass_tchk     : bypass_tchk,
+                                        bypass_tprf     : bypass_tprf,
                                         bypass_lbl      : bypass_lbl
 `ifdef ISA_F
 					, fbypass         : no_fbypass
@@ -597,7 +598,7 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
          // result is meant for a FPR
 	 let bypass              = bypass_base;
 	 let bypass_tag          = bypass_base_tag;
-	 let bypass_tchk         = bypass_base_tchk;
+	 let bypass_tprf         = bypass_base_tprf;
 	 let bypass_lbl          = bypass_base_lbl;
          let fbypass             = fbypass_base;
          if (rg_stage2.rd_in_fpr) begin
@@ -609,7 +610,7 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
             fbypass.rd_val          = truncate (value);
 `endif
             bypass_tag.bypass_state = fbypass.bypass_state;
-	    bypass_tchk.bypass_state = fbypass.bypass_state;
+	    bypass_tprf.bypass_state = fbypass.bypass_state;
 	    bypass_lbl.bypass_state = fbypass.bypass_state;
 	 
          end
@@ -626,7 +627,7 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
             data_to_stage3.rd_val   = truncate (value);
 `endif
             bypass_tag.bypass_state = bypass.bypass_state;
-            bypass_tchk.bypass_state = bypass.bypass_state;
+            bypass_tprf.bypass_state = bypass.bypass_state;
             bypass_lbl.bypass_state = bypass.bypass_state;
 
          end
@@ -649,7 +650,7 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 					data_to_stage3  : data_to_stage3,
 					bypass          : bypass,
                                         bypass_tag      : bypass_tag,
-                                        bypass_tchk     : bypass_tchk,
+                                        bypass_tprf     : bypass_tprf,
                                         bypass_lbl      : bypass_lbl
 
 `ifdef ISA_F
@@ -739,7 +740,7 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 			amo_funct7,
 `endif
 			x.tag_addr, // rgollap1 -- change it to x.addr + 64000 when testing ISA's on bluesim
-                        x.val2_tag,
+                        zeroExtend (x.val2_tag),
 			mem_priv,
 			sstatus_SUM,
 			mstatus_MXR,

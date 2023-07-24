@@ -85,7 +85,6 @@ endfunction
 typedef struct {
    Control    control;
    Exc_Code   exc_code;        // Relevant if control == CONTROL_TRAP
-
    Op_Stage2  op_stage2;
    RegName    rd;
    Addr       addr;           // Branch, jump: newPC
@@ -322,8 +321,8 @@ function ALU_Outputs fv_JAL (ALU_Inputs inputs);
    alu_outputs.val1      = extend (ret_pc);
    alu_outputs.cf_info   = cf_info;
 
-   if inputs.tag == itag_CAL begin
-      alu_outputs.val1_tag = dtag_RA
+   if (inputs.tag == itag_CAL) begin
+      alu_outputs.val1_tag = dtag_RA;
    end
 
 `ifdef INCLUDE_TANDEM_VERIF
@@ -374,12 +373,12 @@ function ALU_Outputs fv_JALR (ALU_Inputs inputs);
    alu_outputs.val1      = extend (ret_pc);
    alu_outputs.cf_info   = cf_info;
 
-   if inputs.tag == itag_CAL begin
-      alu_outputs.val1_tag = dtag_RA
+   if (inputs.tag == itag_CAL) begin
+      alu_outputs.val1_tag = dtag_RA;
    end
   
-   if inputs.tag == itag_RET && inputs.rs1_val_tag != dtag_RA begin
-     alu_outputs.exc_code = excep_RAP
+   if (inputs.tag == itag_RET && inputs.rs1_val_tag != dtag_RA) begin
+     let exc_code = excep_RAP;
    end
 `ifdef INCLUDE_TANDEM_VERIF
    // Normal trace output (if no trap)

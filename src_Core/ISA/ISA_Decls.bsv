@@ -438,13 +438,13 @@ Opcode op_TAG = 7'b00_010_11;
 // ------------
 // Instructions Tags
 
-Bit #(4) itag_GEN = 8'b00000000;
-Bit #(4) itag_CAL = 4'b00001010;
-Bit #(4) itag_RET = 4'b00001011;
-Bit #(4) itag_TFC = 4'b00001100;
-Bit #(4) itag_TRF = 4'b00001101;
-Bit #(4) itag_TIJ = 4'b00001110;
-Bit #(4) itag_LBL = 4'b00001111;
+Bit #(8) itag_GEN = 8'b00000000;
+Bit #(8) itag_CAL = 8'b00001010;
+Bit #(8) itag_RET = 8'b00001011;
+Bit #(8) itag_TFC = 8'b00001100;
+Bit #(8) itag_TFR = 8'b00001101;
+Bit #(8) itag_TIJ = 8'b00001110;
+Bit #(8) itag_LBL = 8'b00001111;
 
 // -----------
 // Memory Tags
@@ -463,10 +463,10 @@ Bit #(8) excep_CFI = 8'b0010000;
 // ---------
 // CFI TCHK States
 
-Bit #(3) TCHK_CFI = 3'b001;
-Bit #(3) TCHK_RET = 3'b010;
-Bit #(3) TCHK_LBL_SRC = 3'b011;
-Bit #(3) TCHK_LBL_CFI = 3'b100;
+Bit #(3) cfi_TCHK_CAL = 3'b001;
+Bit #(3) cfi_TCHK_RET = 3'b010;
+Bit #(3) cfi_TCHK_LBL_SRC = 3'b011;
+Bit #(3) cfi_TCHK_LBL_CFI = 3'b100;
 
 // ================================================================
 // Memory Model

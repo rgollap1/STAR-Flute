@@ -1,5 +1,5 @@
 // Copyright (c) 2016-2020 Bluespec, Inc. All Rights Reserved
-
+0;136;0c
 package CPU_Stage3;
 
 // ================================================================
@@ -98,6 +98,10 @@ module mkCPU_Stage3 #(Bit #(4)         verbosity,
    // ----------------------------------------------------------------
    // BEHAVIOR
 
+   
+   let tprf_val = rg_stage3.cfi_tprf;
+   tprf_val[20:3] = rg_stage3.cfi_lbl[17:0];
+
    let bypass_base = Bypass {bypass_state: BYPASS_RD_NONE,
 			     rd:           rg_stage3.rd,
 			     // WordXL        WordXL
@@ -108,7 +112,7 @@ module mkCPU_Stage3 #(Bit #(4)         verbosity,
                              rd_val:       rg_stage3.rd_val_tag
                              };
    let bypass_base_tprf = Bypass_TPRF {bypass_state: BYPASS_RD_RDVAL,
-                             rd:           0,
+                             rd:           1,
                              rd_val:       rg_stage3.cfi_tprf
                              };
 
@@ -192,9 +196,7 @@ module mkCPU_Stage3 #(Bit #(4)         verbosity,
 
    function Action fa_deq;
       action
-
-//       tprf_regfile.write_rd (1, rg_stage3.cfi_tprf);
-         tprf_regfile.write_rd2 (2, rg_stage3.cfi_lbl);
+         tprf_regfile.write_rd (1, zeroExtend(tprf_val));
 
          // Writeback Rd if valid
 	 if (rg_stage3.rd_valid) begin

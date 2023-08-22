@@ -142,7 +142,7 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 			     };
 
    let bypass_base_lbl = Bypass_LBL {bypass_state: BYPASS_RD_NONE,
-                             rd:           2,
+                             rd:           1,
                              rd_val:       rg_stage2.cfi_lbl
                              };
 

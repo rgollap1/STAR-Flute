@@ -1,5 +1,4 @@
 // Copyright (c) 2016-2020 Bluespec, Inc. All Rights Reserved
-0;136;0c
 package CPU_Stage3;
 
 // ================================================================

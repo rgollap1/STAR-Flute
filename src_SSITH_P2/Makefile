@@ -96,7 +96,7 @@ TESTBENCH_DIRS  = $(REPO)/src_Testbench/Fabrics/AXI4
 # Please use one of the following defs of BSC_PATH (and comment out the other)
 
 # If you are using one of the older bsc 'releases'
-BSC_PATH = $(CUSTOM_DIRS):src_BSV:$(CORE_DIRS):$(TESTBENCH_DIRS):+:%/Libraries/AMBA_TLM3/TLM3:%/Libraries/AMBA_TLM3/Axi:%/Libraries/AMBA_TLM3/Axi4
+BSC_PATH = $(CUSTOM_DIRS):src_BSV:$(CORE_DIRS):$(TESTBENCH_DIRS):+:%/Libraries/AMBA_TLM3/TLM3:%/Libraries/AMBA_TLM3/Axi:%/Libraries/AMBA_TLM3/Axi4:%/Libraries/Bus
 
 # If you are using a new 'bsc' build from these open-source repos:
 #     https://github.com/B-Lang-org/bsc

@@ -100,6 +100,7 @@ typedef struct {
 		              // OP_Stage2_ST: store-val
                               // OP_Stage2_M: arg2
    Bit #(4)   val2_tag;       // tag for val2
+   Bit #(2)   rs_count;       // input count 
 `ifdef ISA_F
    WordFL     fval1;          // OP_Stage2_FD: arg1
    WordFL     fval2;          // OP_Stage2_FD: arg2
@@ -134,8 +135,9 @@ ALU_Outputs alu_outputs_base
 	       isNop       : False, // rgollap1
 	       val1        : ?,
 	       val2        : ?,
-	       val1_tag    : ?,
-	       val2_tag    : ?,
+	       val1_tag    : dtag_DT,
+	       val2_tag    : dtag_DT,
+               rs_count    : 2'b1,
 `ifdef ISA_F
 	       fval1       : ?,
 	       fval2       : ?,
@@ -320,6 +322,7 @@ function ALU_Outputs fv_JAL (ALU_Inputs inputs);
    alu_outputs.addr      = next_pc;
    alu_outputs.val1      = extend (ret_pc);
    alu_outputs.cf_info   = cf_info;
+   alu_outputs.rs_count  = 2'b00;
 
    if (inputs.tag == itag_CAL) begin
      if (inputs.rs1_val_tag != dtag_CP)      
@@ -329,11 +332,13 @@ function ALU_Outputs fv_JAL (ALU_Inputs inputs);
    end
 
    if (inputs.tag == itag_IDJ && inputs.rs1_val_tag != dtag_CP) begin     
-     alu_outputs.exc_code = excep_CFI; 
+     alu_outputs.exc_code = excep_CFI;
+     alu_outputs.control  = CONTROL_TRAP;
    end
 
    if (inputs.tag == itag_RET && inputs.rs1_val_tag != dtag_RA) begin
      alu_outputs.exc_code = excep_RAP;
+     alu_outputs.control  = CONTROL_TRAP;
    end
 
 `ifdef INCLUDE_TANDEM_VERIF
@@ -383,6 +388,7 @@ function ALU_Outputs fv_JALR (ALU_Inputs inputs);
    alu_outputs.addr      = next_pc;
    alu_outputs.val1      = extend (ret_pc);
    alu_outputs.cf_info   = cf_info;
+   alu_outputs.rs_count  = 2'b0;
 
    if (inputs.tag == itag_CAL) begin
      if (inputs.rs1_val_tag != dtag_CP)
@@ -393,10 +399,12 @@ function ALU_Outputs fv_JALR (ALU_Inputs inputs);
 
    if (inputs.tag == itag_IDJ && inputs.rs1_val_tag != dtag_CP) begin 
      alu_outputs.exc_code = excep_CFI;
+     alu_outputs.control  = CONTROL_TRAP;
    end
 
    if (inputs.tag == itag_RET && inputs.rs1_val_tag != dtag_RA) begin
      alu_outputs.exc_code = excep_RAP;
+     alu_outputs.control  = CONTROL_TRAP;
    end
 `ifdef INCLUDE_TANDEM_VERIF
    // Normal trace output (if no trap)
@@ -479,6 +487,9 @@ function ALU_Outputs fv_OP_and_OP_IMM_shifts (ALU_Inputs inputs);
    alu_outputs.val2 = val2;
 `endif
 
+   alu_outputs.rs_count = ((inputs.decoded_instr.opcode == op_OP_IMM)
+                                ? 2'b01
+                                : 2'b11);
 `ifdef INCLUDE_TANDEM_VERIF
    // Normal trace output (if no trap)
    alu_outputs.trace_data = mkTrace_I_RD (fall_through_pc (inputs),
@@ -532,6 +543,10 @@ function ALU_Outputs fv_OP_and_OP_IMM (ALU_Inputs inputs);
    alu_outputs.op_stage2 = OP_Stage2_ALU;
    alu_outputs.rd        = inputs.decoded_instr.rd;
    alu_outputs.val1      = rd_val;
+
+   if (inputs.decoded_instr.opcode == op_OP_IMM) begin
+      alu_outputs.rs_count = 2'b01;
+   end
 
 `ifdef INCLUDE_TANDEM_VERIF
    // Normal trace output (if no trap)
@@ -590,6 +605,8 @@ function ALU_Outputs fv_OP_IMM_32 (ALU_Inputs inputs);
    alu_outputs.op_stage2 = OP_Stage2_ALU;
    alu_outputs.rd        = inputs.decoded_instr.rd;
    alu_outputs.val1      = rd_val;
+   alu_outputs.rs_count  = 2'b01;
+
 
 `ifdef INCLUDE_TANDEM_VERIF
    // Normal trace output (if no trap)
@@ -665,6 +682,15 @@ function ALU_Outputs fv_LUI (ALU_Inputs inputs);
    alu_outputs.rd        = inputs.decoded_instr.rd;
    alu_outputs.val1      = rd_val;
 
+   alu_outputs.rs_count = 2'b00;
+
+   if (inputs.tag == itag_DPO)
+      alu_outputs.val1_tag = dtag_DP;
+   else if (inputs.tag == itag_CPO)
+      alu_outputs.val1_tag = dtag_CP;
+   else
+      alu_outputs.val1_tag = dtag_DT;
+
 `ifdef INCLUDE_TANDEM_VERIF
    // Normal trace output (if no trap)
    alu_outputs.trace_data = mkTrace_I_RD (fall_through_pc (inputs),
@@ -685,6 +711,15 @@ function ALU_Outputs fv_AUIPC (ALU_Inputs inputs);
    alu_outputs.op_stage2 = OP_Stage2_ALU;
    alu_outputs.rd        = inputs.decoded_instr.rd;
    alu_outputs.val1      = rd_val;
+
+   alu_outputs.rs_count = 2'b00;
+
+   if (inputs.tag == itag_DPO)
+      alu_outputs.val1_tag = dtag_DP;
+   else if (inputs.tag == itag_CPO)
+      alu_outputs.val1_tag = dtag_CP;
+   else
+      alu_outputs.val1_tag = dtag_DT;
 
 `ifdef INCLUDE_TANDEM_VERIF
    // Normal trace output (if no trap)
@@ -748,8 +783,9 @@ function ALU_Outputs fv_LD (ALU_Inputs inputs);
 
    if (inputs.rs1_val_tag != dtag_DP) begin
      alu_outputs.exc_code = excep_CFI;
+     alu_outputs.control  = CONTROL_TRAP;
    end    
-
+   alu_outputs.rs_count  = 2'b00;
 
 `ifdef INCLUDE_TANDEM_VERIF
    // Normal trace output (if no trap)
@@ -825,7 +861,10 @@ function ALU_Outputs fv_ST (ALU_Inputs inputs);
 
    if (inputs.rs1_val_tag != dtag_DP) begin
      alu_outputs.exc_code = excep_CFI;
+     alu_outputs.control  = CONTROL_TRAP;
    end
+   alu_outputs.rs_count  = 2'b00;
+
 
 `ifdef INCLUDE_TANDEM_VERIF
    // Normal trace output (if no trap)
@@ -872,6 +911,8 @@ function ALU_Outputs fv_LDC (ALU_Inputs inputs);
    alu_outputs.rd        = inputs.decoded_instr.rd;
    alu_outputs.addr      = eaddr;
    alu_outputs.isNop = True;
+   alu_outputs.rs_count = 2'b00;
+
    return alu_outputs;
 endfunction
 
@@ -895,6 +936,7 @@ function ALU_Outputs fv_STC (ALU_Inputs inputs);
    alu_outputs.addr      = eaddr;
    alu_outputs.val2      = inputs.rs2_val;
    alu_outputs.isNop = True;
+   alu_outputs.rs_count = 2'b00;
 
    return alu_outputs;
 endfunction
@@ -908,7 +950,8 @@ function ALU_Outputs fv_TAG (ALU_Inputs inputs);
    // Signed version of rs1_val
    let alu_outputs = alu_outputs_base;
 
-    alu_outputs.isNop = True;
+   alu_outputs.isNop = True;
+   alu_outputs.rs_count = 2'b00;
 
    return alu_outputs;
 endfunction
@@ -1304,6 +1347,48 @@ function ALU_Outputs fv_ALU (ALU_Inputs inputs);
 
    else begin
       alu_outputs.control = CONTROL_TRAP;
+
+   
+   if (alu_outputs.rs_count == 2'b11) begin
+      
+     let rd_val_tag_reg = dtag_DT;
+     
+     let rd_val_tag_inst = dtag_DT;
+    
+     if (inputs.rs1_val_tag >= inputs.rs2_val_tag)
+       rd_val_tag_reg = inputs.rs1_val_tag;
+     else
+       rd_val_tag_reg = inputs.rs2_val_tag;
+      
+     if (inputs.tag == itag_CPO)
+       rd_val_tag_inst = dtag_CP;
+     else if (inputs.tag == itag_DPO)
+       rd_val_tag_inst = dtag_DP;
+
+     if (rd_val_tag_reg <= rd_val_tag_inst)
+       alu_outputs.val1_tag = rd_val_tag_reg;
+     else
+       alu_outputs.val1_tag = rd_val_tag_inst;
+  
+   end
+
+   else if (alu_outputs.rs_count == 2'b10) begin
+     
+     let rd_val_tag_reg = inputs.rs1_val_tag;
+     
+     let rd_val_tag_inst = dtag_DT;
+
+     if (inputs.tag == itag_CPO)
+       rd_val_tag_inst = dtag_CP;
+     else if (inputs.tag == itag_DPO)
+       rd_val_tag_inst = dtag_DP;
+
+     if (rd_val_tag_reg <= rd_val_tag_inst)
+       alu_outputs.val1_tag = rd_val_tag_reg;
+     else
+       alu_outputs.val1_tag = rd_val_tag_inst;
+
+   end
 
 `ifdef INCLUDE_TANDEM_VERIF
       // Normal trace output (if no trap)

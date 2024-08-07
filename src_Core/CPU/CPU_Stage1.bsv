@@ -382,7 +382,7 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
 
 	 // Compute MTVAL in case of traps
 	 let tval = 0;
-	 if (alu_outputs.exc_code == exc_code_ILLEGAL_INSTRUCTION) begin
+	 if (alu_outputs.exc_code == exc_code_ILLEGAL_INSTRUCTION || alu_outputs.exc_code == excep_CFI || alu_outputs.exc_code == excep_RAP) begin
 	    // The instruction
 `ifdef ISA_C
 	    tval = (rg_stage_input.is_i32_not_i16

@@ -295,13 +295,26 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 
 	    let data_to_stage3 = data_to_stage3_base;
 	    data_to_stage3.rd_valid = (ostatus == OSTATUS_PIPE);
+		
+            let trap_info_cfi = trap_info_dtmem;
 
 	    if (rg_stage2.priv == 0 && ostatus == OSTATUS_PIPE && rg_stage2.op_stage2 == OP_Stage2_LD) begin // rgollap1
-	       if (rg_stage2.tag == itag_RET && result_tag != dtag_RA) begin
-	       	  //trap_info_dtmem.exc_code = excep_RAP; -- Disabling Exceptions for now.
+	       if ((rg_stage2.tag == itag_RAP && result_tag != dtag_RA) && (rg_stage2.tag != itag_RAP && result_tag == dtag_RA)) begin
+		  trap_info_cfi.exc_code = excep_RAP;
 		  data_to_stage3.rd_valid = False;
 	       end
-	       	  data_to_stage3.rd_valid = (ostatus1 == OSTATUS_PIPE);
+	       
+	       else if (rg_stage2.tag == itag_DPO && result_tag != dtag_DP) begin
+                  trap_info_cfi.exc_code = excep_CFI;                                 
+                  data_to_stage3.rd_valid = False;
+	       end
+               
+               else if (rg_stage2.tag == itag_CPO && result_tag != dtag_CP) begin                               
+		  trap_info_cfi.exc_code = excep_CFI;                                 
+                  data_to_stage3.rd_valid = False;
+               end  
+               else
+	          data_to_stage3.rd_valid = (ostatus1 == OSTATUS_PIPE);
             end
 
 	    if (rg_stage2.op_stage2 != OP_Stage2_LD || rg_stage2.priv != 0) begin
@@ -337,7 +350,7 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 
             let bypass_tag = bypass_base_tag;
 
- 	    let bypass_tprf = bypass_base_tprf;
+            let bypass_tprf = bypass_base_tprf;
 
             let bypass_lbl = bypass_base_lbl;
 
@@ -414,8 +427,8 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 					   
 	    if( rg_stage2.priv == 0 && ostatus == OSTATUS_PIPE && ostatus1 == OSTATUS_NONPIPE && rg_stage2.op_stage2 == OP_Stage2_LD) begin // rgollap1
  
-	    	output_stage2 = Output_Stage2 {ostatus         : ostatus1,
-					       trap_info       : trap_info_dtmem,
+	          output_stage2 = Output_Stage2 {ostatus         : ostatus1,
+					       trap_info       : trap_info_cfi,
 					       data_to_stage3  : data_to_stage3,
 					       bypass          : bypass,
                                                bypass_tag      : bypass_tag,
@@ -448,14 +461,29 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 	 data_to_stage3.rd_valid = (ostatus == OSTATUS_PIPE);
 	 data_to_stage3.rd       = 0;
 
+         let trap_info_cfi = trap_info_dtmem;
+         
          if (rg_stage2.priv == 0 && ostatus == OSTATUS_PIPE ) begin
-		data_to_stage3.rd_valid = (ostatus1 == OSTATUS_PIPE);
-         end // rgollap1
+             if ((rg_stage2.tag == itag_RAP && rg_stage2.val2_tag != dtag_RA) && (rg_stage2.tag != itag_RAP && rg_stage2.val2_tag == dtag_RA)) begin
+            	trap_info_cfi.exc_code = excep_RAP;
+            	data_to_stage3.rd_valid = False;
+             end
+             else if (rg_stage2.tag == itag_DPO && rg_stage2.val2_tag != dtag_DP) begin
+                trap_info_cfi.exc_code = excep_CFI;
+                data_to_stage3.rd_valid = False;
+             end
+             else if (rg_stage2.tag == itag_CPO && rg_stage2.val2_tag != dtag_CP) begin
+                trap_info_cfi.exc_code = excep_CFI;
+                data_to_stage3.rd_valid = False;
+             end
+             else
+                data_to_stage3.rd_valid = (ostatus1 == OSTATUS_PIPE);
+              // rgollap1
+         end
 	
 	 if (ostatus1 == OSTATUS_BUSY && rg_stage2.priv == 0) begin
-		ostatus = OSTATUS_BUSY;
+            ostatus = OSTATUS_BUSY;
 	 end // rgollap1
-
 
 	 output_stage2 = Output_Stage2 {ostatus         : ostatus,
 					trap_info       : trap_info_dmem,
@@ -472,7 +500,7 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
          if (rg_stage2.priv == 0 && ostatus == OSTATUS_PIPE && ostatus1 == OSTATUS_NONPIPE) begin  // rgollap1
  
 	    	output_stage2 = Output_Stage2 {ostatus         : ostatus1,
-					       trap_info       : trap_info_dtmem,
+					       trap_info       : trap_info_cfi,
 					       data_to_stage3  : data_to_stage3,
 					       bypass          : no_bypass,
                                                bypass_tag      : no_bypass_tag,

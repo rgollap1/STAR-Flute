@@ -538,7 +538,7 @@ endfunction
 
 // Exception Codes in mcause
 
-typedef Bit #(4) Exc_Code;
+typedef Bit #(5) Exc_Code;
 
 // When Interrupt = 1 (interrupt)
 
@@ -580,6 +580,8 @@ Exc_Code  exc_code_LOAD_PAGE_FAULT               = 13;
 Exc_Code  exc_code_RESERVED_14                   = 14;
 Exc_Code  exc_code_STORE_AMO_PAGE_FAULT          = 15;
 
+Exc_Code  excep_CFI                              = 16;
+Exc_Code  excep_RAP                              = 17;
 
 function Fmt fshow_interrupt_Exc_Code (Exc_Code exc_code);
    return case (exc_code)

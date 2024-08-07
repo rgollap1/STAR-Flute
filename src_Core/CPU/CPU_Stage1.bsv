@@ -258,9 +258,16 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
       let cfi_exec_code = 0;
      
       if (rg_cfi == cfi_TCHK_CAL) begin // rgollap1 - function call registered 
-      	 if (rg_stage_input.tag == itag_TFC) // function call target
+         if (rg_stage_input.tag == itag_TFC) // function call target
 	    cfi_status = 0;
 	 else
+            cfi_exec_code = excep_CFI; // -- ravitheg Setting CPU Trap (Exception if check fails)
+      end
+
+      else if (rg_cfi == cfi_TCHK_IDJ) begin // rgollap1 - Indirect Jump registered
+         if (rg_stage_input.tag == itag_TIJ) // indirect jump target
+            cfi_status = 0;
+         else
             cfi_exec_code = excep_CFI; // -- ravitheg Setting CPU Trap (Exception if check fails)
       end
 
@@ -276,6 +283,8 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
 	    cfi_status = cfi_TCHK_CAL;
 	 else if (rg_stage_input.tag == itag_RET) // function call or function return
             cfi_status = cfi_TCHK_RET;
+	 else if (rg_stage_input.tag == itag_IDJ) // Indirect Jump
+            cfi_status = cfi_TCHK_IDJ;
 	 else if (rg_stage_input.tag == itag_LBL) // checking for function label
             if (rg_stage_input.instr[31] == 0) begin // checking if the lbl is source lbl not a dest lbl encountered in a pass through
 	       cfi_status = cfi_TCHK_LBL_SRC; 
@@ -284,9 +293,9 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
       end
 
       else if (rg_cfi == cfi_TCHK_LBL_SRC) begin // rgollap1 - checking for intermediate instruction or target instrtuction after source lbl
-      	   if (rg_stage_input.tag == itag_CAL || rg_stage_input.tag == itag_RET)
+           if (rg_stage_input.tag == itag_CAL || rg_stage_input.tag == itag_RET || rg_stage_input.tag == itag_IDJ)
 	       cfi_status = cfi_TCHK_LBL_CFI;
- 	   else
+           else
 	      cfi_exec_code = excep_CFI; // -- ravitheg Setting CPU Trap 
       end
 

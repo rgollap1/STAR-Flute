@@ -439,6 +439,12 @@ Opcode op_TAG = 7'b00_010_11;
 // Instructions Tags
 
 Bit #(8) itag_GEN = 8'b00000000;
+Bit #(8) itag_DPO = 8'b00000010;
+Bit #(8) itag_CPO = 8'b00000011;
+Bit #(8) itag_RAP = 8'b00000100;
+Bit #(8) itag_CLR = 8'b00000101;
+Bit #(8) itag_EQR = 8'b00000110;
+Bit #(8) itag_IDJ = 8'b00001001;
 Bit #(8) itag_CAL = 8'b00001010;
 Bit #(8) itag_RET = 8'b00001011;
 Bit #(8) itag_TFC = 8'b00001100;
@@ -455,18 +461,13 @@ Bit #(4) dtag_DP = 4'b0010;
 Bit #(4) dtag_RA = 4'b0011;
 
 // ----------
-// Exceptions
-
-Bit #(8) excep_RAP = 8'b0001000;
-Bit #(8) excep_CFI = 8'b0010000;
-
-// ---------
 // CFI TCHK States
 
 Bit #(3) cfi_TCHK_CAL = 3'b001;
 Bit #(3) cfi_TCHK_RET = 3'b010;
 Bit #(3) cfi_TCHK_LBL_SRC = 3'b011;
 Bit #(3) cfi_TCHK_LBL_CFI = 3'b100;
+Bit #(3) cfi_TCHK_IDJ = 3'b101;
 
 // ================================================================
 // Memory Model

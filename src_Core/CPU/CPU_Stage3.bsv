@@ -206,10 +206,14 @@ module mkCPU_Stage3 #(Bit #(4)         verbosity,
                fpr_regfile.write_rd (rg_stage3.rd, rg_stage3.frd_val);
 
             else
+               if (rg_stage3.instr[6:0] == op_STORE_CONTEXT) begin
+                  gpr_tag_regfile.write_rd (rg_stage3.rd, rg_stage3.rd_val[3:0]);
+               end
+               else begin
                // Write to GPR
-               gpr_regfile.write_rd (rg_stage3.rd, rg_stage3.rd_val);
-	       gpr_tag_regfile.write_rd (rg_stage3.rd, rg_stage3.rd_val_tag);
-            
+                  gpr_regfile.write_rd (rg_stage3.rd, rg_stage3.rd_val);
+	          gpr_tag_regfile.write_rd (rg_stage3.rd, rg_stage3.rd_val_tag);
+               end
 `else
             // Write to GPR in a non-FD system
             gpr_regfile.write_rd (rg_stage3.rd, rg_stage3.rd_val);

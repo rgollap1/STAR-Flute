@@ -323,7 +323,8 @@ function ALU_Outputs fv_JAL (ALU_Inputs inputs);
    alu_outputs.val1      = extend (ret_pc);
    alu_outputs.cf_info   = cf_info;
    alu_outputs.rs_count  = 2'b00;
-
+   
+   if (inputs.cur_priv == 0) begin
    if (inputs.tag == itag_CAL) begin
      if (inputs.rs1_val_tag != dtag_CP)      
        alu_outputs.exc_code = excep_CFI; 
@@ -339,6 +340,7 @@ function ALU_Outputs fv_JAL (ALU_Inputs inputs);
    if (inputs.tag == itag_RET && inputs.rs1_val_tag != dtag_RA) begin
      alu_outputs.exc_code = excep_RAP;
      alu_outputs.control  = CONTROL_TRAP;
+   end
    end
 
 `ifdef INCLUDE_TANDEM_VERIF
@@ -390,6 +392,7 @@ function ALU_Outputs fv_JALR (ALU_Inputs inputs);
    alu_outputs.cf_info   = cf_info;
    alu_outputs.rs_count  = 2'b0;
 
+   if (inputs.cur_priv == 0) begin
    if (inputs.tag == itag_CAL) begin
      if (inputs.rs1_val_tag != dtag_CP)
        alu_outputs.exc_code = excep_CFI;
@@ -405,6 +408,7 @@ function ALU_Outputs fv_JALR (ALU_Inputs inputs);
    if (inputs.tag == itag_RET && inputs.rs1_val_tag != dtag_RA) begin
      alu_outputs.exc_code = excep_RAP;
      alu_outputs.control  = CONTROL_TRAP;
+   end
    end
 `ifdef INCLUDE_TANDEM_VERIF
    // Normal trace output (if no trap)
@@ -684,12 +688,14 @@ function ALU_Outputs fv_LUI (ALU_Inputs inputs);
 
    alu_outputs.rs_count = 2'b00;
 
+   if (inputs.cur_priv == 0) begin
    if (inputs.tag == itag_DPO)
       alu_outputs.val1_tag = dtag_DP;
    else if (inputs.tag == itag_CPO)
       alu_outputs.val1_tag = dtag_CP;
    else
       alu_outputs.val1_tag = dtag_DT;
+   end
 
 `ifdef INCLUDE_TANDEM_VERIF
    // Normal trace output (if no trap)
@@ -713,13 +719,15 @@ function ALU_Outputs fv_AUIPC (ALU_Inputs inputs);
    alu_outputs.val1      = rd_val;
 
    alu_outputs.rs_count = 2'b00;
-
+   
+   if (inputs.cur_priv == 0) begin
    if (inputs.tag == itag_DPO)
       alu_outputs.val1_tag = dtag_DP;
    else if (inputs.tag == itag_CPO)
       alu_outputs.val1_tag = dtag_CP;
    else
       alu_outputs.val1_tag = dtag_DT;
+   end
 
 `ifdef INCLUDE_TANDEM_VERIF
    // Normal trace output (if no trap)
@@ -780,11 +788,12 @@ function ALU_Outputs fv_LD (ALU_Inputs inputs);
    // note that the destination register for this load is in the FPR
    alu_outputs.rd_in_fpr = (opcode == op_LOAD_FP);
 `endif
-
+   if (inputs.cur_priv == 0) begin
    if (inputs.rs1_val_tag != dtag_DP) begin
      alu_outputs.exc_code = excep_CFI;
      alu_outputs.control  = CONTROL_TRAP;
-   end    
+   end
+   end
    alu_outputs.rs_count  = 2'b00;
 
 `ifdef INCLUDE_TANDEM_VERIF
@@ -854,17 +863,19 @@ function ALU_Outputs fv_ST (ALU_Inputs inputs);
    alu_outputs.addr      = eaddr;
    alu_outputs.tag_addr  = tag_eaddr; // assiging the comouted tag address to alu outputs -- rgollap1
    alu_outputs.val2      = inputs.rs2_val;
+   alu_outputs.val2_tag  = inputs.rs2_val_tag;
 
 `ifdef ISA_F
    alu_outputs.fval2     = inputs.frs2_val;
 `endif
-
+   
+   if (inputs.cur_priv == 0) begin
    if (inputs.rs1_val_tag != dtag_DP) begin
      alu_outputs.exc_code = excep_CFI;
      alu_outputs.control  = CONTROL_TRAP;
    end
    alu_outputs.rs_count  = 2'b00;
-
+   end
 
 `ifdef INCLUDE_TANDEM_VERIF
    // Normal trace output (if no trap)
@@ -893,26 +904,7 @@ endfunction
 // LOAD - Context  --rgollap1
 
 function ALU_Outputs fv_LDC (ALU_Inputs inputs);
-   // Signed versions of rs1_val and rs2_val
-   let opcode = inputs.decoded_instr.opcode;
-   IntXL s_rs1_val = unpack (inputs.rs1_val);
-
-   IntXL  imm_s = extend (unpack (inputs.decoded_instr.imm12_I));
-   WordXL eaddr = pack (s_rs1_val + imm_s);
-
-   let regFileType = inputs.decoded_instr.funct3;
-
-
-
-   let alu_outputs = alu_outputs_base;
-
-   alu_outputs.control   = CONTROL_STRAIGHT;
-   alu_outputs.op_stage2 = OP_Stage2_LD;
-   alu_outputs.rd        = inputs.decoded_instr.rd;
-   alu_outputs.addr      = eaddr;
-   alu_outputs.isNop = True;
-   alu_outputs.rs_count = 2'b00;
-
+   let alu_outputs = fv_LD (inputs);
    return alu_outputs;
 endfunction
 
@@ -921,23 +913,10 @@ endfunction
 // STORE - Context  -- rgollap1
 
 function ALU_Outputs fv_STC (ALU_Inputs inputs);
-   // Signed version of rs1_val
-   IntXL  s_rs1_val = unpack (inputs.rs1_val);
-   IntXL  imm_s     = extend (unpack (inputs.decoded_instr.imm12_S));
-   WordXL eaddr     = pack (s_rs1_val + imm_s);
 
-   let opcode = inputs.decoded_instr.opcode;
-   let funct3 = inputs.decoded_instr.funct3;
-
-   let alu_outputs = alu_outputs_base;
-
-   alu_outputs.control   = CONTROL_STRAIGHT;
-   alu_outputs.op_stage2 = OP_Stage2_ST;
-   alu_outputs.addr      = eaddr;
-   alu_outputs.val2      = inputs.rs2_val;
-   alu_outputs.isNop = True;
-   alu_outputs.rs_count = 2'b00;
-
+   let alu_outputs = fv_ST (inputs);
+   alu_outputs.val2 = extend(alu_outputs.val2_tag);
+   alu_outputs.val2_tag = dtag_DT;
    return alu_outputs;
 endfunction
 

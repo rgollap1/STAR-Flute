@@ -257,6 +257,7 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
       let cfi_label = 0;
       let cfi_exec_code = 0;
      
+      if (rg_stage_input.priv == 0 ) begin
       if (rg_cfi == cfi_TCHK_CAL) begin // rgollap1 - function call registered 
          if (rg_stage_input.tag == itag_TFC) // function call target
 	    cfi_status = 0;
@@ -306,6 +307,8 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
 	    end
 	    else
 	       cfi_exec_code = excep_CFI; // -- ravitheg Setting CPU Trap
+      end
+      
       end
 	 
       // This stage is empty

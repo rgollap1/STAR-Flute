@@ -322,7 +322,18 @@ function ALU_Outputs fv_JAL (ALU_Inputs inputs);
    alu_outputs.cf_info   = cf_info;
 
    if (inputs.tag == itag_CAL) begin
-      alu_outputs.val1_tag = dtag_RA;
+     if (inputs.rs1_val_tag != dtag_CP)      
+       alu_outputs.exc_code = excep_CFI; 
+     else if (inputs.rs1_val_tag == dtag_CP)      
+       alu_outputs.val1_tag = dtag_RA;
+   end
+
+   if (inputs.tag == itag_IDJ && inputs.rs1_val_tag != dtag_CP) begin     
+     alu_outputs.exc_code = excep_CFI; 
+   end
+
+   if (inputs.tag == itag_RET && inputs.rs1_val_tag != dtag_RA) begin
+     alu_outputs.exc_code = excep_RAP;
    end
 
 `ifdef INCLUDE_TANDEM_VERIF
@@ -374,11 +385,18 @@ function ALU_Outputs fv_JALR (ALU_Inputs inputs);
    alu_outputs.cf_info   = cf_info;
 
    if (inputs.tag == itag_CAL) begin
-      alu_outputs.val1_tag = dtag_RA;
+     if (inputs.rs1_val_tag != dtag_CP)
+       alu_outputs.exc_code = excep_CFI;
+     else if (inputs.rs1_val_tag == dtag_CP)
+       alu_outputs.val1_tag = dtag_RA;
    end
-  
+
+   if (inputs.tag == itag_IDJ && inputs.rs1_val_tag != dtag_CP) begin 
+     alu_outputs.exc_code = excep_CFI;
+   end
+
    if (inputs.tag == itag_RET && inputs.rs1_val_tag != dtag_RA) begin
-     let exc_code = excep_RAP;
+     alu_outputs.exc_code = excep_RAP;
    end
 `ifdef INCLUDE_TANDEM_VERIF
    // Normal trace output (if no trap)
@@ -728,6 +746,11 @@ function ALU_Outputs fv_LD (ALU_Inputs inputs);
    alu_outputs.rd_in_fpr = (opcode == op_LOAD_FP);
 `endif
 
+   if (inputs.rs1_val_tag != dtag_DP) begin
+     alu_outputs.exc_code = excep_CFI;
+   end    
+
+
 `ifdef INCLUDE_TANDEM_VERIF
    // Normal trace output (if no trap)
 `ifdef ISA_F
@@ -799,6 +822,10 @@ function ALU_Outputs fv_ST (ALU_Inputs inputs);
 `ifdef ISA_F
    alu_outputs.fval2     = inputs.frs2_val;
 `endif
+
+   if (inputs.rs1_val_tag != dtag_DP) begin
+     alu_outputs.exc_code = excep_CFI;
+   end
 
 `ifdef INCLUDE_TANDEM_VERIF
    // Normal trace output (if no trap)

@@ -1329,6 +1329,12 @@ function ALU_Outputs fv_ALU (ALU_Inputs inputs);
 
    
    if (alu_outputs.rs_count == 2'b11) begin
+     // [GEN] may not consume a return address (Ch3): reject an [RA] source operand.
+     if (inputs.cur_priv == 0 && itag_op(inputs.tag) == op_GEN
+         && (inputs.rs1_val_tag == dtag_RA || inputs.rs2_val_tag == dtag_RA)) begin
+        alu_outputs.exc_code = excep_RAP;
+        alu_outputs.control  = CONTROL_TRAP;
+     end
       
      let rd_val_tag_reg = dtag_DT;
      
@@ -1352,6 +1358,12 @@ function ALU_Outputs fv_ALU (ALU_Inputs inputs);
    end
 
    else if (alu_outputs.rs_count == 2'b10) begin
+     // [GEN] may not consume a return address (Ch3).
+     if (inputs.cur_priv == 0 && itag_op(inputs.tag) == op_GEN
+         && inputs.rs1_val_tag == dtag_RA) begin
+        alu_outputs.exc_code = excep_RAP;
+        alu_outputs.control  = CONTROL_TRAP;
+     end
      
      let rd_val_tag_reg = inputs.rs1_val_tag;
      

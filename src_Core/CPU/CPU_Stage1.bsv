@@ -316,6 +316,17 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
       
       end
 	 
+      // STAR: a Stage 1 CFI target-check violation (the cfi_TCHK_* state machine)
+      // raises a trap. cfi_exec_code is non-zero only in U-mode (the kernel is
+      // untagged) and only when a control transfer lands on a target the compiler
+      // did not tag as legal, so this fires solely on a genuine control-flow
+      // violation. Mirrors how illegal-instruction traps set CONTROL_TRAP.
+      // -- rgollap1/ravitheg
+      if (cfi_exec_code != 0) begin
+	 alu_outputs.exc_code = cfi_exec_code;
+	 alu_outputs.control  = CONTROL_TRAP;
+      end
+
       // This stage is empty
       if (! rg_full) begin
 	 output_stage1.ostatus = OSTATUS_EMPTY;

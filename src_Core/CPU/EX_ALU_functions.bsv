@@ -325,6 +325,8 @@ function ALU_Outputs fv_JAL (ALU_Inputs inputs);
    alu_outputs.cf_info   = cf_info;
    alu_outputs.rs_count  = 2'b00;
    
+   // STAR CFI (JAL path): same target-tag validation as JALR; U-mode only.
+   //   [CAL] -> target [CP], tag link [RA];  [GEN] -> [CP];  [RET] -> [RA].
    if (inputs.cur_priv == 0) begin
    if (itag_op(inputs.tag) == op_CAL) begin
      if (inputs.rs1_val_tag != dtag_CP)      
@@ -393,6 +395,11 @@ function ALU_Outputs fv_JALR (ALU_Inputs inputs);
    alu_outputs.cf_info   = cf_info;
    alu_outputs.rs_count  = 2'b0;
 
+   // STAR CFI (JALR, register-indirect transfer): validate the target register's
+   // data tag against the instruction tag; U-mode only (kernel untagged).
+   //   [CAL] -> target must be a code pointer [CP]; on success tag the link [RA].
+   //   [GEN] -> indirect jump: target must be a code pointer [CP] (else excep_CFI).
+   //   [RET] -> target must be a return address [RA] (else excep_RAP).
    if (inputs.cur_priv == 0) begin
    if (itag_op(inputs.tag) == op_CAL) begin
      if (inputs.rs1_val_tag != dtag_CP)
@@ -689,6 +696,9 @@ function ALU_Outputs fv_LUI (ALU_Inputs inputs);
 
    alu_outputs.rs_count = 2'b00;
 
+   // STAR: an arithmetic op tagged [DPO]/[CPO] *produces* a pointer, so its result
+   // takes the data-pointer / code-pointer tag (pointer arithmetic). Untagged ops
+   // produce plain data [DT]. U-mode only. -- STAR
    if (inputs.cur_priv == 0) begin
    if (itag_op(inputs.tag) == op_DPO)
       alu_outputs.val1_tag = dtag_DP;
@@ -721,6 +731,9 @@ function ALU_Outputs fv_AUIPC (ALU_Inputs inputs);
 
    alu_outputs.rs_count = 2'b00;
    
+   // STAR: an arithmetic op tagged [DPO]/[CPO] *produces* a pointer, so its result
+   // takes the data-pointer / code-pointer tag (pointer arithmetic). Untagged ops
+   // produce plain data [DT]. U-mode only. -- STAR
    if (inputs.cur_priv == 0) begin
    if (itag_op(inputs.tag) == op_DPO)
       alu_outputs.val1_tag = dtag_DP;

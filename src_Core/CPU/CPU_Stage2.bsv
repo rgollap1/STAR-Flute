@@ -290,7 +290,7 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 
 
 	    WordXL result = truncate (dcache.word64); 
-            Bit #(4) result_tag = truncate (dtcache.word64); // this needs to be fixed, need a new fucntion to pick the right 8 bits out of the fetched 64
+            Bit #(4) result_tag = (rg_stage2.addr [3] == 1'b0) ? dtcache.word64 [3:0] : dtcache.word64 [7:4]; // rgollap1: select the accessed 64-bit slot's tag nibble (data addr bit 3) from the tag byte
             let funct3 = instr_funct3 (rg_stage2.instr);
 
 	    let data_to_stage3 = data_to_stage3_base;

@@ -1191,6 +1191,17 @@ module mkDTCache #(parameter Bool      dcache_not_icache,
 	    result = Cache_Result {outcome:      CACHE_READ_HIT,
 				   final_ld_val: data,
 				   final_st_val: ?};
+	    // [CLR] scrub (rgollap1). On a load, req.st_value[3:0] is a control word
+	    // packed by the memory stage: {nibble_sel(bit3), CLR(bit2), expected[1:0]}.
+	    // The tag byte holds two 64-bit slots' 4-bit tags; pick this slot's nibble
+	    // via bit 3. If CLR is set and the nibble matches the expected tag, strip
+	    // that nibble to [DT] (0000) in place, preserving the adjacent slot's nibble.
+	    Bit #(4) acc_nibble = (req.st_value [3] == 1'b0) ? data [3:0] : data [7:4];
+	    if ((req.st_value [2] == 1'b1) && (acc_nibble == zeroExtend (req.st_value [1:0]))) begin
+	       Bit #(8) newbyte = (req.st_value [3] == 1'b0) ? { data [7:4], 4'h0 }
+	                                                     : { 4'h0, data [3:0] };
+	       fa_write (pa, req.f3, zeroExtend (newbyte));
+	    end
 	 end
 
 	 // Store-hit

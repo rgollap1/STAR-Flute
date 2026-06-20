@@ -429,6 +429,13 @@ Bit #(3) f3_LCD = 3'b011;
 // STORE_CONTEXT: mem[rs1+imm] <- tprf[rs2]  (save a TPRF entry)
 Opcode op_STORE_CONTEXT = 7'b01_010_11;
 
+// funct3 of a context instruction selects which tag-state file it addresses.
+// Both the TRF (per-register data tags) and the TPRF (CFI/TPP state) are saved
+// and restored this way because the DT-cache tag path is gated to user mode, so
+// a kernel-mode context switch cannot move tags via ordinary loads/stores. -- STAR
+Bit #(3) f3_ctx_TRF  = 3'b000;   // address the TRF  (a register's 4-bit data tag)
+Bit #(3) f3_ctx_TPRF = 3'b001;   // address the TPRF (a TPP-state entry: CFI latch + label)
+
 Bit #(3) f3_SCB = 3'b000;
 Bit #(3) f3_SCD	= 3'b011;
 

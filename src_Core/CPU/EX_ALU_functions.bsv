@@ -928,11 +928,16 @@ endfunction
 
 function ALU_Outputs fv_STC (ALU_Inputs inputs);
 
-   // STORE_CONTEXT: store the TPRF entry (indexed by rs2, read in Stage 1 and
-   // carried in inputs.tprf_val) to memory, so the OS can save the TPP state on
-   // a context switch. Tagged [DT] in memory like ordinary data. -- rgollap1
+   // STORE_CONTEXT: save a tag-state entry to memory as ordinary [DT] data so the
+   // OS can preserve it across a context switch. The DT-cache tag path is gated to
+   // user mode, so a kernel-mode switch cannot save tags with normal stores; these
+   // special S-mode instructions move the state explicitly. funct3 selects the
+   // file: f3_ctx_TPRF -> the TPRF entry (CFI latch+label, read in Stage 1 as
+   // inputs.tprf_val); otherwise -> the rs2 register's 4-bit TRF data tag. -- rgollap1
    let alu_outputs = fv_ST (inputs);
-   alu_outputs.val2     = inputs.tprf_val;
+   alu_outputs.val2     = (inputs.decoded_instr.funct3 == f3_ctx_TPRF)
+                          ? inputs.tprf_val
+                          : zeroExtend (inputs.rs2_val_tag);
    alu_outputs.val2_tag = dtag_DT;
    return alu_outputs;
 endfunction

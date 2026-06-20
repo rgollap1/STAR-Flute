@@ -201,8 +201,8 @@ module mkCPU_Stage3 #(Bit #(4)         verbosity,
          //    in U-mode: in S-mode the latch must be preserved so a value restored
          //    by LOAD_CONTEXT (and saved by STORE_CONTEXT) is not clobbered by the
          //    kernel/sret before the user process resumes.
-         if (rg_stage3.rd_valid && (rg_stage3.instr[6:0] == op_LOAD_CONTEXT))
-            tprf_regfile.write_rd (rg_stage3.rd, rg_stage3.rd_val);
+         if (rg_stage3.rd_valid && (rg_stage3.instr[6:0] == op_LOAD_CONTEXT) && (instr_funct3 (rg_stage3.instr) == f3_ctx_TPRF))
+            tprf_regfile.write_rd (rg_stage3.rd, rg_stage3.rd_val);   // restore a TPRF entry (CFI latch+label)
          else if (rg_stage3.priv == 0)
             tprf_regfile.write_rd (1, zeroExtend(tprf_val));
 
@@ -216,11 +216,20 @@ module mkCPU_Stage3 #(Bit #(4)         verbosity,
 
             else
                if (rg_stage3.instr[6:0] == op_LOAD_CONTEXT) begin
-                  // TPRF restore: the loaded word went to the TPRF above, not to
-                  // the GPR / GPR-tag regfile. rgollap1
+                  // LOAD_CONTEXT restores into a tag-state file, not the GPR. The
+                  // TPRF case is handled by the TPRF write above; the TRF case
+                  // writes the loaded word's low nibble into gpr_tag[rd]. rgollap1
+                  if (instr_funct3 (rg_stage3.instr) == f3_ctx_TRF)
+                     gpr_tag_regfile.write_rd (rg_stage3.rd, rg_stage3.rd_val [3:0]);   // restore a TRF entry
+               end
+               else if ((rg_stage3.priv == 0) && itag_is_clr (rg_stage3.tag) && (rg_stage3.instr[6:0] == op_STORE)) begin
+                  // [CLR] store: scrub the SOURCE register's TRF tag to [DT]. The
+                  // stored value (e.g. a return address pushed to the stack) is
+                  // single-use and must not stay live in the register. rgollap1
+                  gpr_tag_regfile.write_rd (instr_rs2 (rg_stage3.instr), dtag_DT);
                end
                else begin
-               // Write to GPR
+               // Write to GPR (data + destination TRF tag)
                   gpr_regfile.write_rd (rg_stage3.rd, rg_stage3.rd_val);
 	          gpr_tag_regfile.write_rd (rg_stage3.rd, rg_stage3.rd_val_tag);
                end

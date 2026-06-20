@@ -768,7 +768,17 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 			amo_funct7,
 `endif
 			x.tag_addr, // rgollap1 -- change it to x.addr + 64000 when testing ISA's on bluesim
-                        zeroExtend (x.val2_tag),
+                        ((cache_op == CACHE_LD)
+                         // LOAD: the DT value field is unused for a tag write, so it carries a
+                         // control word the DT-cache uses to validate-and-(optionally)[CLR]-scrub.
+                         ? zeroExtend ({ x.addr [3],                            // bit3: nibble select (which 64-bit slot)
+                                         (itag_is_clr (x.tag) ? 1'b1 : 1'b0),   // bit2: CLR (validate then scrub to DT)
+                                         ( (itag_op (x.tag) == op_RAP) ? dtag_RA [1:0]
+                                         : (itag_op (x.tag) == op_DPO) ? dtag_DP [1:0]
+                                         : (itag_op (x.tag) == op_CPO) ? dtag_CP [1:0]
+                                         :                               dtag_DT [1:0] ) })  // bits[1:0]: expected per-word tag
+                         // STORE: unchanged -- the tag value to write.
+                         : zeroExtend (x.val2_tag)),
 			mem_priv,
 			sstatus_SUM,
 			mstatus_MXR,

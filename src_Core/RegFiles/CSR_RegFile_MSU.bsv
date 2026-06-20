@@ -74,13 +74,6 @@ interface CSR_RegFile_IFC;
    (* always_ready *)
    method ActionValue #(CSR_Write_Result) mav_csr_write (CSR_Addr csr_addr, WordXL word);
 
-   // STAR TSRF CFI target-expect latch: architectural home for the latch so it is
-   // CSR-visible (save/restore) and the pipeline reads/commits it here. -- rgollap1
-   (* always_ready *)
-   method Word mv_tsrf_latch;
-   (* always_ready *)
-   method Action ma_tsrf_latch_commit (Word v);
-
 `ifdef ISA_F
    // Read FRM
    (* always_ready *)
@@ -330,11 +323,9 @@ module mkCSR_RegFile (CSR_RegFile_IFC);
    Reg #(MCause)     rg_scause    <- mkRegU;
    Reg #(Word)       rg_stval     <- mkRegU;
 
-   // STAR TSRF (TPP State Register File) state -- rgollap1/ravitheg.
-   // The CFI target-expect latch is committed every cycle by the pipeline and may
-   // also be written by an S-mode CSR write (OS restore), so it is a CReg: port [0]
-   // is the per-instruction pipeline commit, port [1] is the OS/CSR write (wins).
-   Reg #(Word)       crg_tsrf_latch [2] <- mkCReg (2, 0);
+   // STAR TSRF exception-reporting state -- rgollap1/ravitheg. The latch+label
+   // are saved/restored via STORE_CONTEXT/LOAD_CONTEXT (TPRF<->memory); these two
+   // CSRs are read by the S-mode security-exception handler.
    Reg #(Word)       rg_tsrf_pc   <- mkRegU;    // offending PC, latched on a security exception
    Reg #(Word)       rg_tsrf_svc  <- mkRegU;    // security violation code (exc_code of the violation)
 
@@ -413,7 +404,6 @@ module mkCSR_RegFile (CSR_RegFile_IFC);
       rg_stvec    <= word_to_mtvec (truncate (soc_map.m_mtvec_reset_value));
       rg_scause   <= word_to_mcause (0);    // Supposed to be the cause of the reset.
       rg_satp     <= 0;
-      crg_tsrf_latch[0] <= 0;    // STAR TSRF reset -- rgollap1
       rg_tsrf_pc  <= 0;
       rg_tsrf_svc <= 0;
       //rg_scounteren <= mcounteren_reset_value;
@@ -551,8 +541,7 @@ module mkCSR_RegFile (CSR_RegFile_IFC);
 
 		     || (csr_addr == csr_addr_satp)
 
-		     || (csr_addr == csr_addr_tsrf_latch)    // STAR TSRF -- rgollap1
-		     || (csr_addr == csr_addr_tsrf_pc)
+		     || (csr_addr == csr_addr_tsrf_pc)        // STAR TSRF -- rgollap1
 		     || (csr_addr == csr_addr_tsrf_svc)
 
 		     || (csr_addr == csr_addr_medeleg)
@@ -686,8 +675,7 @@ module mkCSR_RegFile (CSR_RegFile_IFC);
 
 	    csr_addr_satp:       m_csr_value = tagged Valid rg_satp;
 
-	    csr_addr_tsrf_latch: m_csr_value = tagged Valid crg_tsrf_latch [1];    // STAR TSRF -- rgollap1
-	    csr_addr_tsrf_pc:    m_csr_value = tagged Valid rg_tsrf_pc;
+	    csr_addr_tsrf_pc:    m_csr_value = tagged Valid rg_tsrf_pc;    // STAR TSRF -- rgollap1
 	    csr_addr_tsrf_svc:   m_csr_value = tagged Valid rg_tsrf_svc;
 
 	    csr_addr_medeleg:    m_csr_value = tagged Valid zeroExtend (rg_medeleg);
@@ -887,11 +875,7 @@ module mkCSR_RegFile (CSR_RegFile_IFC);
 				       new_csr_value = wordxl;
 				       rg_satp      <= new_csr_value;
 				    end
-	       csr_addr_tsrf_latch: begin                          // STAR TSRF -- rgollap1
-				       new_csr_value = wordxl;
-				       crg_tsrf_latch [1] <= wordxl;   // OS restore; CReg port [1] wins over the pipeline commit on port [0]
-				    end
-	       csr_addr_tsrf_pc:    begin
+	       csr_addr_tsrf_pc:    begin                          // STAR TSRF -- rgollap1
 				       new_csr_value = wordxl;
 				       rg_tsrf_pc   <= new_csr_value;
 				    end
@@ -1170,17 +1154,6 @@ module mkCSR_RegFile (CSR_RegFile_IFC);
    method ActionValue #(CSR_Write_Result) mav_csr_write (CSR_Addr csr_addr, WordXL word);
       let result <- fav_csr_write (csr_addr, word);
       return result;
-   endmethod
-
-   // STAR TSRF CFI target-expect latch access -- rgollap1.
-   // mv_tsrf_latch returns the committed (pre-this-cycle-commit) value for the
-   // pipeline's architectural read; ma_tsrf_latch_commit is the per-instruction
-   // pipeline commit on CReg port [0] (an OS CSR write uses port [1] and wins).
-   method Word mv_tsrf_latch;
-      return crg_tsrf_latch [0];
-   endmethod
-   method Action ma_tsrf_latch_commit (Word v);
-      crg_tsrf_latch [0] <= v;
    endmethod
 
    // Read MISA

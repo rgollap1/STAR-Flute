@@ -162,11 +162,15 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
    rg_cfi = rscfib[2:0];
 
    let rs_lbl = 1;  
-   let cfi_lbl = tprf_tag_regfile.read_rs2 (rs_lbl); //rgollap1 - cfi label
-   match { .busylbla, .rslbla } = fn_lbl_bypass (bypass_lbl_from_stage3, 2, cfi_lbl);
+   let cfi_lbl = tprf_tag_regfile.read_rs2 (rs_lbl); //rgollap1 - cfi label   match { .busylbla, .rslbla } = fn_lbl_bypass (bypass_lbl_from_stage3, 2, cfi_lbl);
    match { .busylblb, .rslblb } = fn_lbl_bypass (bypass_lbl_from_stage2, 2, rslbla);
    Bool rslbl_busy = (busylbla || busylblb);
    rg_source_lbl = rslblb[20:3];
+
+   // TPRF entry to be saved by a STORE_CONTEXT (index = rs2 field of the instr),
+   // read on the spare TPRF port. Only the OS context-save sequence uses this;
+   // no bypass is applied (the saved entries are quiescent). -- rgollap1
+   let tprf_save_val = tprf_tag_regfile.read_rs1_port2 (rg_stage_input.decoded_instr.rs2);
    
 `ifdef ISA_F
    // FP Register rs1 read and bypass
@@ -216,7 +220,8 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
 `endif
 `endif
 				mstatus        : csr_regfile.read_mstatus,
-				misa           : csr_regfile.read_misa };
+				misa           : csr_regfile.read_misa,
+				tprf_val       : tprf_save_val };
 
    let alu_outputs = fv_ALU (alu_inputs);
 

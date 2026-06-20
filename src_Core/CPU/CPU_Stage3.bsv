@@ -195,7 +195,16 @@ module mkCPU_Stage3 #(Bit #(4)         verbosity,
 
    function Action fa_deq;
       action
-         tprf_regfile.write_rd (1, zeroExtend(tprf_val));
+         // TPRF write (single port -- muxed). rgollap1:
+         //  - LOAD_CONTEXT restores a TPRF entry: tprf[rd] <- loaded word.
+         //  - Otherwise commit the per-instruction CFI latch to tprf[1], but ONLY
+         //    in U-mode: in S-mode the latch must be preserved so a value restored
+         //    by LOAD_CONTEXT (and saved by STORE_CONTEXT) is not clobbered by the
+         //    kernel/sret before the user process resumes.
+         if (rg_stage3.rd_valid && (rg_stage3.instr[6:0] == op_LOAD_CONTEXT))
+            tprf_regfile.write_rd (rg_stage3.rd, rg_stage3.rd_val);
+         else if (rg_stage3.priv == 0)
+            tprf_regfile.write_rd (1, zeroExtend(tprf_val));
 
          // Writeback Rd if valid
 	 if (rg_stage3.rd_valid) begin
@@ -206,8 +215,9 @@ module mkCPU_Stage3 #(Bit #(4)         verbosity,
                fpr_regfile.write_rd (rg_stage3.rd, rg_stage3.frd_val);
 
             else
-               if (rg_stage3.instr[6:0] == op_STORE_CONTEXT) begin
-                  gpr_tag_regfile.write_rd (rg_stage3.rd, rg_stage3.rd_val[3:0]);
+               if (rg_stage3.instr[6:0] == op_LOAD_CONTEXT) begin
+                  // TPRF restore: the loaded word went to the TPRF above, not to
+                  // the GPR / GPR-tag regfile. rgollap1
                end
                else begin
                // Write to GPR

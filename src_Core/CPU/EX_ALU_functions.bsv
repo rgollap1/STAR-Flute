@@ -59,6 +59,7 @@ typedef struct {
 `endif
 `endif
    MISA           misa;
+   WordXL         tprf_val;       // rgollap1 -- TPRF entry (indexed by rs2) carried for STORE_CONTEXT save
    } ALU_Inputs
 deriving (Bits, FShow);
 
@@ -914,8 +915,11 @@ endfunction
 
 function ALU_Outputs fv_STC (ALU_Inputs inputs);
 
+   // STORE_CONTEXT: store the TPRF entry (indexed by rs2, read in Stage 1 and
+   // carried in inputs.tprf_val) to memory, so the OS can save the TPP state on
+   // a context switch. Tagged [DT] in memory like ordinary data. -- rgollap1
    let alu_outputs = fv_ST (inputs);
-   alu_outputs.val2 = extend(alu_outputs.val2_tag);
+   alu_outputs.val2     = inputs.tprf_val;
    alu_outputs.val2_tag = dtag_DT;
    return alu_outputs;
 endfunction

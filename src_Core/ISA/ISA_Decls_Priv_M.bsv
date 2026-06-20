@@ -580,8 +580,11 @@ Exc_Code  exc_code_LOAD_PAGE_FAULT               = 13;
 Exc_Code  exc_code_RESERVED_14                   = 14;
 Exc_Code  exc_code_STORE_AMO_PAGE_FAULT          = 15;
 
-Exc_Code  excep_CFI                              = 16;
-Exc_Code  excep_RAP                              = 17;
+// STAR security-violation exception codes. Codes 16/17 require a 5-bit Exc_Code
+// (widened above from 4 bits). The S-mode handler reads the TSRF CSRs
+// (csr_addr_tsrf_pc / _svc) to get the offending PC and which policy fired.
+Exc_Code  excep_CFI                              = 16;   // CFI target / label violation
+Exc_Code  excep_RAP                              = 17;   // return-address protection violation
 
 function Fmt fshow_interrupt_Exc_Code (Exc_Code exc_code);
    return case (exc_code)

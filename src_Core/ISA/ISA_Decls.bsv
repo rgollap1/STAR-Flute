@@ -415,23 +415,26 @@ Bit #(3) f3_SW  = 3'b010;
 Bit #(3) f3_SD  = 3'b011;
 
 // ---------------
-// Load Context Instructions
+// Context-switch instructions: move a TPRF (TPP state) entry between a register
+// file slot and memory, so the OS can save/restore the tag-execution state
+// (CFI latch, label, ...) that ordinary loads/stores cannot reach. Data tags
+// ride with data on normal loads/stores, so only the TPRF needs these. -- STAR
 
+// LOAD_CONTEXT: tprf[rd] <- mem[rs1+imm]  (restore a TPRF entry)
 Opcode op_LOAD_CONTEXT = 7'b01_010_10;
 
 Bit #(3) f3_LCB = 3'b000;
 Bit #(3) f3_LCD = 3'b011;
 
-// ---------------
-// Store Context Instructions
-
+// STORE_CONTEXT: mem[rs1+imm] <- tprf[rs2]  (save a TPRF entry)
 Opcode op_STORE_CONTEXT = 7'b01_010_11;
 
 Bit #(3) f3_SCB = 3'b000;
 Bit #(3) f3_SCD	= 3'b011;
 
 // -------------
-// Tag Address
+// Tag-set instruction: installs a data tag into the TRF entry of its register
+// (used by the compiler to mark pointers / return addresses). -- STAR
 
 Opcode op_TAG = 7'b00_010_11;
 
@@ -500,13 +503,16 @@ Bit #(4) dtag_RA = 4'b0011;   // rank 3 -- return address
 // This corrects a prior CP/DP swap (code bug: CP was 1, DP was 2).
 
 // ----------
-// CFI TCHK States
+// CFI target-expect latch (TSRF) states. The Stage-1 CFI state machine arms one
+// of these when it sees a control-transfer instruction, then on the NEXT
+// instruction checks that it carries the matching landing-pad target tag; a
+// mismatch raises excep_CFI (excep_RAP for a return). 0 = idle / no check armed.
 
-Bit #(3) cfi_TCHK_CAL = 3'b001;
-Bit #(3) cfi_TCHK_RET = 3'b010;
-Bit #(3) cfi_TCHK_LBL_SRC = 3'b011;
-Bit #(3) cfi_TCHK_LBL_CFI = 3'b100;
-Bit #(3) cfi_TCHK_IDJ = 3'b101;
+Bit #(3) cfi_TCHK_CAL = 3'b001;       // a [CAL] was seen -- next instr must be tgt_TFC
+Bit #(3) cfi_TCHK_RET = 3'b010;       // a [RET] was seen -- next instr must be tgt_TFR
+Bit #(3) cfi_TCHK_LBL_SRC = 3'b011;   // a source [LBL] was seen -- next must be a CFI op (CAL/RET/indirect jump)
+Bit #(3) cfi_TCHK_LBL_CFI = 3'b100;   // CFI op after a source label -- next must be the matching dest [LBL]
+Bit #(3) cfi_TCHK_IDJ = 3'b101;       // an indirect jump ([GEN] JALR) was seen -- next must be tgt_TIJ
 
 // ================================================================
 // Memory Model

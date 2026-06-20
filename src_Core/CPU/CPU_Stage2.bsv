@@ -299,17 +299,17 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
             let trap_info_cfi = trap_info_dtmem;
 
 	    if (rg_stage2.priv == 0 && ostatus == OSTATUS_PIPE && rg_stage2.op_stage2 == OP_Stage2_LD) begin // rgollap1
-	       if ((rg_stage2.tag == itag_RAP && result_tag != dtag_RA) || (rg_stage2.tag != itag_RAP && result_tag == dtag_RA)) begin
+	       if ((itag_op(rg_stage2.tag) == op_RAP && result_tag != dtag_RA) || (itag_op(rg_stage2.tag) != op_RAP && result_tag == dtag_RA)) begin
 		  trap_info_cfi.exc_code = excep_RAP;
 		  data_to_stage3.rd_valid = False;
 	       end
 	       
-	       else if (rg_stage2.tag == itag_DPO && result_tag != dtag_DP) begin
+	       else if (itag_op(rg_stage2.tag) == op_DPO && result_tag != dtag_DP) begin
                   trap_info_cfi.exc_code = excep_CFI;                                 
                   data_to_stage3.rd_valid = False;
 	       end
                
-               else if (rg_stage2.tag == itag_CPO && result_tag != dtag_CP) begin                               
+               else if (itag_op(rg_stage2.tag) == op_CPO && result_tag != dtag_CP) begin                               
 		  trap_info_cfi.exc_code = excep_CFI;                                 
                   data_to_stage3.rd_valid = False;
                end  
@@ -464,15 +464,15 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
          let trap_info_cfi = trap_info_dtmem;
          
          if (rg_stage2.priv == 0 && ostatus == OSTATUS_PIPE ) begin
-             if ((rg_stage2.tag == itag_RAP && rg_stage2.val2_tag != dtag_RA) || (rg_stage2.tag != itag_RAP && rg_stage2.val2_tag == dtag_RA)) begin
+             if ((itag_op(rg_stage2.tag) == op_RAP && rg_stage2.val2_tag != dtag_RA) || (itag_op(rg_stage2.tag) != op_RAP && rg_stage2.val2_tag == dtag_RA)) begin
             	trap_info_cfi.exc_code = excep_RAP;
             	data_to_stage3.rd_valid = False;
              end
-             else if (rg_stage2.tag == itag_DPO && rg_stage2.val2_tag != dtag_DP) begin
+             else if (itag_op(rg_stage2.tag) == op_DPO && rg_stage2.val2_tag != dtag_DP) begin
                 trap_info_cfi.exc_code = excep_CFI;
                 data_to_stage3.rd_valid = False;
              end
-             else if (rg_stage2.tag == itag_CPO && rg_stage2.val2_tag != dtag_CP) begin
+             else if (itag_op(rg_stage2.tag) == op_CPO && rg_stage2.val2_tag != dtag_CP) begin
                 trap_info_cfi.exc_code = excep_CFI;
                 data_to_stage3.rd_valid = False;
              end

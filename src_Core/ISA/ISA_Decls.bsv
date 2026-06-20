@@ -438,19 +438,55 @@ Opcode op_TAG = 7'b00_010_11;
 // ------------
 // Instructions Tags
 
-Bit #(8) itag_GEN = 8'b00000000;
-Bit #(8) itag_DPO = 8'b00000010;
-Bit #(8) itag_CPO = 8'b00000011;
-Bit #(8) itag_RAP = 8'b00000100;
-Bit #(8) itag_CLR = 8'b00000101;
-Bit #(8) itag_EQR = 8'b00000110;
-Bit #(8) itag_IDJ = 8'b00001001;
-Bit #(8) itag_CAL = 8'b00001010;
-Bit #(8) itag_RET = 8'b00001011;
-Bit #(8) itag_TFC = 8'b00001100;
-Bit #(8) itag_TFR = 8'b00001101;
-Bit #(8) itag_TIJ = 8'b00001110;
-Bit #(8) itag_LBL = 8'b00001111;
+// Instruction Tags -- structured 6-bit bit-field encoding (carried in a Bit#(8)):
+//   tag[2:0] = operation,  tag[3] = CLR (scrub),  tag[5:4] = control-transfer target.
+// A "combined" tag (e.g. [TFC+DPO], [RAP+CLR]) simply sets more than one field;
+// the hardware decodes the fields and applies each policy. Indirect jumps are
+// tagged [GEN] (op_GEN) and inferred from the opcode -- there is no IDJ tag.
+
+// Operation field, tag[2:0]
+Bit #(3) op_GEN = 3'd0;
+Bit #(3) op_DPO = 3'd1;
+Bit #(3) op_CPO = 3'd2;
+Bit #(3) op_RAP = 3'd3;
+Bit #(3) op_CAL = 3'd4;
+Bit #(3) op_RET = 3'd5;
+Bit #(3) op_EQR = 3'd6;
+Bit #(3) op_LBL = 3'd7;
+
+// CLR modifier, tag[3]  (valid only with memory ops GEN/DPO/CPO/RAP)
+Bit #(1) clr_SET = 1'b1;
+
+// Control-transfer target field, tag[5:4]
+Bit #(2) tgt_NONE = 2'd0;
+Bit #(2) tgt_TFC  = 2'd1;   // target of a function call
+Bit #(2) tgt_TFR  = 2'd2;   // target of a function return
+Bit #(2) tgt_TIJ  = 2'd3;   // target of an indirect jump
+
+// Field extractors on the 6-bit instruction tag
+function Bit #(3) itag_op     (Bit #(8) t) = t[2:0];
+function Bool     itag_is_clr (Bit #(8) t) = (t[3] == clr_SET);
+function Bit #(2) itag_target (Bit #(8) t) = t[5:4];
+
+// Bare (uncombined) instruction-tag values (target = none, clr = 0)
+Bit #(8) itag_GEN = 8'h00;   // op_GEN
+Bit #(8) itag_DPO = 8'h01;   // op_DPO
+Bit #(8) itag_CPO = 8'h02;   // op_CPO
+Bit #(8) itag_RAP = 8'h03;   // op_RAP
+Bit #(8) itag_CAL = 8'h04;   // op_CAL
+Bit #(8) itag_RET = 8'h05;   // op_RET
+Bit #(8) itag_EQR = 8'h06;   // op_EQR
+Bit #(8) itag_LBL = 8'h07;   // op_LBL (standalone CFI-label NOP)
+
+// Bare landing-pad tags (target set, op = GEN); for combined forms the op
+// field carries the instruction's real operation (e.g. [TFC+DPO] = 8'h11).
+Bit #(8) itag_TFC = 8'h10;   // tgt_TFC + op_GEN
+Bit #(8) itag_TFR = 8'h20;   // tgt_TFR + op_GEN
+Bit #(8) itag_TIJ = 8'h30;   // tgt_TIJ + op_GEN
+
+// Common combined tags emitted by the compiler
+Bit #(8) itag_RAP_CLR = 8'h0B;   // [RAP+CLR]: normal return-address push/pop (single copy)
+Bit #(8) itag_TFC_DPO = 8'h11;   // [TFC+DPO]: call-target prologue stack-pointer adjust
 
 // -----------
 // Memory Tags

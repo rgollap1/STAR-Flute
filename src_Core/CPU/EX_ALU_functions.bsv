@@ -325,19 +325,19 @@ function ALU_Outputs fv_JAL (ALU_Inputs inputs);
    alu_outputs.rs_count  = 2'b00;
    
    if (inputs.cur_priv == 0) begin
-   if (inputs.tag == itag_CAL) begin
+   if (itag_op(inputs.tag) == op_CAL) begin
      if (inputs.rs1_val_tag != dtag_CP)      
        alu_outputs.exc_code = excep_CFI; 
      else if (inputs.rs1_val_tag == dtag_CP)      
        alu_outputs.val1_tag = dtag_RA;
    end
 
-   if (inputs.tag == itag_IDJ && inputs.rs1_val_tag != dtag_CP) begin     
+   if (itag_op(inputs.tag) == op_GEN && inputs.rs1_val_tag != dtag_CP) begin     
      alu_outputs.exc_code = excep_CFI;
      alu_outputs.control  = CONTROL_TRAP;
    end
 
-   if (inputs.tag == itag_RET && inputs.rs1_val_tag != dtag_RA) begin
+   if (itag_op(inputs.tag) == op_RET && inputs.rs1_val_tag != dtag_RA) begin
      alu_outputs.exc_code = excep_RAP;
      alu_outputs.control  = CONTROL_TRAP;
    end
@@ -393,19 +393,19 @@ function ALU_Outputs fv_JALR (ALU_Inputs inputs);
    alu_outputs.rs_count  = 2'b0;
 
    if (inputs.cur_priv == 0) begin
-   if (inputs.tag == itag_CAL) begin
+   if (itag_op(inputs.tag) == op_CAL) begin
      if (inputs.rs1_val_tag != dtag_CP)
        alu_outputs.exc_code = excep_CFI;
      else if (inputs.rs1_val_tag == dtag_CP)
        alu_outputs.val1_tag = dtag_RA;
    end
 
-   if (inputs.tag == itag_IDJ && inputs.rs1_val_tag != dtag_CP) begin 
+   if (itag_op(inputs.tag) == op_GEN && inputs.rs1_val_tag != dtag_CP) begin 
      alu_outputs.exc_code = excep_CFI;
      alu_outputs.control  = CONTROL_TRAP;
    end
 
-   if (inputs.tag == itag_RET && inputs.rs1_val_tag != dtag_RA) begin
+   if (itag_op(inputs.tag) == op_RET && inputs.rs1_val_tag != dtag_RA) begin
      alu_outputs.exc_code = excep_RAP;
      alu_outputs.control  = CONTROL_TRAP;
    end
@@ -689,9 +689,9 @@ function ALU_Outputs fv_LUI (ALU_Inputs inputs);
    alu_outputs.rs_count = 2'b00;
 
    if (inputs.cur_priv == 0) begin
-   if (inputs.tag == itag_DPO)
+   if (itag_op(inputs.tag) == op_DPO)
       alu_outputs.val1_tag = dtag_DP;
-   else if (inputs.tag == itag_CPO)
+   else if (itag_op(inputs.tag) == op_CPO)
       alu_outputs.val1_tag = dtag_CP;
    else
       alu_outputs.val1_tag = dtag_DT;
@@ -721,9 +721,9 @@ function ALU_Outputs fv_AUIPC (ALU_Inputs inputs);
    alu_outputs.rs_count = 2'b00;
    
    if (inputs.cur_priv == 0) begin
-   if (inputs.tag == itag_DPO)
+   if (itag_op(inputs.tag) == op_DPO)
       alu_outputs.val1_tag = dtag_DP;
-   else if (inputs.tag == itag_CPO)
+   else if (itag_op(inputs.tag) == op_CPO)
       alu_outputs.val1_tag = dtag_CP;
    else
       alu_outputs.val1_tag = dtag_DT;
@@ -1339,9 +1339,9 @@ function ALU_Outputs fv_ALU (ALU_Inputs inputs);
      else
        rd_val_tag_reg = inputs.rs2_val_tag;
       
-     if (inputs.tag == itag_CPO)
+     if (itag_op(inputs.tag) == op_CPO)
        rd_val_tag_inst = dtag_CP;
-     else if (inputs.tag == itag_DPO)
+     else if (itag_op(inputs.tag) == op_DPO)
        rd_val_tag_inst = dtag_DP;
 
      if (rd_val_tag_reg <= rd_val_tag_inst)
@@ -1357,9 +1357,9 @@ function ALU_Outputs fv_ALU (ALU_Inputs inputs);
      
      let rd_val_tag_inst = dtag_DT;
 
-     if (inputs.tag == itag_CPO)
+     if (itag_op(inputs.tag) == op_CPO)
        rd_val_tag_inst = dtag_CP;
-     else if (inputs.tag == itag_DPO)
+     else if (itag_op(inputs.tag) == op_DPO)
        rd_val_tag_inst = dtag_DP;
 
      if (rd_val_tag_reg <= rd_val_tag_inst)

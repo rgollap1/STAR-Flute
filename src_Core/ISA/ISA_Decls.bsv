@@ -455,10 +455,13 @@ Bit #(8) itag_LBL = 8'b00001111;
 // -----------
 // Memory Tags
 
-Bit #(4) dtag_DT = 4'b0000;
-Bit #(4) dtag_CP = 4'b0001;
-Bit #(4) dtag_DP = 4'b0010;
-Bit #(4) dtag_RA = 4'b0011;
+Bit #(4) dtag_DT = 4'b0000;   // rank 0 -- plain data
+Bit #(4) dtag_DP = 4'b0001;   // rank 1 -- data pointer
+Bit #(4) dtag_CP = 4'b0010;   // rank 2 -- code pointer
+Bit #(4) dtag_RA = 4'b0011;   // rank 3 -- return address
+// Encoding value == rank, per the dissertation rank order (DT < DP < CP < RA).
+// The EX-stage MIN/MAX tag resolution compares these values directly as ranks.
+// This corrects a prior CP/DP swap (code bug: CP was 1, DP was 2).
 
 // ----------
 // CFI TCHK States

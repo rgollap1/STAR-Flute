@@ -34,6 +34,12 @@ CSR_Addr   csr_addr_sip        = 12'h144;    // Supervisor interrupt pending
 
 CSR_Addr   csr_addr_satp       = 12'h180;    // Supervisor address translation and protection
 
+// STAR TPP State Register File (TSRF) -- S-mode custom CSRs, saved/restored on
+// context switch and read by the security-exception handler. -- rgollap1/ravitheg
+CSR_Addr   csr_addr_tsrf_latch  = 12'h5C0;    // STAR: CFI target-expect latch (control-transfer state)
+CSR_Addr   csr_addr_tsrf_pc     = 12'h5C1;    // STAR: offending instruction PC on a security exception
+CSR_Addr   csr_addr_tsrf_svc    = 12'h5C2;    // STAR: security violation code (which policy triggered)
+
 // ================================================================
 // SSTATUS
 

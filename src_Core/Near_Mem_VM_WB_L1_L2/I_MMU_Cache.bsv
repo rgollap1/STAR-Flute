@@ -72,6 +72,8 @@ import TLB :: *;
 import PTW :: *;
 `endif
 
+// STAR: use ICache (a copy of base Cache.bsv) instead of the plain data Cache.
+// ICache fetches the 8-bit inline instruction tag (itag) alongside each instr.
 import ICache :: *;  // rgollap1 -- Changed Cache to ICache
 import MMIO  :: *;
 
@@ -96,6 +98,7 @@ interface I_MMU_Cache_IFC;
    (* always_ready *)  method Bool       valid;
    (* always_ready *)  method WordXL     addr;        // req addr for which this is a response
    (* always_ready *)  method Bit #(64)  word64;      // rd_val (instruction)
+   // STAR: returns the 8-bit instruction tag (itag) read inline with the instr.
    (* always_ready *)  method Bit #(8)   tag8;         // rd_tag (instruction) -- rgollap1 Adding a method to return the tag from cache to CPU
    (* always_ready *)  method Bool       exc;
    (* always_ready *)  method Exc_Code   exc_code;
@@ -203,6 +206,8 @@ module mkI_MMU_Cache (I_MMU_Cache_IFC);
    SoC_Map_IFC soc_map <- mkSoC_Map;
 
    Bool dmem_not_imem = True;
+   // STAR: instantiate the instruction+inline-tag cache (ICache) in place of the
+   // base data Cache, so each fetch also returns its 8-bit itag.
    ICache_IFC  cache <- mkICache ((! dmem_not_imem),
 				fromInteger (verbosity_cache));   // rgollap1 -- Changed Cache to ICache
 
@@ -237,6 +242,7 @@ module mkI_MMU_Cache (I_MMU_Cache_IFC);
    Reg #(Exc_Code)  crg_exc_code [2]     <- mkCRegU (2);
    Reg #(Bit #(64)) crg_ld_val [2]       <- mkCRegU (2);  // Load-val (instruction)
 
+   // STAR: latches the fetched 8-bit instruction tag (itag) for the response.
    Reg #(Bit #(8))  crg_ld_tag [2]       <- mkCRegU (2); // rgollap1 -- Adding a register to hold the instruction tag
 
    // ****************************************************************
@@ -425,6 +431,7 @@ module mkI_MMU_Cache (I_MMU_Cache_IFC);
 	    else begin    // Cache hit
 	       crg_exc [0]          <= False;
 	       crg_ld_val [0]       <= cache_result.final_ld_val;
+	       // STAR: capture the inline itag delivered by ICache on a read hit.
 	       crg_ld_tag [0]       <= cache_result.final_ld_tag; // rgollap1
 
 	       if (cache_result.outcome == CACHE_READ_HIT) begin
@@ -500,6 +507,7 @@ module mkI_MMU_Cache (I_MMU_Cache_IFC);
 
       crg_valid [0]               <= True;
       crg_ld_val [0]              <= ld_val;
+      // STAR: non-cached/MMIO fetch carries no inline tag, so default itag to 0 (GEN).
       crg_ld_tag [0]              <= 0; //rgollap1
       crg_exc [0]                 <= err;
       crg_exc_code [0]            <= fv_exc_code_access_fault (crg_mmu_cache_req [0]);
@@ -619,6 +627,7 @@ module mkI_MMU_Cache (I_MMU_Cache_IFC);
       return crg_ld_val [0];
    endmethod
 
+   // STAR: hand the latched instruction tag (itag) back to the CPU pipeline.
    method Bit #(8)  tag8;
       return crg_ld_tag [0];
    endmethod

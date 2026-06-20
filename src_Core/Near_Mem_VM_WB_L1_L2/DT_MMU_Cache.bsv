@@ -1,5 +1,9 @@
 // Copyright (c) 2016-2021 Bluespec, Inc. All Rights Reserved.
 
+// STAR: DT_MMU_Cache is the data-tag MMU+cache -- a trimmed copy of D_MMU_Cache that
+// fronts the DTCache (data tags / TRF). It has no page-table walker of its own:
+// translations and PTE writebacks are delegated to D_MMU_Cache, and a PTW_DCACHE_FAULT
+// response means that shared walker already serviced the tag-path access.
 package DT_MMU_Cache;
 
 // ================================================================
@@ -85,6 +89,7 @@ import TLB :: *;
 import PTW :: *;
 `endif
 
+// STAR: the data-tag cache backing this module.
 import DTCache :: *;
 import MMIO  :: *;
 
@@ -127,6 +132,7 @@ interface DT_MMU_Cache_IFC;
    method Action tlb_flush;
    
    // PTW and PTE-writeback requests from DT_MMU_Cache are serviced by D_MMU_Cache
+   // STAR: DT-cache delegates page-table walks and PTE writebacks to D_MMU_Cache.
    interface Client #(PTW_Req, PTW_Rsp)  ptw_client;  //rgollap1 -- Adding a client module to get the reply from dcache regarding the page walk request
    interface Get #(Tuple2 #(PA, WordXL)) pte_writeback_g; // rgollap1
    
@@ -242,6 +248,7 @@ module mkDT_MMU_Cache (DT_MMU_Cache_IFC);
    SoC_Map_IFC soc_map <- mkSoC_Map;
 
    Bool dmem_not_imem = True;
+   // STAR: instantiate the data-tag cache (DTCache) as this module's L1 store.
    DTCache_IFC  cache <- mkDTCache (dmem_not_imem,
 				fromInteger (verbosity_cache));
 
@@ -252,10 +259,12 @@ module mkDT_MMU_Cache (DT_MMU_Cache_IFC);
 			      fromInteger (verbosity_cache));
 
    // PTW requests and responses -- rgollap1
+   // STAR: request/response FIFOs to D_MMU_Cache's shared page-table walker.
    FIFOF #(PTW_Req) f_ptw_reqs <- mkFIFOF; // to D_MMU_Cache 
    FIFOF #(PTW_Rsp) f_ptw_rsps <- mkFIFOF; // From D_MMU_Cache
 
    // Writebacks to mem of PTEs whose PTE.A and/or PTE.D have been modified
+   // STAR: PTE writebacks from tag-path translations, drained by D_MMU_Cache.
    FIFOF #(Tuple2 #(PA, WordXL)) f_dtmem_pte_writebacks <- mkFIFOF; // rgollap1
 `endif
 
@@ -406,6 +415,7 @@ module mkDT_MMU_Cache (DT_MMU_Cache_IFC);
 	    $display ("    Start PTW; -> STATE_PTW_WAIT");
 
 	 let ptw_req = PTW_Req {va: mmu_cache_req.va, satp: mmu_cache_req.satp};
+         // STAR: DT-cache has no walker of its own; forward the PTW request to D_MMU_Cache.
          f_ptw_reqs.enq (ptw_req); // rgollap1
 
 	 crg_valid [0] <= False;
@@ -441,6 +451,7 @@ module mkDT_MMU_Cache (DT_MMU_Cache_IFC);
 			   vm_xlate_result.pte_pa);
 	    // Writeback the modified PTE to memory
 	    // Enqueue it to be written back to memory
+	    // STAR: route the tag-path PTE writeback into D_MMU_Cache's merged writeback path.
 	    f_dtmem_pte_writebacks.enq (tuple2 (vm_xlate_result.pte_pa, vm_xlate_result.pte)); // rgollap1
 	    if (verbosity >= 3)
 	       $display ("    Writeback updated PTE: pa %0h pte %0h",
@@ -573,6 +584,8 @@ module mkDT_MMU_Cache (DT_MMU_Cache_IFC);
 	 if (verbosity >= 3)
 	    $display ("    ok; retry -> STATE_MAIN");
       end
+      // STAR: D_MMU_Cache signalled it already serviced this walk on the data path
+      // (the DT-cache shares its walker); just complete the request, no exception.
       else if (ptw_rsp.result == PTW_DCACHE_FAULT) begin
       	 crg_valid [0] <= True;
 	 crg_exc   [0] <= False;

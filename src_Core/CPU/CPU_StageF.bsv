@@ -70,6 +70,8 @@ endinterface
 
 module mkCPU_StageF #(Bit #(4)  verbosity,
 		      IMem_IFC  imem,
+		      // STAR: current privilege threaded in so the fetch stage can skip
+		      // inline instruction tags only in user mode (tag-aware fetch).
 		      Priv_Mode cur_priv) 
                     (CPU_StageF_IFC); // rgollap1 -- adding priv to fetch stage call
 
@@ -98,6 +100,7 @@ module mkCPU_StageF #(Bit #(4)  verbosity,
    // Combinational output function
 
    function Output_StageF fv_out;
+      // STAR: pass cur_priv to the branch predictor so its fallthrough PC can account for inline tags
       let pred_pc = branch_predictor.predict_rsp (imem.is_i32_not_i16, imem.instr, cur_priv); // rgollap1 -- passing the current privilage mode to branch predictor
       let d = Data_StageF_to_StageD {pc:              imem.pc,
 				     epoch:           rg_epoch,
@@ -107,7 +110,7 @@ module mkCPU_StageF #(Bit #(4)  verbosity,
 				     exc_code:        imem.exc_code,
 				     tval:            imem.tval,
 				     instr:           imem.instr,
-				     tag: 	      imem.tag,
+				     tag: 	      imem.tag,    // STAR: capture the inline instruction tag from the ICache into the pipeline
 				     pred_pc:         pred_pc};
 
       let ostatus = (  (! rg_full) ? OSTATUS_EMPTY
@@ -141,6 +144,10 @@ module mkCPU_StageF #(Bit #(4)  verbosity,
 		      Bit #(1)         sstatus_SUM,
 		      Bit #(1)         mstatus_MXR,
 		      WordXL           satp);
+      // STAR: inline instruction-tag skip on fetch. In user mode (priv==0), instruction
+      // tags are interleaved in the code stream on 16-byte boundaries; when the fetch PC
+      // lands on such a tag slot (pc[3:0]==0) within the user code region, advance past the
+      // 4-byte tag so the real instruction is fetched.
       if (pc[3:0] == 0 && priv == 0 && pc < 'h_0015_5555_6000) begin //rgollap1
       	 pc = pc + 4;
 	 //$display("pc:0x%0h" , pc);

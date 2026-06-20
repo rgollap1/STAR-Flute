@@ -1,5 +1,8 @@
 // Copyright (c) 2016-2021 Bluespec, Inc. All Rights Reserved.
 
+// STAR: ICache is the instruction cache (a copy of Cache.bsv) extended to fetch an
+// inline 8-bit instruction tag (itag) alongside each instruction. The tag is read via
+// the cword RAM's 2nd BRAM port and returned in Cache_Result.final_ld_tag.
 package ICache;
 
 // ================================================================
@@ -57,6 +60,7 @@ typedef struct {
    Cache_Result_Type  outcome;
    Bit #(64)          final_ld_val;
    Bit #(64)          final_st_val;
+   // STAR: 8-bit instruction tag (itag) returned to I_MMU_Cache on a read hit.
    Bit #(8)          final_ld_tag;
    } Cache_Result
 deriving (Bits, FShow);
@@ -226,6 +230,7 @@ typedef struct {
    Bit #(2)     num_valids;     // # of hits in set (should be 0 or 1; error if > 1)
    Meta_State   valid_state;    // M, E, S, I
    Bit #(64)    data;           // if valid
+   // STAR: inline instruction-tag word read in parallel with the data word.
    Bit #(64)    tag;            // instruction tag -- rgollap1
    Way_in_CSet  way;            // if valid (for subsequent updates)
    } Valid_Info
@@ -385,6 +390,7 @@ module mkICache #(parameter Bool      dcache_not_icache,
    let ram_A_cset_meta  = ram_cset_meta.a.read;
    let ram_A_cset_cword = ram_cset_cword.a.read;
 
+   // STAR: 2nd BRAM port (B) of the cword RAM, used to read the inline instruction tag.
    let ram_B_cset_ctag  = ram_cset_cword.b.read;  // rgollap1 -- Using port B to read inline tag
 
    // ----------------
@@ -414,6 +420,7 @@ module mkICache #(parameter Bool      dcache_not_icache,
 	 let cword_at_way = ram_A_cset_cword [way];
 	 cword  = (cword | (cword_at_way & pack (replicate (hit_at_way))));
 
+         // STAR: select the hit way's inline-tag word, mirroring the data path above.
          let ctag_at_way = ram_B_cset_ctag [way];  // rgollap1 -- reading the right set in the cache
          ctag  = (ctag | (ctag_at_way & pack (replicate (hit_at_way)))); //rgollap1
       end
@@ -440,6 +447,9 @@ module mkICache #(parameter Bool      dcache_not_icache,
 	 let cset_cword_in_cache = fn_Addr_to_CSet_CWord_in_Cache (va);
 	 ram_cset_cword.a.put (bram_cmd_read, cset_cword_in_cache, ?);
 
+         // STAR: also read the inline instruction-tag word alongside the data. Tags are
+         // line-aligned, so clear va[3:0]; use the cword RAM's 2nd port (B) for this read,
+         // except during a refill when port B serves as the write port.
          let va_tag = va; //rgollap1 -- since inline tags are always at the beginning of a cache line the last 4 bits of the address woould be 0
 	 va_tag[3:0] = 0; // rgollap1
 
@@ -1191,6 +1201,9 @@ module mkICache #(parameter Bool      dcache_not_icache,
 	 let data       = fv_from_byte_lanes (zeroExtend (req.va), req.f3 [1:0], valid_info.data);
 	 data = fv_extend (req.f3, data);
 
+	 // STAR: extract this instruction's 8-bit tag from the inline-tag word. Tags sit
+	 // at the start of the 16-byte line (tag_va clears va[3:0]); the packed word holds
+	 // one 8-bit itag per instruction slot, selected by the instruction offset va[3:0].
       	 let tag_va = req.va;   //rgollap1
 	 tag_va[3:0] = 0;       //rgollap1
 

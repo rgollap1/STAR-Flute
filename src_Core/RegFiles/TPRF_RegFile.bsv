@@ -4,6 +4,16 @@ package TPRF_RegFile;
 
 // ================================================================
 // TPRF (Tag Processor) Register File
+//
+// STAR (Tagged Architecture): the TPRF is a 32-entry Word register
+// file that holds the Tag Processor / TPP state. It is distinct from
+// the TRF (which shadows GPR/FPR data tags): the TPRF carries the
+// control-flow-integrity (CFI) and label state used by the tag engine.
+// Entry 1 is special -- it packs the CFI latch in bits [2:0] and the
+// active label in bits [20:3]. The whole file is saved and restored by
+// the STORE_CONTEXT / LOAD_CONTEXT operations on a context switch.
+// Two write ports are exposed: write_rd for the CFI/status word and
+// write_rd2 for the label word.
 
 // ================================================================
 // Exports
@@ -69,6 +79,7 @@ module mkTPRF_RegFile (TPRF_RegFile_IFC);
    FIFOF #(Token) f_reset_rsps <- mkFIFOF;
 
    // General Purpose Registers
+   // STAR: 32-entry Word file holding TPP state; entry 1 packs CFI latch [2:0] + label [20:3]
    // TODO: can we use Reg [0] for some other purpose?
    RegFile #(RegName, Word) regfile <- mkRegFileFull;
 
@@ -123,25 +134,30 @@ module mkTPRF_RegFile (TPRF_RegFile_IFC);
    endinterface
 
    // GPR read
+   // STAR: returns the TPP-state word for rs1; entry 0 reads as 0
    method Word read_rs1 (RegName rs1);
       return ((rs1 == 0) ? 0 : regfile.sub (rs1));
    endmethod
 
    // GPR read
+   // STAR: second read port for rs1, debugger use only (mirrors read_rs1)
    method Word read_rs1_port2 (RegName rs1);        // For debugger access only
       return ((rs1 == 0) ? 0 : regfile.sub (rs1));
    endmethod
 
+   // STAR: returns the TPP-state word for rs2; entry 0 reads as 0
    method Word read_rs2 (RegName rs2);
       return ((rs2 == 0) ? 0 : regfile.sub (rs2));
    endmethod
 
    // GPR write
+   // STAR: write port for the CFI / status word (entry 1 bits [2:0] = CFI latch); writes to entry 0 are dropped
    method Action write_rd (RegName rd1, Word rd_val);
       if (rd1 != 0) regfile.upd (rd1, rd_val);
    endmethod
 
    // GPR write
+   // STAR: separate write port for the label word (entry 1 bits [20:3] = label); writes to entry 0 are dropped
    method Action write_rd2 (RegName rd2, Word rd_val_label);
       if (rd2 != 0) regfile.upd (rd2, rd_val_label);
    endmethod

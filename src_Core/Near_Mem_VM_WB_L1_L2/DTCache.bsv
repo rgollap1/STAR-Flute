@@ -1,5 +1,10 @@
 // Copyright (c) 2016-2021 Bluespec, Inc. All Rights Reserved.
 
+// STAR: DTCache is the data-tag cache -- a copy of Cache.bsv (same set-associative,
+// write-back L1 design) whose lines hold the per-word 4-bit data tags (TRF:
+// DT=0 plain data, DP=1 data ptr, CP=2 code ptr, RA=3 return addr) instead of data.
+// It is backed by the separate tag-memory region (tag addr =
+// (data_addr>>4)+0x003c00000000), where each tag byte packs two 64-bit slots' nibbles.
 package DTCache;
 
 // ================================================================
@@ -1191,6 +1196,7 @@ module mkDTCache #(parameter Bool      dcache_not_icache,
 	    result = Cache_Result {outcome:      CACHE_READ_HIT,
 				   final_ld_val: data,
 				   final_st_val: ?};
+	    // STAR: in-cache validate-then-scrub for the [CLR] instruction-tag op.
 	    // [CLR] scrub (rgollap1). On a load, req.st_value[3:0] is a control word
 	    // packed by the memory stage: {nibble_sel(bit3), CLR(bit2), expected[1:0]}.
 	    // The tag byte holds two 64-bit slots' 4-bit tags; pick this slot's nibble

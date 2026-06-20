@@ -123,24 +123,30 @@ typedef struct {
    } Bypass
 deriving (Bits);
 
+// STAR: bypass record carrying a 4-bit data tag (TRF shadow value) for a GPR.
+// Mirrors the base 'Bypass' but forwards the register's tag nibble instead of
+// its data, so later pipeline stages see an in-flight rd's tag (DT/DP/CP/RA).
 typedef struct {
    Bypass_State  bypass_state;
    RegName       rd;
-   Bit #(4)      rd_val;
+   Bit #(4)      rd_val;          // STAR: 4-bit data tag being forwarded (a pointer nibble)
    } Bypass_Tag
 deriving (Bits);
 
+// STAR: bypass record forwarding a TPRF entry (packed TPP/CFI state Word).
+// Lets Stage1 read the latest CFI-latch/state before it is written back to the TPRF.
 typedef struct {
    Bypass_State  bypass_state;
    RegName       rd;
-   Word          rd_val;
+   Word          rd_val;          // STAR: packed CFI/TPP status word from the TPRF
    } Bypass_TPRF
 deriving (Bits);
 
+// STAR: bypass record forwarding the CFI label word (TPRF entry-1 label[20:3]).
 typedef struct {
    Bypass_State  bypass_state;
    RegName       rd;
-   Word          rd_val;
+   Word          rd_val;          // STAR: in-flight CFI label value being forwarded
    } Bypass_LBL
 deriving (Bits);
 
@@ -165,10 +171,11 @@ typedef struct {
    } FBypass
 deriving (Bits);
 
+// STAR: FPR counterpart of Bypass_Tag - forwards an FPR's shadow tag (TRF).
 typedef struct {
    Bypass_State  bypass_state;
    RegName       rd;
-   WordFL        rd_val;
+   WordFL        rd_val;          // STAR: forwarded FPR data tag
    } FBypass_Tag
 deriving (Bits);
 
@@ -193,6 +200,7 @@ Bypass no_bypass = Bypass {bypass_state: BYPASS_RD_NONE,
 			   rd: ?,
 			   rd_val: ? };
 
+// STAR: idle/no-op defaults for the three tag-path bypass channels above.
 Bypass_Tag no_bypass_tag = Bypass_Tag {bypass_state: BYPASS_RD_NONE,
                            rd: ?,
                            rd_val: ? };
@@ -210,6 +218,7 @@ FBypass no_fbypass = FBypass {bypass_state: BYPASS_RD_NONE,
 			      rd: ?,
 			      rd_val: ? };
 
+// STAR: idle default for the FPR tag bypass channel.
 FBypass_Tag no_fbypass_tag = FBypass_Tag {bypass_state: BYPASS_RD_NONE,
                               rd: ?,
                               rd_val: ? };
@@ -228,6 +237,8 @@ function Tuple2 #(Bool, Word) fn_gpr_bypass (Bypass bypass, RegName rd, Word rd_
    return tuple2 (busy, val);
 endfunction
 
+// STAR: tag-path analogue of fn_gpr_bypass. Resolves a GPR's 4-bit data tag
+// from the tag bypass channel, returning the in-flight tag when available.
 function Tuple2 #(Bool, Bit #(4)) fn_tag_bypass (Bypass_Tag bypass, RegName rd, Bit #(4) rd_val);
    Bool   busy = ((bypass.bypass_state == BYPASS_RD) && (bypass.rd == rd));
    Bit #(4) val  = (  ((bypass.bypass_state == BYPASS_RD_RDVAL) && (bypass.rd == rd))
@@ -236,6 +247,7 @@ function Tuple2 #(Bool, Bit #(4)) fn_tag_bypass (Bypass_Tag bypass, RegName rd, 
    return tuple2 (busy, val);
 endfunction
 
+// STAR: resolves the packed TPP/CFI status word forwarded from the TPRF.
 function Tuple2 #(Bool, Word) fn_tprf_bypass (Bypass_TPRF bypass, RegName rd, Word rd_val);
    Bool   busy = ((bypass.bypass_state == BYPASS_RD) && (bypass.rd == rd));
    WordXL val  = (  ((bypass.bypass_state == BYPASS_RD_RDVAL) && (bypass.rd == rd))
@@ -244,6 +256,7 @@ function Tuple2 #(Bool, Word) fn_tprf_bypass (Bypass_TPRF bypass, RegName rd, Wo
    return tuple2 (busy, val);
 endfunction
 
+// STAR: resolves the CFI label word forwarded from the TPRF.
 function Tuple2 #(Bool, Word) fn_lbl_bypass (Bypass_LBL bypass, RegName rd, Word rd_val);
    Bool   busy = ((bypass.bypass_state == BYPASS_RD) && (bypass.rd == rd));
    WordXL val  = (  ((bypass.bypass_state == BYPASS_RD_RDVAL) && (bypass.rd == rd))
@@ -265,6 +278,7 @@ function Tuple2 #(Bool, WordFL) fn_fpr_bypass (FBypass bypass, RegName rd, WordF
    return tuple2 (busy, val);
 endfunction
 
+// STAR: FPR tag-path analogue of fn_fpr_bypass; forwards an FPR's shadow tag.
 function Tuple2 #(Bool, WordFL) fn_fpr_tag_bypass (FBypass_Tag bypass, RegName rd, WordFL rd_val);
    Bool busy = ((bypass.bypass_state == BYPASS_RD) && (bypass.rd == rd));
    WordFL val= (  ((bypass.bypass_state == BYPASS_RD_RDVAL) && (bypass.rd == rd))
@@ -322,6 +336,8 @@ typedef struct {
    Exc_Code   exc_code;
    WordXL     tval;               // Trap value; can be different from PC, with 'C' extension
    Instr      instr;              // Valid if no exception
+   // STAR: 8-bit instruction tag fetched inline with the instr from the ICache
+   // (tag[2:0]=op, tag[3]=CLR scrub, tag[5:4]=control-transfer target). Carried F->D.
    Bit #(8)   tag;		  // rgollap1 -- Adding a tag field in the data_struct 
    WordXL     pred_pc;            // Predicted next pc
    } Data_StageF_to_StageD
@@ -382,6 +398,7 @@ typedef struct {
 
    Instr          instr;              // Valid if no exception
    Instr_C        instr_C;            // Valid if no exception; original compressed instruction
+   // STAR: 8-bit instruction tag forwarded D->Stage1, where itag_op/target are decoded.
    Bit #(8)       tag;                // rgollap1 -- Adding a tag field in the data_struct
    WordXL         pred_pc;            // Predicted next pc
    Decoded_Instr  decoded_instr;
@@ -501,20 +518,23 @@ typedef struct {
    Addr       pc;
    Instr      instr;             // For debugging. Just funct3, funct7 are
                                  // enough for functionality.
+   // STAR: instruction tag forwarded into Stage2 (drives DT scrub/op handling).
    Bit #(8)   tag;               // rgollap1 -- Adding a tag field in the data_struct
    Op_Stage2  op_stage2;
    RegName    rd;
    Addr       addr;              // Branch, jump: newPC
                                  // Mem ops and AMOs: mem addr
+   // STAR: companion address into the data-tag memory region for this mem op,
+   // computed as (data_addr>>4)+0x003c00000000 (16 data bytes -> 1 tag byte).
    Addr       tag_addr;		 // Tag address for memory ops -- rgollap1
    WordXL     val1;              // OP_Stage2_ALU: rd_val
                                  // OP_Stage2_M
-   Bit #(4)   val1_tag;          // rgollap1 -- val1 data tag
+   Bit #(4)   val1_tag;          // rgollap1 -- val1 data tag (TRF nibble of source rs1)
    WordXL     val2;              // OP_Stage2_ST: store-val;
                                  // OP_Stage2_M and OP_Stage2_FD: arg2
-   Bit #(4)  val2_tag;           // rgollap1 -- val2 data tag
-   WordXL    cfi_tprf;           // CFI status val
-   WordXL    cfi_lbl;            // CFI label
+   Bit #(4)  val2_tag;           // rgollap1 -- val2 data tag (TRF nibble of source rs2)
+   WordXL    cfi_tprf;           // STAR: packed CFI/TPP status word for this instr (from TPRF)
+   WordXL    cfi_lbl;            // STAR: CFI label operand (TPRF entry-1 label field)
 
 `ifdef ISA_F
    // Floating point fields
@@ -557,12 +577,12 @@ typedef struct {
 
    // feedback
    Bypass                 bypass;
-   Bypass_Tag             bypass_tag;
-   Bypass_TPRF            bypass_tprf;
-   Bypass_LBL             bypass_lbl;
+   Bypass_Tag             bypass_tag;    // STAR: forward Stage2's GPR data tag back to Stage1
+   Bypass_TPRF            bypass_tprf;    // STAR: forward updated TPP/CFI status to Stage1
+   Bypass_LBL             bypass_lbl;     // STAR: forward updated CFI label to Stage1
 `ifdef ISA_F
    FBypass                fbypass;
-   FBypass                fbypass_tag;
+   FBypass                fbypass_tag;    // STAR: forward Stage2's FPR data tag back to Stage1
 `endif
 
    // feedforward data
@@ -593,22 +613,22 @@ endinstance
 typedef struct {
    Addr      pc;            // For debugging only
    Instr     instr;         // For debugging only
-   Bit #(8)   tag;          // rgollap1 -- Adding a tag field in the data_struct
+   Bit #(8)   tag;          // rgollap1 -- 8-bit instruction tag carried into writeback (Stage3)
    Priv_Mode priv;
 
    Bool      rd_valid;
    RegName   rd;
    WordXL    rd_val;
-   Bit #(4)  rd_val_tag;  // rgollap1 -- data tag
-   WordXL    cfi_tprf; // rgollap1 -- cfi status check
-   WordXL    cfi_lbl; // rgollap1 --  CFI Label
+   Bit #(4)  rd_val_tag;  // STAR: 4-bit data tag written to the GPR's TRF shadow entry
+   WordXL    cfi_tprf; // STAR: TPP/CFI status word written back to the TPRF
+   WordXL    cfi_lbl; // STAR: CFI label written back to the TPRF
 
 `ifdef ISA_F
    Bool      upd_flags;
    Bool      rd_in_fpr;
    Bit #(5)  fpr_flags;
    WordFL    frd_val;
-   Bit #(4)  frd_val_tag;
+   Bit #(4)  frd_val_tag;   // STAR: 4-bit data tag written to the FPR's TRF shadow entry
 `endif
 
 `ifdef INCLUDE_TANDEM_VERIF
@@ -641,13 +661,13 @@ endinstance
 typedef struct {
    Stage_OStatus  ostatus;
    Bypass         bypass;
-   Bypass_Tag     bypass_tag;
-   Bypass_TPRF    bypass_tprf;
-   Bypass_LBL     bypass_lbl;
+   Bypass_Tag     bypass_tag;      // STAR: forward Stage3's GPR data tag back to Stage1
+   Bypass_TPRF    bypass_tprf;     // STAR: forward Stage3's TPP/CFI status to Stage1
+   Bypass_LBL     bypass_lbl;      // STAR: forward Stage3's CFI label to Stage1
 
 `ifdef ISA_F
    FBypass        fbypass;
-   FBypass_Tag    fbypass_tag;     
+   FBypass_Tag    fbypass_tag;     // STAR: forward Stage3's FPR data tag back to Stage1
 `endif
 
 `ifdef INCLUDE_TANDEM_VERIF

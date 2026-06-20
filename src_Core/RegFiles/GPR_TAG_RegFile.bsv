@@ -4,6 +4,16 @@ package GPR_TAG_RegFile;
 
 // ================================================================
 // GPR TAG (General Purpose Register) Register File
+//
+// STAR (Tagged Architecture): this module is the GPR half of the TRF
+// (Tag Register File) -- a shadow copy of the base GPR register file
+// that holds a 4-bit tag per architectural register instead of data.
+// Each entry mirrors one x-register; the 4-bit tag is the nibble of a
+// 64-bit pointer (2 tag bits per 32-bit word). Tag encodings (dtag_*):
+//   0 = DT plain data, 1 = DP data pointer,
+//   2 = CP code pointer, 3 = RA return address (value == rank).
+// Reads/writes stay in lock-step with the base GPR regfile so the tag
+// of register x[i] always travels alongside its data value.
 
 // ================================================================
 // Exports
@@ -65,6 +75,7 @@ module mkGPR_TAG_RegFile (GPR_TAG_RegFile_IFC);
    FIFOF #(Token) f_reset_rsps <- mkFIFOF;
 
    // General Purpose Registers
+   // STAR: holds a 4-bit shadow tag per GPR (not data); same RegName index space as base GPR regfile
    // TODO: can we use Reg [0] for some other purpose?
    RegFile #(RegName, Bit #(4)) regfile <- mkRegFileFull;
 
@@ -119,20 +130,24 @@ module mkGPR_TAG_RegFile (GPR_TAG_RegFile_IFC);
    endinterface
 
    // GPR read
+   // STAR: returns the 4-bit tag for rs1; x0 is hard-wired to tag 0 (DT plain data)
    method Bit #(4) read_rs1 (RegName rs1);
       return ((rs1 == 0) ? 0 : regfile.sub (rs1));
    endmethod
 
    // GPR read
+   // STAR: second tag read port for rs1, debugger use only (mirrors read_rs1)
    method Bit #(4) read_rs1_port2 (RegName rs1);        // For debugger access only
       return ((rs1 == 0) ? 0 : regfile.sub (rs1));
    endmethod
 
+   // STAR: returns the 4-bit tag for rs2; x0 is hard-wired to tag 0 (DT plain data)
    method Bit #(4) read_rs2 (RegName rs2);
       return ((rs2 == 0) ? 0 : regfile.sub (rs2));
    endmethod
 
    // GPR write
+   // STAR: writes the 4-bit destination tag for rd; writes to x0 are dropped
    method Action write_rd (RegName rd, Bit #(4) rd_val);
       if (rd != 0) regfile.upd (rd, rd_val);
    endmethod

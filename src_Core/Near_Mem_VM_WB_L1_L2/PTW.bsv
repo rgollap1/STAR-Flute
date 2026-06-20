@@ -58,6 +58,8 @@ typedef enum {
    PTW_OK,
    PTW_ACCESS_FAULT,
    PTW_PAGE_FAULT,
+   // STAR: sentinel result handed to the DT-cache when its walk is deferred/aborted
+   // by the shared walker (produced by dt_ptw_rsp_enq).
    PTW_DCACHE_FAULT // rgollap1
    } PTW_Result
 deriving (Bits, Eq, FShow);
@@ -98,6 +100,7 @@ interface PTW_IFC;
    // ----------------
    // PTW requests from IMem and DMem
    interface Server #(PTW_Req, PTW_Rsp)  imem_server;
+   // STAR: separate PTW server for DT-cache requests (alongside imem/dmem).
    interface Server #(PTW_Req, PTW_Rsp)  dtmem_server;
    interface Server #(PTW_Req, PTW_Rsp)  dmem_server;
 
@@ -105,6 +108,9 @@ interface PTW_IFC;
    // PTW's requests to memory and responses.
    // Responses expected only for reads
    interface Client #(PTW_Mem_Req, PTW_Mem_Rsp) mem_client;
+   // STAR: DT-cache PTW control hooks driven by D_MMU_Cache (shared walker):
+   //   dt_ptw_rsp_enq -> emit deferred response; dt_ptw_flush/_walk -> pause/resume;
+   //   dt_ptw_count   -> is a DT-cache walk active?
    method Action dt_ptw_rsp_enq; // rgollap1
    method Action dt_ptw_flush;   // rgollap1
    method Action dt_ptw_walk;    // rgollap1
@@ -133,6 +139,8 @@ module mkPTW #(parameter Bit #(3) verbosity) (PTW_IFC);
    // Overall state of this module
    Reg #(PTW_State)   rg_state      <- mkReg (FSM_IDLE);
 
+   // STAR: dt_ptw = active DT-cache PTW channel marker (0 = none); dt_tlb pauses the
+   // walker FSM while D_MMU_Cache runs the DT-cache TLB/abort handshake.
    Reg #(Bit #(2))  dt_ptw <- mkReg (0); // rgollap1
    Reg #(Bool)  dt_tlb <- mkReg (False); // rgollap1
 
@@ -145,6 +153,8 @@ module mkPTW #(parameter Bit #(3) verbosity) (PTW_IFC);
    FIFOF #(PTW_Rsp) f_dtmem_rsps <- mkFIFOF; // rgollap1
 
    // Merged: 0: from DMem, 1: from IMem, 2: from DTMem // rgollap1
+   // STAR: NOTE the line above is stale -- actual ids are 0=DMem, 1=DTMem, 2=IMem
+   // (see the enq calls below and the response dispatch in fa_ptw_rsp).
    FIFOF #(Tuple2 #(Bit #(2), PTW_Req)) f_dmem_imem_reqs <- mkFIFOF; // rgollap1
 
    FIFOF #(PTW_Req) f_dmem_reqs <- mkFIFOF;
@@ -172,6 +182,8 @@ module mkPTW #(parameter Bit #(3) verbosity) (PTW_IFC);
 	 $display ("%0d: %m.rl_merge_dmem_reqs:\n    ", cur_cycle, fshow (req));
    endrule
 
+   // STAR: merge DTMem PTW requests into the shared walker queue (channel id 1) and
+   // mark a DT-cache walk as in flight (dt_ptw <= 1).
    rule rl_merge_dtmem_reqs; // rgollap1
       let req <- pop (f_dtmem_reqs);
       f_dmem_imem_reqs.enq (tuple2 (1, req));
@@ -218,6 +230,9 @@ module mkPTW #(parameter Bit #(3) verbosity) (PTW_IFC);
 	 // Consume the request
 	 f_dmem_imem_reqs.deq;
 	 // Enq the response
+	 // STAR: route the walk response by source channel (the legacy name
+	 // 'dmem_not_imem' is now a Bit#(2) id: 0=DMem, 1=DTMem, 2=IMem). On a DMem
+	 // walk completing while a DT-cache walk is in flight (dt_ptw==1), latch dt_tlb.
 	 if (dmem_not_imem == 0) begin  // rgollap1
 		f_dmem_rsps.enq (rsp);
 		if (dt_ptw == 1) begin
@@ -237,6 +252,7 @@ module mkPTW #(parameter Bit #(3) verbosity) (PTW_IFC);
    // ================================================================
    // Start a PTW
 
+   // STAR: do not (re)start a walk while dt_tlb holds the DT-cache walk paused.
    rule rl_ptw_start (rg_state == FSM_IDLE && !dt_tlb); // rgollap1
       // RV32.Sv32: Page Table top is at Level 1
       if (verbosity >= 1) begin
@@ -485,6 +501,7 @@ module mkPTW #(parameter Bit #(3) verbosity) (PTW_IFC);
    // ----------------
    // PTW requests from IMem, DTMem and DMem // rgollap1
    interface Server imem_server = toGPServer (f_imem_reqs, f_imem_rsps);
+   // STAR: dedicated PTW request/response channel for the DT-cache.
    interface Server dtmem_server = toGPServer (f_dtmem_reqs, f_dtmem_rsps); // rgollap1
    interface Server dmem_server = toGPServer (f_dmem_reqs, f_dmem_rsps);
 
@@ -494,6 +511,8 @@ module mkPTW #(parameter Bit #(3) verbosity) (PTW_IFC);
    interface Client mem_client = toGPClient (f_mem_reqs, f_mem_rsps);
 
 
+   // STAR: complete a deferred DT-cache walk -- pop the merged request and push a
+   // synthetic PTW_DCACHE_FAULT response on the DTMem channel, then clear walk state.
    method Action dt_ptw_rsp_enq; // rgollap1
 		match { .dtmem, .ptwdt_req } = f_dmem_imem_reqs.first;
 		let ptw_rsp = PTW_Rsp {result: PTW_DCACHE_FAULT, pte: 0, level: 2, pte_pa: ptwdt_req.va};
@@ -503,14 +522,18 @@ module mkPTW #(parameter Bit #(3) verbosity) (PTW_IFC);
 		dt_tlb <= False;
    endmethod
 	
+   // STAR: pause the DT-cache walk by latching dt_tlb (holds off rl_ptw_start).
    method Action dt_ptw_flush; // rgollap1
 	dt_tlb <= True;	
    endmethod
  	
+   // STAR: resume the paused DT-cache walk (clear the dt_tlb hold latch).
    method Action dt_ptw_walk; // rgollap1
 	dt_tlb <= False;	
    endmethod
 
+   // STAR: True while a DT-cache page-table walk is active (dt_ptw != 0); polled by
+   // D_MMU_Cache to decide whether to advance or abort that shared walk.
    method Bool dt_ptw_count; // rgollap1
 	if (dt_ptw > 0) begin
 		return True;	

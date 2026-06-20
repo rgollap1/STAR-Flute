@@ -79,6 +79,7 @@ import PTW :: *;
 
 import D_MMU_Cache :: *;
 import I_MMU_Cache :: *;
+// STAR: data-tag MMU+cache module; threads the tag path beside the data path.
 import DT_MMU_Cache :: *;
 
 // This option is for "L1-like" cache connecting to L2 on an L1-like port
@@ -117,6 +118,7 @@ export mkNear_Mem;
 // 0-1: quiet; 2 show L1-to-L2 and L2-to-L1 messages
 Integer verbosity_I_L1_L2   = 0;    // for I-Cache
 Integer verbosity_D_L1_L2   = 0;    // for D-Cache
+// STAR: verbosity knob for the data-tag (DT) cache's L1<->L2 traffic.
 Integer verbosity_DT_L1_L2   = 0;    // for D-Cache
 Integer verbosity_DMA_L1_L2 = 0;    // for DMA-Cache
 
@@ -268,6 +270,8 @@ module mkNear_Mem (Near_Mem_IFC);
    // L1 caches
    I_MMU_Cache_IFC  i_mmu_cache <- mkI_MMU_Cache;    // Instruction fetch
    D_MMU_Cache_IFC  d_mmu_cache <- mkD_MMU_Cache;    // Data, PTWs
+   // STAR: third L1 cache holding data tags (TRF). Runs in parallel with the
+   // I- and D-caches; its backing store is the separate tag-memory region.
    DT_MMU_Cache_IFC dt_mmu_cache <- mkDT_MMU_Cache; // Data Tags // rgollap1
 `ifdef OPTION_DMA_CACHE
    DMA_Cache_IFC    dma_cache   <- mkDMA_Cache;      // External 'devices'
@@ -313,6 +317,8 @@ module mkNear_Mem (Near_Mem_IFC);
    mkConnection (i_mmu_cache.ptw_client,      d_mmu_cache.imem_ptw_server);
    mkConnection (i_mmu_cache.pte_writeback_g, d_mmu_cache.imem_pte_writeback_p);
 
+   // STAR: the DT-cache has no PTW of its own; it shares D_MMU_Cache's page-table
+   // walker and PTE-writeback path (tag accesses are translated like data accesses).
    mkConnection (dt_mmu_cache.ptw_client,      d_mmu_cache.dtmem_ptw_server); // rgollap1
    mkConnection (dt_mmu_cache.pte_writeback_g, d_mmu_cache.dtmem_pte_writeback_p);
 
@@ -335,6 +341,8 @@ module mkNear_Mem (Near_Mem_IFC);
 				     d_mmu_cache.l2_to_l1_server);
    l1 [1] = ifc_D_L1;
 
+   // STAR: register the DT-cache as L1 child #2 on the L2 (LLC) interconnect,
+   // alongside I-cache (#0) and D-cache (#1).
    let ifc_DT_L1 <- mkL1_IFC_Adapter (verbosity_D_L1_L2, // rgollap1
                                      2,
                                      dt_mmu_cache.l1_to_l2_client,
@@ -357,6 +365,7 @@ module mkNear_Mem (Near_Mem_IFC);
 
    mkConnection (i_mmu_cache.mmio_client, mmio_axi4_adapter.v_mmio_server [0]);
    mkConnection (d_mmu_cache.mmio_client, mmio_axi4_adapter.v_mmio_server [1]);
+   // STAR: give the DT-cache its own MMIO port (server slot [2]).
    mkConnection (dt_mmu_cache.mmio_client, mmio_axi4_adapter.v_mmio_server [2]); // rgollap1
 `ifdef OPTION_DMA_CACHE
    mkConnection (dma_cache.mmio_client,   mmio_axi4_adapter.v_mmio_server [3]); // rgollap1
@@ -429,6 +438,7 @@ module mkNear_Mem (Near_Mem_IFC);
       method Bool     is_i32_not_i16 = True;
       method WordXL   pc             = i_mmu_cache.addr;
       method Instr    instr          = truncate (i_mmu_cache.word64);
+      // STAR: surface the fetched instruction tag (itag) on the IMem interface.
       method Bit #(8) tag            = i_mmu_cache.tag8;
       method Bool     exc            = i_mmu_cache.exc;
       method Exc_Code exc_code       = i_mmu_cache.exc_code;
@@ -466,6 +476,7 @@ module mkNear_Mem (Near_Mem_IFC);
    endinterface
 
    // DTMem   // rgollap1
+   // STAR: wire the Near_Mem DTMem port through to the DT-cache (data-tag) module.
    interface DTMem_IFC dtmem;
       // CPU side: DTMem request
       method Action  req (CacheOp op,
@@ -539,6 +550,7 @@ module mkNear_Mem (Near_Mem_IFC);
 	 method Action put (Token t);
 	    i_mmu_cache.tlb_flush;
 	    d_mmu_cache.tlb_flush;
+	    // STAR: also flush the DT-cache TLB so tag translations stay coherent.
 	    dt_mmu_cache.tlb_flush; // rgollap1
 	 endmethod
       endinterface

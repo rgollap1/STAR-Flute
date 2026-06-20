@@ -103,6 +103,9 @@ interface Near_Mem_IFC;
 
    // ---------------- rgollap1
    // DTMem
+   // STAR: data-tag memory path. Mirrors the DMem path but targets the STAR
+   // tag-memory region (tag addr = (data_addr>>4)+0x003c00000000), where every
+   // 16 data bytes map to one tag byte holding the 4-bit data tags (TRF).
 
    // CPU side
    interface DTMem_IFC  dtmem;
@@ -182,6 +185,9 @@ interface IMem_IFC;
    (* always_ready *)  method Bool     is_i32_not_i16;
    (* always_ready *)  method WordXL   pc;
    (* always_ready *)  method Instr    instr;
+   // STAR: 8-bit instruction tag (itag) fetched inline with the instruction word;
+   // tag[2:0]=op (GEN/DPO/CPO/RAP/CAL/RET/EQR/LBL), tag[3]=CLR scrub,
+   // tag[5:4]=control-transfer target (NONE/TFC/TFR/TIJ).
    (* always_ready *)  method Bit #(8) tag;
    (* always_ready *)  method Bool     exc;
    (* always_ready *)  method Exc_Code exc_code;
@@ -217,6 +223,10 @@ endinterface
 
 // ================================================================
 // DTMem interface   // rgollap1
+// STAR: CPU-facing port to the data-tag cache (DTCache). Same request/response
+// shape as DMem_IFC, but loads/stores operate on the 4-bit per-word data tags
+// (TRF shadow: DT=0 plain data, DP=1 data ptr, CP=2 code ptr, RA=3 return addr)
+// held in the tag-memory region rather than on the data words themselves.
 
 interface DTMem_IFC;
    // CPU side: DTMem request

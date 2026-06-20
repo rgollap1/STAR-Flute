@@ -287,6 +287,8 @@ module mkD_MMU_Cache (D_MMU_Cache_IFC);
    Reg #(Bit #(64)) crg_ld_val [2]       <- mkCRegU (2);  // Load-val for LOAD/LR/AMO, success/fail for SC
    Reg #(Bit #(64)) crg_final_st_val [2] <- mkCRegU (2);
 
+   // STAR: set when an exception aborts a DT-cache page-table walk sharing this
+   // D-cache's walker; rl_ptw_deq_dt then drains that walk's deferred response.
    Reg #(Bool)      dequeue_dtmem_ptw <- mkReg (False); // rgollap1
    
 `ifdef WATCH_TOHOST
@@ -440,6 +442,7 @@ module mkD_MMU_Cache (D_MMU_Cache_IFC);
 
       if (! fn_is_aligned (mmu_cache_req.f3 [1:0], mmu_cache_req.va)) begin
 	 // Misaligned accesses not supported
+	 // STAR: misaligned access -- abort the in-flight DT-cache walk before trapping.
 	 if (ptw.dt_ptw_count) begin // rgollap1
                 ptw.dt_ptw_flush;
                 dequeue_dtmem_ptw <= True;
@@ -472,6 +475,8 @@ module mkD_MMU_Cache (D_MMU_Cache_IFC);
 	 if (verbosity >= 3)
 	    $display ("    VM_XLATE_EXCEPTION");
 
+         // STAR: translation exception -- abort the in-flight DT-cache walk and
+         // schedule its deferred response to be drained.
          if (ptw.dt_ptw_count) begin  // rgollap1
 		 ptw.dt_ptw_flush;
 		 dequeue_dtmem_ptw <= True;
@@ -486,6 +491,7 @@ module mkD_MMU_Cache (D_MMU_Cache_IFC);
 
       // ---- TLB success
       else begin
+      // STAR: TLB hit -- advance the in-flight DT-cache page-table walk one step.
       	 if (ptw.dt_ptw_count) begin // rgollap1
 		 ptw.dt_ptw_walk;
 	 end
@@ -584,6 +590,7 @@ module mkD_MMU_Cache (D_MMU_Cache_IFC);
 	 $display ("%0d: %m.rl_CPU_cache_wait: done -> STATE_MAIN", cur_cycle);
 
       if (! cache.mv_refill_ok) begin
+      // STAR: refill failed (access fault) -- abort the in-flight DT-cache walk.
       	 if (ptw.dt_ptw_count) begin // rgollap1
                 ptw.dt_ptw_flush;
                 dequeue_dtmem_ptw <= True;
@@ -643,6 +650,8 @@ module mkD_MMU_Cache (D_MMU_Cache_IFC);
 	    $display ("    ok; retry -> STATE_MAIN");
       end
       else begin
+         // STAR: PTW returned a fault -- abort any in-flight DT-cache walk and
+         // schedule its deferred response to be drained.
          if (ptw.dt_ptw_count) begin  // rgollap1
 		 ptw.dt_ptw_flush;
 		 dequeue_dtmem_ptw <= True;
@@ -710,6 +719,8 @@ module mkD_MMU_Cache (D_MMU_Cache_IFC);
    Bool ok_to_do_IMem_PTW = (   (crg_state [0] == STATE_MAIN)
 			     && (crg_mmu_cache_req_state [0] == REQ_STATE_EMPTY));
 
+   // STAR: block normal PTW reads while a DT-cache PTW response is still pending
+   // (dequeue_dtmem_ptw) so the shared walker's two streams do not interleave.
    // Step A
    rule rl_ptw_rd_A (cache.mv_is_idle
 		     && (ok_to_do_DMem_PTW || ok_to_do_IMem_PTW) && !dequeue_dtmem_ptw); // rgollap1
@@ -783,6 +794,8 @@ module mkD_MMU_Cache (D_MMU_Cache_IFC);
       end
    endrule
       
+   // STAR: drain the deferred DT-cache PTW -- enqueue its response, then clear the
+   // pending flag so the shared walker can resume normal (I/D) page-table reads.
    rule rl_ptw_deq_dt (dequeue_dtmem_ptw);  // rgollap1
 	ptw.dt_ptw_rsp_enq;
 	dequeue_dtmem_ptw <= False;
@@ -954,6 +967,8 @@ module mkD_MMU_Cache (D_MMU_Cache_IFC);
    interface Put    imem_pte_writeback_p = toPut (f_imem_pte_writebacks);
 
    // Service PTW requests from DT_MMU_Cache    // rgollap1
+   // STAR: expose this D-cache's shared page-table walker to the DT-cache, which
+   // has no walker of its own.
    interface Server dtmem_ptw_server = ptw.dtmem_server; // rgollap1
 
    // Service PTE-writeback requests from DT_MMU_Cache // rgollap1

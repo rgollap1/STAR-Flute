@@ -48,10 +48,14 @@ import PC_Trace  :: *;
 import TV_Info   :: *;
 
 import GPR_RegFile :: *;
+// STAR: GPR_TAG_RegFile is the integer TRF - a shadow copy of the GPR file holding
+// a 4-bit data tag (DT/DP/CP/RA) per register instead of data.
 import GPR_TAG_RegFile :: *; // rgollap1 -- importing the new tag register file module
+// STAR: TPRF holds per-thread CFI/TPP state (entry 1 packs CFI latch[2:0]+label[20:3]).
 import TPRF_RegFile :: *;
 `ifdef ISA_F
 import FPR_RegFile :: *;
+// STAR: FPR_TAG_RegFile is the floating-point TRF - shadow tag copy of the FPR file.
 import FPR_TAG_RegFile :: *; // rgollap1 -- importing the new tag register file module
 `endif
 import CSR_RegFile :: *;
@@ -133,10 +137,12 @@ module mkCPU (CPU_IFC);
    // ----------------
    // General purpose registers and CSRs
    GPR_RegFile_IFC  gpr_regfile  <- mkGPR_RegFile;
+   // STAR: instantiate the integer TRF (shadow tag file) alongside the GPRs, plus the TPRF.
    GPR_TAG_RegFile_IFC  gpr_tag_regfile  <- mkGPR_TAG_RegFile; // initializing tag register file -- rgollap1
    TPRF_RegFile_IFC  tprf_regfile  <- mkTPRF_RegFile;
 `ifdef ISA_F
    FPR_RegFile_IFC  fpr_regfile  <- mkFPR_RegFile;
+   // STAR: instantiate the floating-point TRF alongside the FPRs.
    FPR_TAG_RegFile_IFC  fpr_tag_regfile  <- mkFPR_TAG_RegFile; // initializing tag register file for floating point register file -- rgollap1
 `endif
 
@@ -190,6 +196,7 @@ module mkCPU (CPU_IFC);
    Reg #(Trap_Info)  rg_trap_info       <- mkRegU;
    Reg #(Bool)       rg_trap_interrupt  <- mkRegU;
    Reg #(Instr)      rg_trap_instr      <- mkRegU;
+   // STAR: latch the trapping instruction's 8-bit tag so the trap handler / trace can see it.
    Reg #(Bit #(8))   rg_trap_instr_tag  <- mkRegU; // rgollap1 adding a new register to hold the tag of the instrcuction that raised an exception
 `ifdef INCLUDE_TANDEM_VERIF
    Reg #(Trace_Data) rg_trap_trace_data <- mkRegU;
@@ -213,31 +220,36 @@ module mkCPU (CPU_IFC);
 
    CPU_Stage3_IFC stage3 <- mkCPU_Stage3 (cur_verbosity,
 					  gpr_regfile,
+					  // STAR: thread the integer TRF + TPRF so writeback updates tags/CFI state
 					  gpr_tag_regfile,
 					  tprf_regfile,
 `ifdef ISA_F
 					  fpr_regfile,
-					  fpr_tag_regfile,
+					  fpr_tag_regfile,        // STAR: FPR TRF for FP tag writeback
 `endif
 					  csr_regfile);
 
+   // STAR: pass near_mem.dtmem (the data-tag cache path) in addition to the data dmem,
+   // so Stage2 can load/store data tags alongside the data word.
    CPU_Stage2_IFC stage2 <- mkCPU_Stage2 (cur_verbosity, csr_regfile, near_mem.dmem, near_mem.dtmem);
 
    CPU_Stage1_IFC  stage1 <- mkCPU_Stage1 (cur_verbosity,
 					   gpr_regfile,
-					   gpr_tag_regfile,
-					   tprf_regfile,
+					   gpr_tag_regfile,       // STAR: integer TRF read port for source tags
+					   tprf_regfile,          // STAR: TPRF read port for CFI/TPP state
 					   stage2.out.bypass,
+					   // STAR: tag/TPRF/label bypass channels from Stage2 -> Stage1
 					   stage2.out.bypass_tag,
 					   stage2.out.bypass_tprf,
                                            stage2.out.bypass_lbl,
                                            stage3.out.bypass,
+					   // STAR: tag/TPRF/label bypass channels from Stage3 -> Stage1
 					   stage3.out.bypass_tag,
                                            stage3.out.bypass_tprf,
                                            stage3.out.bypass_lbl,
 `ifdef ISA_F
 					   fpr_regfile,
-					   fpr_tag_regfile,
+					   fpr_tag_regfile,       // STAR: FPR TRF read port for source tags
 					   stage2.out.fbypass,
 					   stage3.out.fbypass,
 `endif
@@ -247,6 +259,8 @@ module mkCPU (CPU_IFC);
 
    CPU_StageD_IFC  stageD <- mkCPU_StageD (cur_verbosity, misa);
 
+   // STAR: StageF also receives rg_cur_priv so it can skip inline instruction-tag
+   // handling in user mode vs privileged mode (tag checks are user-mode only).
    CPU_StageF_IFC  stageF <- mkCPU_StageF (cur_verbosity, imem, rg_cur_priv); // rgollap1 --  passing the current privilage for inline tag skipping
 
    // ----------------
@@ -323,6 +337,8 @@ module mkCPU (CPU_IFC);
    // ================================================================
    // Debugging: print instruction trace info
 
+   // STAR: extended the trace helper with a 'tag' arg so the per-instruction
+   // 8-bit instruction tag is printed alongside pc/instr/priv.
    function Action fa_emit_instr_trace (Bit #(64) instret, WordXL pc, Instr instr, Priv_Mode priv, Bit #(8) tag); // rgollap1 modified the trace/print function to print instruction tag
       action
 	 if ((cur_verbosity >= 1) || ((instret & 'h_F_FFFF) == 0))

@@ -4,6 +4,16 @@ package FPR_TAG_RegFile;
 
 // ================================================================
 // FPR (Floating Point Register) Register File
+//
+// STAR (Tagged Architecture): this module is the FPR half of the TRF
+// (Tag Register File) -- a shadow copy of the base FPR register file
+// that holds a tag per floating-point register alongside the data
+// regfile. Each entry mirrors one f-register so a tag travels with its
+// FP value. Tag encodings match the GPR tags (dtag_*):
+//   0 = DT plain data, 1 = DP data pointer,
+//   2 = CP code pointer, 3 = RA return address (value == rank).
+// Unlike the GPR TRF there is no special r0, so every f-register has a
+// real tag entry.
 
 // ================================================================
 // Exports
@@ -67,6 +77,7 @@ module mkFPR_TAG_RegFile (FPR_TAG_RegFile_IFC);
    FIFOF #(Token) f_reset_rsps <- mkFIFOF;
 
    // Floating Point Registers
+   // STAR: shadow tag store -- one tag entry per FPR (WordFL wide), parallel to base FPR regfile
    // Unlike GPRs, all registers in the FPR are regular registers (no r0)
    RegFile #(RegName, WordFL) regfile <- mkRegFileFull;
 
@@ -121,24 +132,29 @@ module mkFPR_TAG_RegFile (FPR_TAG_RegFile_IFC);
    endinterface
 
    // FPR read
+   // STAR: returns the shadow tag for rs1 (no r0 special-case for FPRs)
    method WordFL read_rs1 (RegName rs1);
       return (regfile.sub (rs1));
    endmethod
 
    // FPR read
+   // STAR: second tag read port for rs1, debugger use only (mirrors read_rs1)
    method WordFL read_rs1_port2 (RegName rs1);        // For debugger access only
       return (regfile.sub (rs1));
    endmethod
 
+   // STAR: returns the shadow tag for rs2
    method WordFL read_rs2 (RegName rs2);
       return (regfile.sub (rs2));
    endmethod
 
+   // STAR: returns the shadow tag for rs3 (third FP source, e.g. fused multiply-add)
    method WordFL read_rs3 (RegName rs3);
       return (regfile.sub (rs3));
    endmethod
 
    // FPR write
+   // STAR: writes the destination tag for rd (every FPR is writable, no r0)
    method Action write_rd (RegName rd, WordFL rd_val);
       regfile.upd (rd, rd_val);
    endmethod

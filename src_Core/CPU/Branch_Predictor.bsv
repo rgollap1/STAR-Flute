@@ -50,6 +50,8 @@ interface Branch_Predictor_IFC;
    // fall-through PC if no prediction.
 
    (* always_ready *)
+   // STAR: added cur_priv so fallthrough prediction can account for inline instruction
+   // tags interleaved in the code stream (tags are skipped only in user mode).
    method WordXL  predict_rsp (Bool is_i32_not_i16, Instr instr, Priv_Mode cur_priv); //rgollap1
 
    // ----------------
@@ -284,6 +286,9 @@ module mkBranch_Predictor (Branch_Predictor_IFC);
       end
 
       // Default prediction: fallthrough
+      // STAR: the disabled block below was an experiment to bump the fallthrough PC past
+      // an inline 4-byte instruction tag in user mode (cur_priv==0) when the next PC lands
+      // on a tag-aligned slot; left commented as it is not currently used.
       if (pred_pc == bogus_PC) begin //rgollap1
 
       	 pred_pc = rg_pc + (is_i32_not_i16 ? 4 : 2);

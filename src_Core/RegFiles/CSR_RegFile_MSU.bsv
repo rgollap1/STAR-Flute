@@ -883,6 +883,7 @@ module mkCSR_RegFile (CSR_RegFile_IFC);
 				       new_csr_value = wordxl;
 				       rg_tsrf_svc  <= new_csr_value;
 				    end
+	       csr_addr_medeleg:    begin
 				       new_csr_value = (wordxl & 'h_B3FF);  // 16 bits relevant and some are 0
 				       rg_medeleg   <= truncate (new_csr_value);
 				    end

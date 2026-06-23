@@ -162,7 +162,8 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
    rg_cfi = rscfib[2:0];
 
    let rs_lbl = 1;  
-   let cfi_lbl = tprf_tag_regfile.read_rs2 (rs_lbl); //rgollap1 - cfi label   match { .busylbla, .rslbla } = fn_lbl_bypass (bypass_lbl_from_stage3, 2, cfi_lbl);
+   let cfi_lbl = tprf_tag_regfile.read_rs2 (rs_lbl); //rgollap1 - cfi label
+   match { .busylbla, .rslbla } = fn_lbl_bypass (bypass_lbl_from_stage3, 2, cfi_lbl);
    match { .busylblb, .rslblb } = fn_lbl_bypass (bypass_lbl_from_stage2, 2, rslbla);
    Bool rslbl_busy = (busylbla || busylblb);
    rg_source_lbl = rslblb[20:3];

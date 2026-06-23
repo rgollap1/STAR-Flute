@@ -325,26 +325,13 @@ function ALU_Outputs fv_JAL (ALU_Inputs inputs);
    alu_outputs.cf_info   = cf_info;
    alu_outputs.rs_count  = 2'b00;
    
-   // STAR CFI (JAL path): same target-tag validation as JALR; U-mode only.
-   //   [CAL] -> target [CP], tag link [RA];  [GEN] -> [CP];  [RET] -> [RA].
-   if (inputs.cur_priv == 0) begin
-   if (itag_op(inputs.tag) == op_CAL) begin
-     if (inputs.rs1_val_tag != dtag_CP)      
-       alu_outputs.exc_code = excep_CFI; 
-     else if (inputs.rs1_val_tag == dtag_CP)      
-       alu_outputs.val1_tag = dtag_RA;
-   end
-
-   if (itag_op(inputs.tag) == op_GEN && inputs.rs1_val_tag != dtag_CP) begin     
-     alu_outputs.exc_code = excep_CFI;
-     alu_outputs.control  = CONTROL_TRAP;
-   end
-
-   if (itag_op(inputs.tag) == op_RET && inputs.rs1_val_tag != dtag_RA) begin
-     alu_outputs.exc_code = excep_RAP;
-     alu_outputs.control  = CONTROL_TRAP;
-   end
-   end
+   // STAR CFI (JAL = PC-relative direct transfer). Per the STAR spec,
+   // PC-relative targets are verified by the compiler and are NOT re-checked
+   // at runtime; jal has no code-pointer source register to validate. A
+   // direct *call* tagged [CAL] must still tag its link register [RA].
+   // U-mode only (the kernel runs untagged). -- STAR
+   if ((inputs.cur_priv == 0) && (itag_op(inputs.tag) == op_CAL))
+     alu_outputs.val1_tag = dtag_RA;
 
 `ifdef INCLUDE_TANDEM_VERIF
    // Normal trace output (if no trap)
@@ -402,9 +389,14 @@ function ALU_Outputs fv_JALR (ALU_Inputs inputs);
    //   [RET] -> target must be a return address [RA] (else excep_RAP).
    if (inputs.cur_priv == 0) begin
    if (itag_op(inputs.tag) == op_CAL) begin
-     if (inputs.rs1_val_tag != dtag_CP)
+     // STAR fix: an indirect call must target a code pointer [CP]; on
+     // failure TRAP (previously set exc_code but not control, so the
+     // forward-edge call check never actually fired). -- STAR
+     if (inputs.rs1_val_tag != dtag_CP) begin
        alu_outputs.exc_code = excep_CFI;
-     else if (inputs.rs1_val_tag == dtag_CP)
+       alu_outputs.control  = CONTROL_TRAP;
+     end
+     else
        alu_outputs.val1_tag = dtag_RA;
    end
 
@@ -1349,7 +1341,10 @@ function ALU_Outputs fv_ALU (ALU_Inputs inputs);
    else begin
       alu_outputs.control = CONTROL_TRAP;
 
-   
+   // NOTE (STAR): the rs_count-gated tag resolution below is DEAD CODE -- it
+   // sits in the illegal-opcode branch and never runs for legal instructions.
+   // Live rank resolution is the U-mode block after the dispatch chain (see
+   // end of fv_ALU). Left here only to preserve history; safe (result trapped).
    if (alu_outputs.rs_count == 2'b11) begin
      // [GEN] may not consume a return address (Ch3): reject an [RA] source operand.
      if (inputs.cur_priv == 0 && itag_op(inputs.tag) == op_GEN
@@ -1414,6 +1409,63 @@ function ALU_Outputs fv_ALU (ALU_Inputs inputs);
 					     ?,
 					     ?);
 `endif
+   end
+
+   // ================================================================
+   // STAR: rank-based data-tag resolution for integer-ALU arithmetic.
+   //
+   // Spec (Ch.3 "Rank-Based Arithmetic Tag Resolution" / S&P 2023): an
+   // arithmetic op resolves its destination data tag as
+   //     MIN( MAX(rs1_rank, rs2_rank), instruction-implied-rank )
+   // and a [GEN] op may not consume a return-address ([RA]) operand.
+   // Data-tag encodings equal their ranks ([DT]=0 < [DP]=1 < [CP]=2 <
+   // [RA]=3), so MAX/MIN are ordinary unsigned comparisons.  Tag
+   // production is U-mode only (the kernel runs untagged), matching fv_LUI.
+   //
+   // Scope: integer arithmetic ops (op_OP / op_OP_IMM / op_OP_32 /
+   // op_OP_IMM_32, including shifts AND the 'M' MUL/DIV/REM ops). For 'M'
+   // ops the result *value* is produced later by the MBox, but the result
+   // *tag* computed here travels in val1_tag and is carried onto the MBox
+   // writeback (CPU_Stage2 data_to_stage3_base.rd_val_tag = val1_tag), so a
+   // [GEN] M-op resolves to [DT] and a [GEN] M-op consuming an [RA] operand
+   // is rejected -- consistent with the arithmetic rank policy. The 'F' and
+   // 'A' extensions are out of scope for tag policy.
+   //
+   // NOTE: this supersedes the rs_count-gated block in the illegal-opcode
+   // branch above, which never executed for legal instructions. -- STAR
+   if (inputs.cur_priv == 0) begin
+      Bool two_src = (inputs.decoded_instr.opcode == op_OP)
+`ifdef RV64
+                  || (inputs.decoded_instr.opcode == op_OP_32)
+`endif
+                  ;
+      Bool one_src = (inputs.decoded_instr.opcode == op_OP_IMM)
+`ifdef RV64
+                  || (inputs.decoded_instr.opcode == op_OP_IMM_32)
+`endif
+                  ;
+      if (two_src || one_src) begin
+         // [GEN] may not consume a return-address operand.
+         if (   (itag_op(inputs.tag) == op_GEN)
+             && (   (inputs.rs1_val_tag == dtag_RA)
+                 || (two_src && (inputs.rs2_val_tag == dtag_RA)))) begin
+            alu_outputs.exc_code = excep_RAP;
+            alu_outputs.control  = CONTROL_TRAP;
+         end
+
+         // reg_tag = MAX over the source-operand ranks
+         Bit #(4) reg_tag = inputs.rs1_val_tag;
+         if (two_src && (inputs.rs2_val_tag > reg_tag))
+            reg_tag = inputs.rs2_val_tag;
+
+         // inst_tag = rank implied by the instruction tag
+         Bit #(4) inst_tag = dtag_DT;
+         if      (itag_op(inputs.tag) == op_CPO) inst_tag = dtag_CP;
+         else if (itag_op(inputs.tag) == op_DPO) inst_tag = dtag_DP;
+
+         // result data tag = MIN(reg_tag, inst_tag)
+         alu_outputs.val1_tag = (reg_tag <= inst_tag) ? reg_tag : inst_tag;
+      end
    end
 
    return alu_outputs;

@@ -142,7 +142,7 @@ typedef struct {
    } Bypass_TPRF
 deriving (Bits);
 
-// STAR: bypass record forwarding the CFI label word (TPRF entry-1 label[20:3]).
+// STAR: bypass record forwarding the CFI label word (TPRF entry-1 label[21:3]).
 typedef struct {
    Bypass_State  bypass_state;
    RegName       rd;

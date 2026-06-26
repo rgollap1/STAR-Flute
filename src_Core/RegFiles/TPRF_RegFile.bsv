@@ -10,7 +10,7 @@ package TPRF_RegFile;
 // the TRF (which shadows GPR/FPR data tags): the TPRF carries the
 // control-flow-integrity (CFI) and label state used by the tag engine.
 // Entry 1 is special -- it packs the CFI latch in bits [2:0] and the
-// active label in bits [20:3]. The whole file is saved and restored by
+// active label in bits [21:3] (19-bit function signature). The whole file is saved and restored by
 // the STORE_CONTEXT / LOAD_CONTEXT operations on a context switch.
 // Two write ports are exposed: write_rd for the CFI/status word and
 // write_rd2 for the label word.
@@ -79,7 +79,7 @@ module mkTPRF_RegFile (TPRF_RegFile_IFC);
    FIFOF #(Token) f_reset_rsps <- mkFIFOF;
 
    // General Purpose Registers
-   // STAR: 32-entry Word file holding TPP state; entry 1 packs CFI latch [2:0] + label [20:3]
+   // STAR: 32-entry Word file holding TPP state; entry 1 packs CFI latch [2:0] + label [21:3] (19-bit signature)
    // TODO: can we use Reg [0] for some other purpose?
    RegFile #(RegName, Word) regfile <- mkRegFileFull;
 
@@ -157,7 +157,7 @@ module mkTPRF_RegFile (TPRF_RegFile_IFC);
    endmethod
 
    // GPR write
-   // STAR: separate write port for the label word (entry 1 bits [20:3] = label); writes to entry 0 are dropped
+   // STAR: separate write port for the label word (entry 1 bits [21:3] = label); writes to entry 0 are dropped
    method Action write_rd2 (RegName rd2, Word rd_val_label);
       if (rd2 != 0) regfile.upd (rd2, rd_val_label);
    endmethod

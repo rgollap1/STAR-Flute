@@ -166,7 +166,7 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
    match { .busylbla, .rslbla } = fn_lbl_bypass (bypass_lbl_from_stage3, 2, cfi_lbl);
    match { .busylblb, .rslblb } = fn_lbl_bypass (bypass_lbl_from_stage2, 2, rslbla);
    Bool rslbl_busy = (busylbla || busylblb);
-   rg_source_lbl = rslblb[20:3];
+   rg_source_lbl = rslblb[21:3];   // STAR: 19-bit CFI label signature (TPRF entry-1 [21:3]); see paper 20-bit LUI imm = 1 type bit + 19 signature
 
    // TPRF entry to be saved by a STORE_CONTEXT (index = rs2 field of the instr),
    // read on the spare TPRF port. Only the OS context-save sequence uses this;
@@ -294,8 +294,8 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
             cfi_status = cfi_TCHK_IDJ;
 	 else if (itag_op(rg_stage_input.tag) == op_LBL) // checking for function label
             if (rg_stage_input.instr[31] == 0) begin // checking if the lbl is source lbl not a dest lbl encountered in a pass through
-	       cfi_status = cfi_TCHK_LBL_SRC; 
-	       cfi_label = rg_stage_input.instr[30:13];
+	       cfi_status = cfi_TCHK_LBL_SRC;
+	       cfi_label = rg_stage_input.instr[30:12];   // STAR: 19-bit signature = LUI imm bits [30:12]; type bit is instr[31]
 	    end
       end
 
@@ -307,7 +307,7 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
       end
 
       else if  (rg_cfi == cfi_TCHK_LBL_CFI) begin
-	    if (itag_op(rg_stage_input.tag) == op_LBL && rg_stage_input.instr[30:13] == rg_source_lbl[17:0]) begin
+	    if (itag_op(rg_stage_input.tag) == op_LBL && rg_stage_input.instr[30:12] == rg_source_lbl[18:0]) begin   // STAR: 19-bit signature compare
 	       cfi_status = 0;
 	       cfi_label = 0;
 	    end

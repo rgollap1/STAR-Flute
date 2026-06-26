@@ -99,7 +99,7 @@ module mkCPU_Stage3 #(Bit #(4)         verbosity,
 
    
    let tprf_val = rg_stage3.cfi_tprf;
-   tprf_val[20:3] = rg_stage3.cfi_lbl[17:0];
+   tprf_val[21:3] = rg_stage3.cfi_lbl[18:0];   // STAR: 19-bit CFI label signature packed into TPRF entry-1 [21:3]
 
    let bypass_base = Bypass {bypass_state: BYPASS_RD_NONE,
 			     rd:           rg_stage3.rd,

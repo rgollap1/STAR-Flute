@@ -51,7 +51,7 @@ import GPR_RegFile :: *;
 // STAR: GPR_TAG_RegFile is the integer TRF - a shadow copy of the GPR file holding
 // a 4-bit data tag (DT/DP/CP/RA) per register instead of data.
 import GPR_TAG_RegFile :: *; // rgollap1 -- importing the new tag register file module
-// STAR: TPRF holds per-thread CFI/TPP state (entry 1 packs CFI latch[2:0]+label[20:3]).
+// STAR: TPRF holds per-thread CFI/TPP state (entry 1 packs CFI latch[2:0]+label[21:3]).
 import TPRF_RegFile :: *;
 `ifdef ISA_F
 import FPR_RegFile :: *;

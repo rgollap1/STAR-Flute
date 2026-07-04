@@ -323,9 +323,14 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
       // did not tag as legal, so this fires solely on a genuine control-flow
       // violation. Mirrors how illegal-instruction traps set CONTROL_TRAP.
       // -- rgollap1/ravitheg
+      // BSV forbids assigning the module-level `alu_outputs' from inside this
+      // function (P0039), so fold the CFI trap override into locals used by the
+      // ALU-output path below. Semantics are unchanged: a violation forces a trap.
+      Control  eff_control  = alu_outputs.control;
+      Exc_Code eff_exc_code = alu_outputs.exc_code;
       if (cfi_exec_code != 0) begin
-	 alu_outputs.exc_code = cfi_exec_code;
-	 alu_outputs.control  = CONTROL_TRAP;
+	 eff_exc_code = cfi_exec_code;
+	 eff_control  = CONTROL_TRAP;
       end
 
       // This stage is empty
@@ -395,14 +400,14 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
       // ALU outputs: pipe (straight/branch)
       // and non-pipe (CSRR_W, CSRR_S_or_C, FENCE.I, FENCE, SFENCE_VMA, xRET, WFI, TRAP)
       else begin
-	 let ostatus = (  (   (alu_outputs.control == CONTROL_STRAIGHT)
-			   || (alu_outputs.control == CONTROL_BRANCH))
+	 let ostatus = (  (   (eff_control == CONTROL_STRAIGHT)
+			   || (eff_control == CONTROL_BRANCH))
 			? OSTATUS_PIPE
 			: OSTATUS_NONPIPE);
 
 	 // Compute MTVAL in case of traps
 	 let tval = 0;
-	 if (alu_outputs.exc_code == exc_code_ILLEGAL_INSTRUCTION || alu_outputs.exc_code == excep_CFI || alu_outputs.exc_code == excep_RAP) begin
+	 if (eff_exc_code == exc_code_ILLEGAL_INSTRUCTION || eff_exc_code == excep_CFI || eff_exc_code == excep_RAP) begin
 	    // The instruction
 `ifdef ISA_C
 	    tval = (rg_stage_input.is_i32_not_i16
@@ -412,19 +417,19 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
 	    tval = zeroExtend (rg_stage_input.instr);
 `endif
 	 end
-	 else if (alu_outputs.exc_code == exc_code_INSTR_ADDR_MISALIGNED)
+	 else if (eff_exc_code == exc_code_INSTR_ADDR_MISALIGNED)
 	    tval = alu_outputs.addr;                           // The branch target pc
-	 else if (alu_outputs.exc_code == exc_code_BREAKPOINT)
+	 else if (eff_exc_code == exc_code_BREAKPOINT)
 	    tval = rg_stage_input.pc;                          // The faulting virtual address
 
 	 let trap_info = Trap_Info {epc:      rg_stage_input.pc,
-				    exc_code: alu_outputs.exc_code,
+				    exc_code: eff_exc_code,
 				    tval:     tval};
 
 	 let fall_through_pc = rg_stage_input.pc + (rg_stage_input.is_i32_not_i16 ? 4 : 2);
 
 
-	 let next_pc = ((alu_outputs.control == CONTROL_BRANCH)
+	 let next_pc = ((eff_control == CONTROL_BRANCH)
 			? alu_outputs.addr
 			: fall_through_pc);
 	 let redirect = (next_pc != rg_stage_input.pred_pc);
@@ -432,7 +437,7 @@ module mkCPU_Stage1 #(Bit #(4)         verbosity,
          output_stage1.data_to_stage2.cfi_tprf  = zeroExtend (cfi_status);
 	 output_stage1.data_to_stage2.cfi_lbl   = zeroExtend (cfi_label);
 	 output_stage1.ostatus        = ostatus;
-	 output_stage1.control        = alu_outputs.control;
+	 output_stage1.control        = eff_control;
 	 output_stage1.trap_info      = trap_info;
 	 output_stage1.redirect       = redirect;
 	 output_stage1.next_pc        = next_pc;

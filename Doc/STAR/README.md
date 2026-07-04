@@ -68,6 +68,7 @@ Read in order if you are new; jump by subsystem if you are not.
 | 07 | **[07-cfi-and-pointer-integrity.md](07-cfi-and-pointer-integrity.md)** | The Stage-1 CFI state machine and the Stage-2 memory pointer-integrity checks |
 | 08 | **[08-context-switch.md](08-context-switch.md)** | Saving/restoring tag state across context switches (`STORE_CONTEXT`/`LOAD_CONTEXT`), `[CLR]` scrub |
 | 09 | **[09-change-log-by-commit.md](09-change-log-by-commit.md)** | Every STAR commit, grouped into the three development phases, with a file→commit cross-reference |
+| 10 | **[10-building.md](10-building.md)** | Installing `bsc` (Homebrew / prebuilt / source) and building + `bsc`-compiling the STAR sources |
 
 Diagrams are [Mermaid](https://mermaid.js.org/); GitHub renders them inline. For the
 *base* machine we reuse the base-Flute authors' authoritative drawings in
@@ -141,11 +142,18 @@ source-audit / spec-alignment layer**:
    in-cache `[CLR]` scrub, TSRF CSRs, context-switch re-targeting, Stage-1 trap
    enforcement, doc comments, 19-bit label widen.
 
-⚠️ **The entire 2026 layer is source-audited only and has NOT been `bsc`-compiled.**
-Several of those commits fix bugs introduced by earlier commits in the same layer.
-Before relying on any 2026-era behavior in silicon or in a paper, **build it with `bsc`
-first**. See [09-change-log-by-commit.md](09-change-log-by-commit.md) for the per-commit
-detail and the caveats list.
+✅ **As of 2026-07-04 the full 2026 STAR tree `bsc`-compiles clean** (`make compile`,
+`bsc` 2026.01, `EXIT=0`, `mkTop_HW_Side.ba` elaborated — all STAR modules included).
+Reaching a clean build required **one** source fix (`CPU_Stage1.bsv` P0039 — a non-local
+`alu_outputs` assignment in the CFI-enforcement block; fixed semantics-preservingly). See
+[10-building.md](10-building.md) for the recipe + status log and
+[09-change-log-by-commit.md](09-change-log-by-commit.md) for per-commit detail.
+
+Note this confirms the design **compiles and links** (`make simulator` produced a working
+`exe_HW_sim`); it does **not** mean the tag policies are behaviorally validated. Stock
+`rv64ui-*` ISA tests do **not** validate STAR — they are untagged and run in machine mode,
+so they never exercise the user-mode tag checks. Real validation needs
+**STAR-compiler-produced tagged binaries**; see [10-building.md §10.5.1](10-building.md).
 
 ---
 

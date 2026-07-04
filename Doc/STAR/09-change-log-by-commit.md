@@ -8,9 +8,11 @@ Base boundary = `c6f66da`; the **59 commits after it are STAR**, all by
 Development happened in three phases separated by ~2-year gaps, plus a **2026
 source-audit / spec-alignment layer**.
 
-> ⚠️ **The entire 2026 layer is source-audited only and has NOT been `bsc`-compiled.**
-> Several 2026 commits fix bugs introduced by earlier commits in the same layer. Do not
-> present these as verified-in-silicon; build with `bsc` first.
+> ✅ **Update (2026-07-04):** the full 2026 layer now **`bsc`-compiles clean** (`bsc`
+> 2026.01; see [chapter 10](10-building.md)). One source fix was needed to get there —
+> `CPU_Stage1.bsv` P0039 (non-local `alu_outputs` assignment in the CFI-enforcement block
+> from commit `6280c1a`), fixed semantics-preservingly. "Compiles clean" ≠ "validated in
+> silicon"; test-level validation is still pending.
 
 ---
 

@@ -290,7 +290,11 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
 
 
 	    WordXL result = truncate (dcache.word64); 
-            Bit #(4) result_tag = (rg_stage2.addr [3] == 1'b0) ? dtcache.word64 [3:0] : dtcache.word64 [7:4]; // rgollap1: select the accessed 64-bit slot's tag nibble (data addr bit 3) from the tag byte
+            // rgollap1: select the accessed 64-bit slot's tag nibble (data addr bit 3) from
+            // the tag byte. INVARIANT: addr[3] MUST pick the slot consistently on both this
+            // read and the in-cache RMW scrub in DTCache (else the wrong slot is validated --
+            // this was a real bug fixed in 3f7c56f). See Doc/STAR/04-dtcache-and-tlb.md §4.3.
+            Bit #(4) result_tag = (rg_stage2.addr [3] == 1'b0) ? dtcache.word64 [3:0] : dtcache.word64 [7:4];
             let funct3 = instr_funct3 (rg_stage2.instr);
 
 	    let data_to_stage3 = data_to_stage3_base;

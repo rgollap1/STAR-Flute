@@ -91,7 +91,10 @@ typedef struct {
    Addr       addr;           // Branch, jump: newPC
 		              // Mem ops and AMOs: mem addr
    Addr       tag_addr;	      // Tag address for mem ops -- rgollap1
-   Bool       isNop;          // bool check to skip tag instructions  -- rgollap1
+   Bool       isNop;          // STAR: when True, Stage1 turns this instr into a no-op
+			      // (CONTROL_DISCARD). Set for the standalone op_TAG instruction
+			      // so a tag-install "instruction" retires without effect.
+			      // See Doc/STAR/03-icache-inline-tag.md. -- rgollap1
    WordXL     val1;           // OP_Stage2_ALU: result for Rd (ALU ops: result, JAL/JALR: return PC)
                               // CSRRx: rs1_val
                               // OP_Stage2_M: arg1

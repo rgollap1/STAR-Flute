@@ -484,6 +484,11 @@ module mkCPU (CPU_IFC);
 
       gpr_regfile.server_reset.request.put (?);
       gpr_tag_regfile.server_reset.request.put (?);
+      // STAR NOTE: tprf_regfile is intentionally NOT reset here (nor collected below).
+      // Low-risk today -- the kernel boots in M/S mode and Stage3 commits TPRF[1] before
+      // the first user instruction relies on it -- but it is an inconsistency with the
+      // other regfiles. See Doc/STAR/05-tag-regfiles.md §5.5 before adding it (needs both
+      // the request here AND the response .get below, and a bsc build to confirm). rgollap1
 `ifdef ISA_F
       fpr_regfile.server_reset.request.put (?);
       fpr_tag_regfile.server_reset.request.put (?);

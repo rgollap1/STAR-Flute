@@ -184,7 +184,8 @@ through an ordinary load.
 > **History / bug fix.** These clauses were joined with `&&` (commit `709344d`), making
 > the RAP check always-false and dead; commit `6f67e3e` changed `&&`→`||`, and `3f7c56f`
 > fixed the nibble-select so the check reads the *accessed* slot's tag. Both are in the
-> 2026 (not-yet-`bsc`-compiled) layer — see [chapter 09](09-change-log-by-commit.md).
+> 2026 fix layer, which now `bsc`-compiles clean (2026-07-04) — see
+> [chapter 10](10-building.md).
 
 ---
 

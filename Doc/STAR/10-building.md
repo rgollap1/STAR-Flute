@@ -16,16 +16,22 @@ caveat threaded through [chapter 09](09-change-log-by-commit.md).
 ```mermaid
 flowchart TD
   Q{"What are you doing?"}
-  Q -->|"just run existing<br/>Verilator build"| V["bsc NOT needed<br/>(uses committed Verilog_RTL/)"]
-  Q -->|"validate/rebuild<br/>the STAR .bsv edits"| B["bsc NEEDED<br/>(regenerate RTL from .bsv)"]
+  Q -->|"just run the BASE core<br/>(committed RTL, pre-STAR)"| V["bsc NOT needed<br/>(committed Verilog_RTL/ is base Flute)"]
+  Q -->|"anything STAR<br/>(run or validate the .bsv)"| B["bsc NEEDED<br/>(regenerate RTL from .bsv)"]
   V --> VC["cd builds/..._verilator_tohost<br/>make simulator"]
   B --> BC["install bsc → cd builds/..._bluesim_tohost<br/>make compile simulator"]
 ```
 
 - **Verilator, `bsc` not needed** — each `builds/*_verilator_tohost/` dir already ships a
-  pre-generated `Verilog_RTL/`. `make simulator` builds from that.
-  ⚠️ **That RTL predates the 2026 STAR fixes** — it does *not* exercise the current `.bsv`.
-  Use it only to run the core as-shipped, not to validate STAR source edits.
+  pre-generated `Verilog_RTL/` (checked into the repo). `make simulator` compiles *that
+  committed Verilog*, not the `.bsv`. Fast, and needs no `bsc`.
+  ⚠️ **The committed `Verilog_RTL/` is stale — it was last generated 2021-05-19, which is
+  *before STAR's first commit* (`b0dbd64`, 2021-07-20). It is essentially base-Flute
+  Verilog with none of the tag logic in it.** Running the Verilator sim as-shipped exercises
+  the *base core*, not STAR, and never reflects your `.bsv` edits. To get STAR into a
+  Verilator sim you must first `make compile` (needs `bsc`) to regenerate `Verilog_RTL/`.
+  For validating STAR source, use the **Bluesim + `bsc`** path, which always builds from the
+  live `.bsv`.
 - **`bsc` needed** — to regenerate RTL from the STAR `.bsv` (`make compile`) or build a
   Bluesim sim (`make compile simulator`). **This is the path that actually compiles STAR.**
 

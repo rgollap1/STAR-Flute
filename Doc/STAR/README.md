@@ -157,6 +157,36 @@ so they never exercise the user-mode tag checks. Real validation needs
 
 ---
 
+## Concept → code map (where is X implemented?)
+
+Jump straight from a STAR concept to the source and the chapter that explains it. (The
+repo root also has [`STAR_source_map.md`](../../STAR_source_map.md), a terser topic→file
+index maintained alongside the dissertation.)
+
+| I'm looking for… | Source (`src_Core/`) | Chapter |
+|---|---|---|
+| Tag encodings (itag / dtag / exceptions / CSRs) | `ISA/ISA_Decls.bsv`, `ISA/ISA_Decls_Priv_M.bsv`, `ISA/ISA_Decls_Priv_S.bsv` | [02](02-isa-and-tags.md) |
+| Reading the inline instruction tag from the I-cache | `Near_Mem_VM_WB_L1_L2/ICache.bsv`, `I_MMU_Cache.bsv` | [03](03-icache-inline-tag.md) |
+| Skipping the tag container at fetch | `CPU/CPU_StageF.bsv`, `CPU/Branch_Predictor.bsv` | [03](03-icache-inline-tag.md) |
+| Data-Tag Cache + shared page-table walker | `Near_Mem_VM_WB_L1_L2/DTCache.bsv`, `DT_MMU_Cache.bsv`, `D_MMU_Cache.bsv`, `PTW.bsv` | [04](04-dtcache-and-tlb.md) |
+| Tag-address mapping `(addr>>4)+0x003c…` | `CPU/EX_ALU_functions.bsv` | [04](04-dtcache-and-tlb.md), [06](06-pipeline-integration.md) |
+| Tag register files (TRF / TPRF) | `RegFiles/GPR_TAG_RegFile.bsv`, `FPR_TAG_RegFile.bsv`, `TPRF_RegFile.bsv` | [05](05-tag-regfiles.md) |
+| Tag fields in the pipeline + bypass/forwarding | `CPU/CPU_Globals.bsv` | [06](06-pipeline-integration.md) |
+| Rank-based destination-tag resolution | `CPU/EX_ALU_functions.bsv` (`fv_ALU`) | [06](06-pipeline-integration.md) |
+| **The CFI state machine** | `CPU/CPU_Stage1.bsv` (`fv_out`, ≈`:259`) | [07](07-cfi-and-pointer-integrity.md) |
+| Memory pointer-integrity checks (`[RAP]`/`[DPO]`/`[CPO]`) | `CPU/CPU_Stage2.bsv` (≈`:299`) | [07](07-cfi-and-pointer-integrity.md) |
+| Tag writeback + CFI-latch commit + `[CLR]` scrub | `CPU/CPU_Stage3.bsv` | [07](07-cfi-and-pointer-integrity.md), [08](08-context-switch.md) |
+| Context save/restore (`STORE`/`LOAD_CONTEXT`) | `CPU/EX_ALU_functions.bsv`, `CPU/CPU_Stage3.bsv` | [08](08-context-switch.md) |
+| How the tag files/DT-cache are wired into the CPU | `CPU/CPU.bsv` | [05](05-tag-regfiles.md) |
+
+## Prerequisites
+
+This guide assumes working familiarity with **Bluespec SystemVerilog** (modules, rules,
+methods, interfaces — see the [`bsc` docs](https://github.com/B-Lang-org/bsc)), the
+**RISC-V** ISA and its **M/S/U privilege modes** + Sv39 paging, and basic in-order CPU
+pipeline concepts. It does *not* re-teach these; [chapter 01](01-base-flute.md) orients you
+in the *base Flute* machine specifically.
+
 ## Glossary
 
 | Term | Meaning |

@@ -14,6 +14,93 @@ Rishiyur S. Nikhil, Bluespec, Inc. (c) 2021
 // ================================================================
 // SECTION
 
+== STAR-Flute — the Secure Tagged Architecture on Flute
+
+*This repository is a STAR fork of Flute.* STAR (the Secure Tagged
+Architecture) extends the in-order 5-stage RV64GC Flute core into a *tagged
+architecture* that enforces control-flow integrity (CFI) and pointer integrity
+in hardware. The rest of this README is the original Flute documentation; read
+this section first if you are here for STAR.
+
+=== What STAR-Flute does
+
+* *Inline instruction tags* — every instruction carries a small tag fetched
+  alongside it from the I-cache (a second BRAM port reads a 16-byte-aligned tag
+  container; the container never executes).
+* *Data tags* — every 32-bit data word carries a 2-bit tag
+  (`DT` plain data / `DP` data pointer / `CP` code pointer / `RA` return
+  address), held in registers (the Tag Register File) and in memory (a third L1
+  *Data-Tag Cache* addressed in lock-step with the D-cache).
+* *A Tag Processing Pipeline (TPP)* threaded through the five stages checks
+  these tags: calls must target valid call landing pads, returns must consume a
+  genuine return address, pointers cannot be forged from plain data, and a
+  rank rule (`DT<DP<CP<RA`) governs how arithmetic propagates tags.
+* *Two hardware exceptions* — `excep_CFI` (16) and `excep_RAP` (17) — fire on a
+  violation, with S-mode CSRs (`0x5C1`/`0x5C2`) reporting the offending PC and
+  which policy fired.
+* *Scope: single core, in-order, user-mode enforcement* (the kernel runs
+  untagged). Multi-core / OoO / dynamic linking are out of scope.
+
+STAR tags are produced by the STAR compiler (COGENT, a modified LLVM). Running
+the hardware for real requires *STAR-compiler-produced tagged binaries* — the
+stock `rv64ui-*` ISA tests are untagged and do not exercise the tag logic.
+
+=== Full STAR documentation
+
+The complete design-and-implementation guide for engineers continuing the work
+lives in *`Doc/STAR/`* (Markdown + Mermaid, renders on GitHub). Start at
+`Doc/STAR/README.md`. It covers the base core, the tag ISA, the inline-tag
+fetch path, the Data-Tag Cache, the tag register files, pipeline integration,
+the CFI / pointer-integrity checks, context switching, a per-commit change log,
+and a build guide.
+
+=== Installing `bsc` and compiling STAR-Flute
+
+STAR is Bluespec SystemVerilog, compiled by the free, open-source *`bsc`*
+compiler (https://github.com/B-Lang-org/bsc[], latest release 2026.01). It is
+not bundled here.
+
+*Install `bsc` (macOS, easiest first — no Haskell toolchain needed):*
+
+[source]
+----
+# Option A — Homebrew (prebuilt bottle: Apple Silicon Tahoe/Sequoia/Sonoma, Intel Sonoma)
+$ brew install bsc
+$ bsc -help                       # verify (pulls in gmp, icarus-verilog, tcl-tk)
+
+# Option B — prebuilt release tarball for your macOS, then:
+$ tar xzf bsc-2026.01-macos-<ver>.tar.gz
+$ export PATH=$PWD/bsc-2026.01-macos-<ver>/bin:$PATH
+# (BLUESPECDIR is NOT needed in 2026.01)
+
+# Option C — build from source (only if A/B unavailable): needs GHC 9.6.7 via
+# GHCup + a few cabal libs; see https://github.com/B-Lang-org/bsc INSTALL.md
+----
+
+On Linux, use the matching prebuilt tarball from the Releases page or your
+distro's package (ArchLinux AUR, Fedora, Gentoo, Nix).
+
+*Compile the STAR core* (the STAR config is RV64GC, M/S/U, WB_L1_L2):
+
+[source]
+----
+$ cd builds/Flute_RV64GC_MSU_WB_L1_L2_bluesim_tohost
+$ make compile              # bsc: STAR .bsv -> Verilog_RTL  (compiles the STAR sources)
+$ make compile simulator    # also build a Bluesim simulator
+----
+
+`make compile` in that directory is what `bsc`-compiles the modified STAR
+`src_Core/` (ICache, DTCache/DT_MMU_Cache, the tag register files, EX/Stage1/2/3,
+the ISA layer). *Status: as of 2026-07-04 the STAR tree `bsc`-compiles clean
+(`bsc` 2026.01) and links a Bluesim simulator.* See `Doc/STAR/10-building.md`
+for the full recipe, the build-status log, and why behavioral validation needs
+tagged binaries.
+
+'''
+
+// ================================================================
+// SECTION
+
 == CPU microarchitecture and options
 
 Flute is one of a family of free and open-source RISC-V CPUs from

@@ -22,16 +22,19 @@ flowchart TD
   B --> BC["install bsc → cd builds/..._bluesim_tohost<br/>make compile simulator"]
 ```
 
-- **Verilator, `bsc` not needed** — each `builds/*_verilator_tohost/` dir already ships a
-  pre-generated `Verilog_RTL/` (checked into the repo). `make simulator` compiles *that
-  committed Verilog*, not the `.bsv`. Fast, and needs no `bsc`.
-  ⚠️ **The committed `Verilog_RTL/` is stale — it was last generated 2021-05-19, which is
-  *before STAR's first commit* (`b0dbd64`, 2021-07-20). It is essentially base-Flute
-  Verilog with none of the tag logic in it.** Running the Verilator sim as-shipped exercises
-  the *base core*, not STAR, and never reflects your `.bsv` edits. To get STAR into a
-  Verilator sim you must first `make compile` (needs `bsc`) to regenerate `Verilog_RTL/`.
-  For validating STAR source, use the **Bluesim + `bsc`** path, which always builds from the
-  live `.bsv`.
+- **Verilator, `bsc` not needed** — each `builds/*_verilator_tohost/` dir ships a committed
+  `Verilog_RTL/`. `make simulator` compiles *that committed Verilog*, not the `.bsv`. Fast,
+  and needs no `bsc`.
+  ✅ **The `RV64GC_MSU_WB_L1_L2` verilator dir's `Verilog_RTL/` now contains STAR** — it was
+  regenerated from the current `.bsv` on 2026-07-04 (`bsc` 2026.01) and includes the 6 STAR
+  modules (`mkICache`, `mkDTCache`, `mkDT_MMU_Cache`, `mkGPR/FPR_TAG_RegFile`,
+  `mkTPRF_RegFile`) plus the tag-threaded base modules. (Before that it was a stale 2021
+  snapshot predating STAR entirely.)
+  ⚠️ **Committed RTL is a snapshot — it drifts.** After *any* `.bsv` change, re-run
+  `make compile` (needs `bsc`) to regenerate `Verilog_RTL/`, or the committed Verilog no
+  longer matches the source. When in doubt, use the **Bluesim + `bsc`** path, which always
+  builds from the live `.bsv`. Other configs' verilator dirs have *not* been regenerated and
+  may still be pre-STAR.
 - **`bsc` needed** — to regenerate RTL from the STAR `.bsv` (`make compile`) or build a
   Bluesim sim (`make compile simulator`). **This is the path that actually compiles STAR.**
 
@@ -125,6 +128,22 @@ make isa_tests             # run all ISA tests relevant to this config
 - `make simulator` — builds the sim executable from the RTL.
 - `make clean` / `make full_clean` — clean build products.
 
+### Regenerating the Verilog RTL (for Verilator / FPGA synthesis)
+
+`make compile` in a **`*_verilator_tohost/`** dir runs `bsc -verilog` and writes synthesizable
+Verilog into that dir's `Verilog_RTL/`, overwriting the committed snapshot with RTL built
+from the current `.bsv`:
+
+```bash
+cd builds/Flute_RV64GC_MSU_WB_L1_L2_verilator_tohost
+make compile               # bsc -verilog: .bsv -> Verilog_RTL/  (STAR modules included)
+make simulator             # build a Verilator sim from that RTL (needs verilator)
+```
+
+This is how the committed STAR `Verilog_RTL/` in that dir was produced (2026-07-04). Re-run
+it after any `.bsv` edit so the committed Verilog does not drift from the source. Committed
+Verilog is a build artifact — treat the `.bsv` as the source of truth.
+
 ### Other configurations
 
 To build a different config from scratch:
@@ -166,11 +185,13 @@ per-commit in [chapter 09](09-change-log-by-commit.md)):
 Keep this current so the next person knows the real state (this is the single most useful
 line in the whole guide):
 
-| Date | `bsc` version | `make compile` result | Notes |
-|---|---|---|---|
-| 2026-07-04 | 2026.01 (Homebrew) | **clean (EXIT=0)** | First successful `bsc` build of the full 2026 STAR tree. Required one source fix — see below. |
+| Date | `bsc` version | Action | Result | Notes |
+|---|---|---|---|---|
+| 2026-07-04 | 2026.01 (Homebrew) | `make compile` (bluesim) | **clean (EXIT=0)** | Successful `bsc` build of the full 2026 STAR tree. Required one source fix — see below. |
+| 2026-07-04 | 2026.01 (Homebrew) | `make simulator` (bluesim) | **clean (EXIT=0)** | Linked `exe_HW_sim` with all STAR modules. |
+| 2026-07-04 | 2026.01 (Homebrew) | `make compile` (verilator) | **clean (EXIT=0)** | Regenerated `Verilog_RTL/` from current `.bsv` — 44 `.v`, incl. the 6 STAR modules; committed. Replaced the stale 2021 pre-STAR snapshot. |
 
-**First clean `bsc` build (2026-07-04).** `make compile` in
+**Clean `bsc` build (2026-07-04).** `make compile` in
 `builds/Flute_RV64GC_MSU_WB_L1_L2_bluesim_tohost/` now elaborates the whole design
 (`mkTop_HW_Side.ba`), including every STAR module (`mkICache`, `mkDTCache`,
 `mkDT_MMU_Cache`, `mkGPR/FPR_TAG_RegFile`, `mkTPRF_RegFile`). Getting there required

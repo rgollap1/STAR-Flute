@@ -91,10 +91,24 @@ $ make compile simulator    # also build a Bluesim simulator
 
 `make compile` in that directory is what `bsc`-compiles the modified STAR
 `src_Core/` (ICache, DTCache/DT_MMU_Cache, the tag register files, EX/Stage1/2/3,
-the ISA layer). *Status: as of 2026-07-04 the STAR tree `bsc`-compiles clean
-(`bsc` 2026.01) and links a Bluesim simulator.* See `Doc/STAR/10-building.md`
-for the full recipe, the build-status log, and why behavioral validation needs
-tagged binaries.
+the ISA layer).
+
+To (re)generate synthesizable *Verilog* from the STAR `.bsv` (for a Verilator
+sim or FPGA synthesis), run `make compile` in the matching *verilator* build
+dir instead:
+
+[source]
+----
+$ cd builds/Flute_RV64GC_MSU_WB_L1_L2_verilator_tohost
+$ make compile              # bsc -verilog: STAR .bsv -> Verilog_RTL/
+----
+
+*Status: as of 2026-07-04 the STAR tree `bsc`-compiles clean (`bsc` 2026.01),
+links a Bluesim simulator, and the `RV64GC_MSU_WB_L1_L2` verilator dir's
+`Verilog_RTL/` has been regenerated with the STAR modules (committed).* The
+committed Verilog is a build artifact — re-run `make compile` after any `.bsv`
+change so it does not drift. See `Doc/STAR/10-building.md` for the full recipe,
+the build-status log, and why behavioral validation needs tagged binaries.
 
 '''
 

@@ -6,16 +6,16 @@
 // Name                         I/O  size props
 // RDY_server_reset_request_put   O     1 reg
 // RDY_server_reset_response_get  O     1
-// read_rs1                       O    64
-// read_rs1_port2                 O    64
-// read_rs2                       O    64
+// read_rs1                       O     4
+// read_rs1_port2                 O     4
+// read_rs2                       O     4
 // CLK                            I     1 clock
 // RST_N                          I     1 reset
 // read_rs1_rs1                   I     5
 // read_rs1_port2_rs1             I     5
 // read_rs2_rs2                   I     5
 // write_rd_rd                    I     5
-// write_rd_rd_val                I    64 reg
+// write_rd_rd_val                I     4 reg
 // EN_server_reset_request_put    I     1
 // EN_server_reset_response_get   I     1
 // EN_write_rd                    I     1
@@ -40,27 +40,27 @@
   `define BSV_RESET_EDGE negedge
 `endif
 
-module mkGPR_RegFile(CLK,
-		     RST_N,
+module mkGPR_TAG_RegFile(CLK,
+			 RST_N,
 
-		     EN_server_reset_request_put,
-		     RDY_server_reset_request_put,
+			 EN_server_reset_request_put,
+			 RDY_server_reset_request_put,
 
-		     EN_server_reset_response_get,
-		     RDY_server_reset_response_get,
+			 EN_server_reset_response_get,
+			 RDY_server_reset_response_get,
 
-		     read_rs1_rs1,
-		     read_rs1,
+			 read_rs1_rs1,
+			 read_rs1,
 
-		     read_rs1_port2_rs1,
-		     read_rs1_port2,
+			 read_rs1_port2_rs1,
+			 read_rs1_port2,
 
-		     read_rs2_rs2,
-		     read_rs2,
+			 read_rs2_rs2,
+			 read_rs2,
 
-		     write_rd_rd,
-		     write_rd_rd_val,
-		     EN_write_rd);
+			 write_rd_rd,
+			 write_rd_rd_val,
+			 EN_write_rd);
   input  CLK;
   input  RST_N;
 
@@ -74,23 +74,23 @@ module mkGPR_RegFile(CLK,
 
   // value method read_rs1
   input  [4 : 0] read_rs1_rs1;
-  output [63 : 0] read_rs1;
+  output [3 : 0] read_rs1;
 
   // value method read_rs1_port2
   input  [4 : 0] read_rs1_port2_rs1;
-  output [63 : 0] read_rs1_port2;
+  output [3 : 0] read_rs1_port2;
 
   // value method read_rs2
   input  [4 : 0] read_rs2_rs2;
-  output [63 : 0] read_rs2;
+  output [3 : 0] read_rs2;
 
   // action method write_rd
   input  [4 : 0] write_rd_rd;
-  input  [63 : 0] write_rd_rd_val;
+  input  [3 : 0] write_rd_rd_val;
   input  EN_write_rd;
 
   // signals for module outputs
-  wire [63 : 0] read_rs1, read_rs1_port2, read_rs2;
+  wire [3 : 0] read_rs1, read_rs1_port2, read_rs2;
   wire RDY_server_reset_request_put, RDY_server_reset_response_get;
 
   // register rg_state
@@ -106,16 +106,16 @@ module mkGPR_RegFile(CLK,
        f_reset_rsps$FULL_N;
 
   // ports of submodule regfile
-  wire [63 : 0] regfile$D_IN,
-		regfile$D_OUT_1,
-		regfile$D_OUT_2,
-		regfile$D_OUT_3;
   wire [4 : 0] regfile$ADDR_1,
 	       regfile$ADDR_2,
 	       regfile$ADDR_3,
 	       regfile$ADDR_4,
 	       regfile$ADDR_5,
 	       regfile$ADDR_IN;
+  wire [3 : 0] regfile$D_IN,
+	       regfile$D_OUT_1,
+	       regfile$D_OUT_2,
+	       regfile$D_OUT_3;
   wire regfile$WE;
 
   // rule scheduling signals
@@ -143,14 +143,14 @@ module mkGPR_RegFile(CLK,
   assign WILL_FIRE_server_reset_response_get = EN_server_reset_response_get ;
 
   // value method read_rs1
-  assign read_rs1 = (read_rs1_rs1 == 5'd0) ? 64'd0 : regfile$D_OUT_3 ;
+  assign read_rs1 = (read_rs1_rs1 == 5'd0) ? 4'd0 : regfile$D_OUT_3 ;
 
   // value method read_rs1_port2
   assign read_rs1_port2 =
-	     (read_rs1_port2_rs1 == 5'd0) ? 64'd0 : regfile$D_OUT_2 ;
+	     (read_rs1_port2_rs1 == 5'd0) ? 4'd0 : regfile$D_OUT_2 ;
 
   // value method read_rs2
-  assign read_rs2 = (read_rs2_rs2 == 5'd0) ? 64'd0 : regfile$D_OUT_1 ;
+  assign read_rs2 = (read_rs2_rs2 == 5'd0) ? 4'd0 : regfile$D_OUT_1 ;
 
   // action method write_rd
   assign CAN_FIRE_write_rd = 1'd1 ;
@@ -167,7 +167,7 @@ module mkGPR_RegFile(CLK,
 
   // submodule regfile
   RegFile #(.addr_width(32'd5),
-	    .data_width(32'd64),
+	    .data_width(32'd4),
 	    .lo(5'h0),
 	    .hi(5'd31)) regfile(.CLK(CLK),
 				.ADDR_1(regfile$ADDR_1),
@@ -243,5 +243,5 @@ module mkGPR_RegFile(CLK,
   end
   `endif // BSV_NO_INITIAL_BLOCKS
   // synopsys translate_on
-endmodule  // mkGPR_RegFile
+endmodule  // mkGPR_TAG_RegFile
 

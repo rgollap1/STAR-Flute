@@ -14,11 +14,14 @@
 // read_rs1_rs1                   I     5
 // read_rs1_port2_rs1             I     5
 // read_rs2_rs2                   I     5
-// write_rd_rd                    I     5
-// write_rd_rd_val                I    64 reg
+// write_rd_rd1                   I     5
+// write_rd_rd_val                I    64
+// write_rd2_rd2                  I     5
+// write_rd2_rd_val_label         I    64
 // EN_server_reset_request_put    I     1
 // EN_server_reset_response_get   I     1
 // EN_write_rd                    I     1
+// EN_write_rd2                   I     1
 //
 // Combinational paths from inputs to outputs:
 //   read_rs1_rs1 -> read_rs1
@@ -40,27 +43,31 @@
   `define BSV_RESET_EDGE negedge
 `endif
 
-module mkGPR_RegFile(CLK,
-		     RST_N,
+module mkTPRF_RegFile(CLK,
+		      RST_N,
 
-		     EN_server_reset_request_put,
-		     RDY_server_reset_request_put,
+		      EN_server_reset_request_put,
+		      RDY_server_reset_request_put,
 
-		     EN_server_reset_response_get,
-		     RDY_server_reset_response_get,
+		      EN_server_reset_response_get,
+		      RDY_server_reset_response_get,
 
-		     read_rs1_rs1,
-		     read_rs1,
+		      read_rs1_rs1,
+		      read_rs1,
 
-		     read_rs1_port2_rs1,
-		     read_rs1_port2,
+		      read_rs1_port2_rs1,
+		      read_rs1_port2,
 
-		     read_rs2_rs2,
-		     read_rs2,
+		      read_rs2_rs2,
+		      read_rs2,
 
-		     write_rd_rd,
-		     write_rd_rd_val,
-		     EN_write_rd);
+		      write_rd_rd1,
+		      write_rd_rd_val,
+		      EN_write_rd,
+
+		      write_rd2_rd2,
+		      write_rd2_rd_val_label,
+		      EN_write_rd2);
   input  CLK;
   input  RST_N;
 
@@ -85,9 +92,14 @@ module mkGPR_RegFile(CLK,
   output [63 : 0] read_rs2;
 
   // action method write_rd
-  input  [4 : 0] write_rd_rd;
+  input  [4 : 0] write_rd_rd1;
   input  [63 : 0] write_rd_rd_val;
   input  EN_write_rd;
+
+  // action method write_rd2
+  input  [4 : 0] write_rd2_rd2;
+  input  [63 : 0] write_rd2_rd_val_label;
+  input  EN_write_rd2;
 
   // signals for module outputs
   wire [63 : 0] read_rs1, read_rs1_port2, read_rs2;
@@ -124,11 +136,16 @@ module mkGPR_RegFile(CLK,
        CAN_FIRE_server_reset_request_put,
        CAN_FIRE_server_reset_response_get,
        CAN_FIRE_write_rd,
+       CAN_FIRE_write_rd2,
        WILL_FIRE_RL_rl_reset_loop,
        WILL_FIRE_RL_rl_reset_start,
        WILL_FIRE_server_reset_request_put,
        WILL_FIRE_server_reset_response_get,
-       WILL_FIRE_write_rd;
+       WILL_FIRE_write_rd,
+       WILL_FIRE_write_rd2;
+
+  // inputs to muxes for submodule ports
+  wire MUX_regfile$upd_1__SEL_1;
 
   // action method server_reset_request_put
   assign RDY_server_reset_request_put = f_reset_rsps$FULL_N ;
@@ -155,6 +172,10 @@ module mkGPR_RegFile(CLK,
   // action method write_rd
   assign CAN_FIRE_write_rd = 1'd1 ;
   assign WILL_FIRE_write_rd = EN_write_rd ;
+
+  // action method write_rd2
+  assign CAN_FIRE_write_rd2 = 1'd1 ;
+  assign WILL_FIRE_write_rd2 = EN_write_rd2 ;
 
   // submodule f_reset_rsps
   FIFO20 #(.guarded(1'd1)) f_reset_rsps(.RST(RST_N),
@@ -192,6 +213,9 @@ module mkGPR_RegFile(CLK,
   assign CAN_FIRE_RL_rl_reset_loop = rg_state == 2'd1 ;
   assign WILL_FIRE_RL_rl_reset_loop = rg_state == 2'd1 ;
 
+  // inputs to muxes for submodule ports
+  assign MUX_regfile$upd_1__SEL_1 = EN_write_rd && write_rd_rd1 != 5'd0 ;
+
   // register rg_state
   always@(EN_server_reset_request_put or
 	  WILL_FIRE_RL_rl_reset_loop or WILL_FIRE_RL_rl_reset_start)
@@ -216,9 +240,15 @@ module mkGPR_RegFile(CLK,
   assign regfile$ADDR_3 = read_rs1_rs1 ;
   assign regfile$ADDR_4 = 5'h0 ;
   assign regfile$ADDR_5 = 5'h0 ;
-  assign regfile$ADDR_IN = write_rd_rd ;
-  assign regfile$D_IN = write_rd_rd_val ;
-  assign regfile$WE = EN_write_rd && write_rd_rd != 5'd0 ;
+  assign regfile$ADDR_IN =
+	     MUX_regfile$upd_1__SEL_1 ? write_rd_rd1 : write_rd2_rd2 ;
+  assign regfile$D_IN =
+	     MUX_regfile$upd_1__SEL_1 ?
+	       write_rd_rd_val :
+	       write_rd2_rd_val_label ;
+  assign regfile$WE =
+	     EN_write_rd && write_rd_rd1 != 5'd0 ||
+	     EN_write_rd2 && write_rd2_rd2 != 5'd0 ;
 
   // handling of inlined registers
 
@@ -243,5 +273,5 @@ module mkGPR_RegFile(CLK,
   end
   `endif // BSV_NO_INITIAL_BLOCKS
   // synopsys translate_on
-endmodule  // mkGPR_RegFile
+endmodule  // mkTPRF_RegFile
 

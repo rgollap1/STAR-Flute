@@ -13,14 +13,11 @@
 // RDY_flush_server_request_put   O     1 reg
 // RDY_flush_server_response_get  O     1 reg
 // RDY_tlb_flush                  O     1 const
-// RDY_imem_ptw_server_request_put  O     1 reg
-// imem_ptw_server_response_get   O   132 reg
-// RDY_imem_ptw_server_response_get  O     1 reg
-// RDY_imem_pte_writeback_p_put   O     1 reg
-// RDY_dtmem_ptw_server_request_put  O     1 reg
-// dtmem_ptw_server_response_get  O   132 reg
-// RDY_dtmem_ptw_server_response_get  O     1 reg
-// RDY_dtmem_pte_writeback_p_put  O     1 reg
+// ptw_client_request_get         O   128 reg
+// RDY_ptw_client_request_get     O     1 reg
+// RDY_ptw_client_response_put    O     1 reg
+// pte_writeback_g_get            O   128 reg
+// RDY_pte_writeback_g_get        O     1 reg
 // l1_to_l2_client_request_first  O    69 reg
 // RDY_l1_to_l2_client_request_first  O     1 reg
 // RDY_l1_to_l2_client_request_deq  O     1 reg
@@ -40,9 +37,6 @@
 // mmio_client_request_get        O   131 reg
 // RDY_mmio_client_request_get    O     1 reg
 // RDY_mmio_client_response_put   O     1 reg
-// RDY_set_watch_tohost           O     1 const
-// mv_tohost_value                O    64 reg
-// RDY_mv_tohost_value            O     1 const
 // CLK                            I     1 clock
 // RST_N                          I     1 reset
 // ma_req_op                      I     2
@@ -55,31 +49,22 @@
 // ma_req_mstatus_MXR             I     1
 // ma_req_satp                    I    64
 // flush_server_request_put       I     1 reg
-// imem_ptw_server_request_put    I   128 reg
-// imem_pte_writeback_p_put       I   128 reg
-// dtmem_ptw_server_request_put   I   128 reg
-// dtmem_pte_writeback_p_put      I   128 reg
+// ptw_client_response_put        I   132 reg
 // l1_to_l2_client_response_enq_x  I   579 reg
 // l2_to_l1_server_request_enq_x  I    66 reg
 // mmio_client_response_put       I    65 reg
-// set_watch_tohost_watch_tohost  I     1 reg
-// set_watch_tohost_tohost_addr   I    64 reg
 // EN_ma_req                      I     1
 // EN_flush_server_request_put    I     1
 // EN_flush_server_response_get   I     1
 // EN_tlb_flush                   I     1
-// EN_imem_ptw_server_request_put  I     1
-// EN_imem_pte_writeback_p_put    I     1
-// EN_dtmem_ptw_server_request_put  I     1
-// EN_dtmem_pte_writeback_p_put   I     1
+// EN_ptw_client_response_put     I     1
 // EN_l1_to_l2_client_request_deq  I     1
 // EN_l1_to_l2_client_response_enq  I     1
 // EN_l2_to_l1_server_request_enq  I     1
 // EN_l2_to_l1_server_response_deq  I     1
 // EN_mmio_client_response_put    I     1
-// EN_set_watch_tohost            I     1
-// EN_imem_ptw_server_response_get  I     1
-// EN_dtmem_ptw_server_response_get  I     1
+// EN_ptw_client_request_get      I     1
+// EN_pte_writeback_g_get         I     1
 // EN_mmio_client_request_get     I     1
 //
 // No combinational paths from inputs to outputs
@@ -99,113 +84,93 @@
   `define BSV_RESET_EDGE negedge
 `endif
 
-module mkD_MMU_Cache(CLK,
-		     RST_N,
+module mkDT_MMU_Cache(CLK,
+		      RST_N,
 
-		     ma_req_op,
-		     ma_req_f3,
-		     ma_req_amo_funct7,
-		     ma_req_va,
-		     ma_req_st_value,
-		     ma_req_priv,
-		     ma_req_sstatus_SUM,
-		     ma_req_mstatus_MXR,
-		     ma_req_satp,
-		     EN_ma_req,
+		      ma_req_op,
+		      ma_req_f3,
+		      ma_req_amo_funct7,
+		      ma_req_va,
+		      ma_req_st_value,
+		      ma_req_priv,
+		      ma_req_sstatus_SUM,
+		      ma_req_mstatus_MXR,
+		      ma_req_satp,
+		      EN_ma_req,
 
-		     valid,
+		      valid,
 
-		     addr,
+		      addr,
 
-		     word64,
+		      word64,
 
-		     st_amo_val,
+		      st_amo_val,
 
-		     exc,
+		      exc,
 
-		     exc_code,
+		      exc_code,
 
-		     flush_server_request_put,
-		     EN_flush_server_request_put,
-		     RDY_flush_server_request_put,
+		      flush_server_request_put,
+		      EN_flush_server_request_put,
+		      RDY_flush_server_request_put,
 
-		     EN_flush_server_response_get,
-		     RDY_flush_server_response_get,
+		      EN_flush_server_response_get,
+		      RDY_flush_server_response_get,
 
-		     EN_tlb_flush,
-		     RDY_tlb_flush,
+		      EN_tlb_flush,
+		      RDY_tlb_flush,
 
-		     imem_ptw_server_request_put,
-		     EN_imem_ptw_server_request_put,
-		     RDY_imem_ptw_server_request_put,
+		      EN_ptw_client_request_get,
+		      ptw_client_request_get,
+		      RDY_ptw_client_request_get,
 
-		     EN_imem_ptw_server_response_get,
-		     imem_ptw_server_response_get,
-		     RDY_imem_ptw_server_response_get,
+		      ptw_client_response_put,
+		      EN_ptw_client_response_put,
+		      RDY_ptw_client_response_put,
 
-		     imem_pte_writeback_p_put,
-		     EN_imem_pte_writeback_p_put,
-		     RDY_imem_pte_writeback_p_put,
+		      EN_pte_writeback_g_get,
+		      pte_writeback_g_get,
+		      RDY_pte_writeback_g_get,
 
-		     dtmem_ptw_server_request_put,
-		     EN_dtmem_ptw_server_request_put,
-		     RDY_dtmem_ptw_server_request_put,
+		      l1_to_l2_client_request_first,
+		      RDY_l1_to_l2_client_request_first,
 
-		     EN_dtmem_ptw_server_response_get,
-		     dtmem_ptw_server_response_get,
-		     RDY_dtmem_ptw_server_response_get,
+		      EN_l1_to_l2_client_request_deq,
+		      RDY_l1_to_l2_client_request_deq,
 
-		     dtmem_pte_writeback_p_put,
-		     EN_dtmem_pte_writeback_p_put,
-		     RDY_dtmem_pte_writeback_p_put,
+		      l1_to_l2_client_request_notEmpty,
+		      RDY_l1_to_l2_client_request_notEmpty,
 
-		     l1_to_l2_client_request_first,
-		     RDY_l1_to_l2_client_request_first,
+		      l1_to_l2_client_response_enq_x,
+		      EN_l1_to_l2_client_response_enq,
+		      RDY_l1_to_l2_client_response_enq,
 
-		     EN_l1_to_l2_client_request_deq,
-		     RDY_l1_to_l2_client_request_deq,
+		      l1_to_l2_client_response_notFull,
+		      RDY_l1_to_l2_client_response_notFull,
 
-		     l1_to_l2_client_request_notEmpty,
-		     RDY_l1_to_l2_client_request_notEmpty,
+		      l2_to_l1_server_request_enq_x,
+		      EN_l2_to_l1_server_request_enq,
+		      RDY_l2_to_l1_server_request_enq,
 
-		     l1_to_l2_client_response_enq_x,
-		     EN_l1_to_l2_client_response_enq,
-		     RDY_l1_to_l2_client_response_enq,
+		      l2_to_l1_server_request_notFull,
+		      RDY_l2_to_l1_server_request_notFull,
 
-		     l1_to_l2_client_response_notFull,
-		     RDY_l1_to_l2_client_response_notFull,
+		      l2_to_l1_server_response_first,
+		      RDY_l2_to_l1_server_response_first,
 
-		     l2_to_l1_server_request_enq_x,
-		     EN_l2_to_l1_server_request_enq,
-		     RDY_l2_to_l1_server_request_enq,
+		      EN_l2_to_l1_server_response_deq,
+		      RDY_l2_to_l1_server_response_deq,
 
-		     l2_to_l1_server_request_notFull,
-		     RDY_l2_to_l1_server_request_notFull,
+		      l2_to_l1_server_response_notEmpty,
+		      RDY_l2_to_l1_server_response_notEmpty,
 
-		     l2_to_l1_server_response_first,
-		     RDY_l2_to_l1_server_response_first,
+		      EN_mmio_client_request_get,
+		      mmio_client_request_get,
+		      RDY_mmio_client_request_get,
 
-		     EN_l2_to_l1_server_response_deq,
-		     RDY_l2_to_l1_server_response_deq,
-
-		     l2_to_l1_server_response_notEmpty,
-		     RDY_l2_to_l1_server_response_notEmpty,
-
-		     EN_mmio_client_request_get,
-		     mmio_client_request_get,
-		     RDY_mmio_client_request_get,
-
-		     mmio_client_response_put,
-		     EN_mmio_client_response_put,
-		     RDY_mmio_client_response_put,
-
-		     set_watch_tohost_watch_tohost,
-		     set_watch_tohost_tohost_addr,
-		     EN_set_watch_tohost,
-		     RDY_set_watch_tohost,
-
-		     mv_tohost_value,
-		     RDY_mv_tohost_value);
+		      mmio_client_response_put,
+		      EN_mmio_client_response_put,
+		      RDY_mmio_client_response_put);
   input  CLK;
   input  RST_N;
 
@@ -252,35 +217,20 @@ module mkD_MMU_Cache(CLK,
   input  EN_tlb_flush;
   output RDY_tlb_flush;
 
-  // action method imem_ptw_server_request_put
-  input  [127 : 0] imem_ptw_server_request_put;
-  input  EN_imem_ptw_server_request_put;
-  output RDY_imem_ptw_server_request_put;
+  // actionvalue method ptw_client_request_get
+  input  EN_ptw_client_request_get;
+  output [127 : 0] ptw_client_request_get;
+  output RDY_ptw_client_request_get;
 
-  // actionvalue method imem_ptw_server_response_get
-  input  EN_imem_ptw_server_response_get;
-  output [131 : 0] imem_ptw_server_response_get;
-  output RDY_imem_ptw_server_response_get;
+  // action method ptw_client_response_put
+  input  [131 : 0] ptw_client_response_put;
+  input  EN_ptw_client_response_put;
+  output RDY_ptw_client_response_put;
 
-  // action method imem_pte_writeback_p_put
-  input  [127 : 0] imem_pte_writeback_p_put;
-  input  EN_imem_pte_writeback_p_put;
-  output RDY_imem_pte_writeback_p_put;
-
-  // action method dtmem_ptw_server_request_put
-  input  [127 : 0] dtmem_ptw_server_request_put;
-  input  EN_dtmem_ptw_server_request_put;
-  output RDY_dtmem_ptw_server_request_put;
-
-  // actionvalue method dtmem_ptw_server_response_get
-  input  EN_dtmem_ptw_server_response_get;
-  output [131 : 0] dtmem_ptw_server_response_get;
-  output RDY_dtmem_ptw_server_response_get;
-
-  // action method dtmem_pte_writeback_p_put
-  input  [127 : 0] dtmem_pte_writeback_p_put;
-  input  EN_dtmem_pte_writeback_p_put;
-  output RDY_dtmem_pte_writeback_p_put;
+  // actionvalue method pte_writeback_g_get
+  input  EN_pte_writeback_g_get;
+  output [127 : 0] pte_writeback_g_get;
+  output RDY_pte_writeback_g_get;
 
   // value method l1_to_l2_client_request_first
   output [68 : 0] l1_to_l2_client_request_first;
@@ -334,31 +284,15 @@ module mkD_MMU_Cache(CLK,
   input  EN_mmio_client_response_put;
   output RDY_mmio_client_response_put;
 
-  // action method set_watch_tohost
-  input  set_watch_tohost_watch_tohost;
-  input  [63 : 0] set_watch_tohost_tohost_addr;
-  input  EN_set_watch_tohost;
-  output RDY_set_watch_tohost;
-
-  // value method mv_tohost_value
-  output [63 : 0] mv_tohost_value;
-  output RDY_mv_tohost_value;
-
   // signals for module outputs
   wire [578 : 0] l2_to_l1_server_response_first;
-  wire [131 : 0] dtmem_ptw_server_response_get, imem_ptw_server_response_get;
   wire [130 : 0] mmio_client_request_get;
+  wire [127 : 0] pte_writeback_g_get, ptw_client_request_get;
   wire [68 : 0] l1_to_l2_client_request_first;
-  wire [63 : 0] addr, mv_tohost_value, st_amo_val, word64;
+  wire [63 : 0] addr, st_amo_val, word64;
   wire [4 : 0] exc_code;
-  wire RDY_dtmem_pte_writeback_p_put,
-       RDY_dtmem_ptw_server_request_put,
-       RDY_dtmem_ptw_server_response_get,
-       RDY_flush_server_request_put,
+  wire RDY_flush_server_request_put,
        RDY_flush_server_response_get,
-       RDY_imem_pte_writeback_p_put,
-       RDY_imem_ptw_server_request_put,
-       RDY_imem_ptw_server_response_get,
        RDY_l1_to_l2_client_request_deq,
        RDY_l1_to_l2_client_request_first,
        RDY_l1_to_l2_client_request_notEmpty,
@@ -371,8 +305,9 @@ module mkD_MMU_Cache(CLK,
        RDY_l2_to_l1_server_response_notEmpty,
        RDY_mmio_client_request_get,
        RDY_mmio_client_response_put,
-       RDY_mv_tohost_value,
-       RDY_set_watch_tohost,
+       RDY_pte_writeback_g_get,
+       RDY_ptw_client_request_get,
+       RDY_ptw_client_response_put,
        RDY_tlb_flush,
        exc,
        l1_to_l2_client_request_notEmpty,
@@ -447,46 +382,14 @@ module mkD_MMU_Cache(CLK,
   reg crg_valid;
   wire crg_valid$D_IN, crg_valid$EN;
 
-  // register dequeue_dtmem_ptw
-  reg dequeue_dtmem_ptw;
-  wire dequeue_dtmem_ptw$D_IN, dequeue_dtmem_ptw$EN;
-
-  // register rg_pass_fail_msg_printed
-  reg rg_pass_fail_msg_printed;
-  wire rg_pass_fail_msg_printed$D_IN, rg_pass_fail_msg_printed$EN;
-
-  // register rg_ptw_mem_req
-  reg [63 : 0] rg_ptw_mem_req;
-  wire [63 : 0] rg_ptw_mem_req$D_IN;
-  wire rg_ptw_mem_req$EN;
-
-  // register rg_state_stack_during_ptw_rd
-  reg [3 : 0] rg_state_stack_during_ptw_rd;
-  wire [3 : 0] rg_state_stack_during_ptw_rd$D_IN;
-  wire rg_state_stack_during_ptw_rd$EN;
-
-  // register rg_tohost_addr
-  reg [63 : 0] rg_tohost_addr;
-  wire [63 : 0] rg_tohost_addr$D_IN;
-  wire rg_tohost_addr$EN;
-
-  // register rg_tohost_value
-  reg [63 : 0] rg_tohost_value;
-  wire [63 : 0] rg_tohost_value$D_IN;
-  wire rg_tohost_value$EN;
-
-  // register rg_watch_tohost
-  reg rg_watch_tohost;
-  wire rg_watch_tohost$D_IN, rg_watch_tohost$EN;
-
   // ports of submodule cache
-  reg [207 : 0] cache$mav_request_pa_req;
-  reg [63 : 0] cache$ma_request_va_va, cache$mav_request_pa_pa;
   wire [578 : 0] cache$l1_to_l2_client_response_enq_x,
 		 cache$l2_to_l1_server_response_first;
+  wire [207 : 0] cache$mav_request_pa_req;
   wire [129 : 0] cache$mav_request_pa;
   wire [68 : 0] cache$l1_to_l2_client_request_first;
   wire [65 : 0] cache$l2_to_l1_server_request_enq_x;
+  wire [63 : 0] cache$ma_request_va_va, cache$mav_request_pa_pa;
   wire cache$EN_flush_server_request_put,
        cache$EN_flush_server_response_get,
        cache$EN_l1_to_l2_client_request_deq,
@@ -529,14 +432,6 @@ module mkD_MMU_Cache(CLK,
        f_cache_flush_rsps$ENQ,
        f_cache_flush_rsps$FULL_N;
 
-  // ports of submodule f_dmem_pte_writebacks
-  wire [127 : 0] f_dmem_pte_writebacks$D_IN, f_dmem_pte_writebacks$D_OUT;
-  wire f_dmem_pte_writebacks$CLR,
-       f_dmem_pte_writebacks$DEQ,
-       f_dmem_pte_writebacks$EMPTY_N,
-       f_dmem_pte_writebacks$ENQ,
-       f_dmem_pte_writebacks$FULL_N;
-
   // ports of submodule f_dtmem_pte_writebacks
   wire [127 : 0] f_dtmem_pte_writebacks$D_IN, f_dtmem_pte_writebacks$D_OUT;
   wire f_dtmem_pte_writebacks$CLR,
@@ -545,22 +440,21 @@ module mkD_MMU_Cache(CLK,
        f_dtmem_pte_writebacks$ENQ,
        f_dtmem_pte_writebacks$FULL_N;
 
-  // ports of submodule f_imem_pte_writebacks
-  wire [127 : 0] f_imem_pte_writebacks$D_IN, f_imem_pte_writebacks$D_OUT;
-  wire f_imem_pte_writebacks$CLR,
-       f_imem_pte_writebacks$DEQ,
-       f_imem_pte_writebacks$EMPTY_N,
-       f_imem_pte_writebacks$ENQ,
-       f_imem_pte_writebacks$FULL_N;
+  // ports of submodule f_ptw_reqs
+  wire [127 : 0] f_ptw_reqs$D_IN, f_ptw_reqs$D_OUT;
+  wire f_ptw_reqs$CLR,
+       f_ptw_reqs$DEQ,
+       f_ptw_reqs$EMPTY_N,
+       f_ptw_reqs$ENQ,
+       f_ptw_reqs$FULL_N;
 
-  // ports of submodule f_pte_writebacks
-  reg [127 : 0] f_pte_writebacks$D_IN;
-  wire [127 : 0] f_pte_writebacks$D_OUT;
-  wire f_pte_writebacks$CLR,
-       f_pte_writebacks$DEQ,
-       f_pte_writebacks$EMPTY_N,
-       f_pte_writebacks$ENQ,
-       f_pte_writebacks$FULL_N;
+  // ports of submodule f_ptw_rsps
+  wire [131 : 0] f_ptw_rsps$D_IN, f_ptw_rsps$D_OUT;
+  wire f_ptw_rsps$CLR,
+       f_ptw_rsps$DEQ,
+       f_ptw_rsps$EMPTY_N,
+       f_ptw_rsps$ENQ,
+       f_ptw_rsps$FULL_N;
 
   // ports of submodule mmio
   wire [207 : 0] mmio$req_mmu_cache_req;
@@ -577,37 +471,6 @@ module mkD_MMU_Cache(CLK,
        mmio$RDY_result_snd_fst,
        mmio$RDY_result_snd_snd,
        mmio$result_fst;
-
-  // ports of submodule ptw
-  wire [131 : 0] ptw$dmem_server_response_get,
-		 ptw$dtmem_server_response_get,
-		 ptw$imem_server_response_get;
-  wire [127 : 0] ptw$dmem_server_request_put,
-		 ptw$dtmem_server_request_put,
-		 ptw$imem_server_request_put;
-  wire [64 : 0] ptw$mem_client_response_put;
-  wire [63 : 0] ptw$mem_client_request_get;
-  wire ptw$EN_dmem_server_request_put,
-       ptw$EN_dmem_server_response_get,
-       ptw$EN_dt_ptw_flush,
-       ptw$EN_dt_ptw_rsp_enq,
-       ptw$EN_dt_ptw_walk,
-       ptw$EN_dtmem_server_request_put,
-       ptw$EN_dtmem_server_response_get,
-       ptw$EN_imem_server_request_put,
-       ptw$EN_imem_server_response_get,
-       ptw$EN_mem_client_request_get,
-       ptw$EN_mem_client_response_put,
-       ptw$RDY_dmem_server_request_put,
-       ptw$RDY_dmem_server_response_get,
-       ptw$RDY_dt_ptw_rsp_enq,
-       ptw$RDY_dtmem_server_request_put,
-       ptw$RDY_dtmem_server_response_get,
-       ptw$RDY_imem_server_request_put,
-       ptw$RDY_imem_server_response_get,
-       ptw$RDY_mem_client_request_get,
-       ptw$RDY_mem_client_response_put,
-       ptw$dt_ptw_count;
 
   // ports of submodule soc_map
   wire [63 : 0] soc_map$m_is_IO_addr_addr,
@@ -631,10 +494,7 @@ module mkD_MMU_Cache(CLK,
        tlb$mv_vm_xlate_sstatus_SUM;
 
   // rule scheduling signals
-  wire CAN_FIRE_RL_mkConnectionGetPut,
-       CAN_FIRE_RL_mkConnectionGetPut_1,
-       CAN_FIRE_RL_mkConnectionGetPut_2,
-       CAN_FIRE_RL_rl_CPU_ST_wait,
+  wire CAN_FIRE_RL_rl_CPU_ST_wait,
        CAN_FIRE_RL_rl_CPU_cache_wait,
        CAN_FIRE_RL_rl_CPU_req,
        CAN_FIRE_RL_rl_CPU_req_A,
@@ -643,21 +503,8 @@ module mkD_MMU_Cache(CLK,
        CAN_FIRE_RL_rl_PTW_wait,
        CAN_FIRE_RL_rl_cache_flush_finish,
        CAN_FIRE_RL_rl_cache_flush_start,
-       CAN_FIRE_RL_rl_pte_wb_cache_WAIT,
-       CAN_FIRE_RL_rl_pte_wb_req_A,
-       CAN_FIRE_RL_rl_pte_wb_req_B,
-       CAN_FIRE_RL_rl_ptw_deq_dt,
-       CAN_FIRE_RL_rl_ptw_rd_A,
-       CAN_FIRE_RL_rl_ptw_rd_B,
-       CAN_FIRE_RL_rl_ptw_rd_wait,
-       CAN_FIRE_dtmem_pte_writeback_p_put,
-       CAN_FIRE_dtmem_ptw_server_request_put,
-       CAN_FIRE_dtmem_ptw_server_response_get,
        CAN_FIRE_flush_server_request_put,
        CAN_FIRE_flush_server_response_get,
-       CAN_FIRE_imem_pte_writeback_p_put,
-       CAN_FIRE_imem_ptw_server_request_put,
-       CAN_FIRE_imem_ptw_server_response_get,
        CAN_FIRE_l1_to_l2_client_request_deq,
        CAN_FIRE_l1_to_l2_client_response_enq,
        CAN_FIRE_l2_to_l1_server_request_enq,
@@ -665,11 +512,10 @@ module mkD_MMU_Cache(CLK,
        CAN_FIRE_ma_req,
        CAN_FIRE_mmio_client_request_get,
        CAN_FIRE_mmio_client_response_put,
-       CAN_FIRE_set_watch_tohost,
+       CAN_FIRE_pte_writeback_g_get,
+       CAN_FIRE_ptw_client_request_get,
+       CAN_FIRE_ptw_client_response_put,
        CAN_FIRE_tlb_flush,
-       WILL_FIRE_RL_mkConnectionGetPut,
-       WILL_FIRE_RL_mkConnectionGetPut_1,
-       WILL_FIRE_RL_mkConnectionGetPut_2,
        WILL_FIRE_RL_rl_CPU_ST_wait,
        WILL_FIRE_RL_rl_CPU_cache_wait,
        WILL_FIRE_RL_rl_CPU_req,
@@ -679,21 +525,8 @@ module mkD_MMU_Cache(CLK,
        WILL_FIRE_RL_rl_PTW_wait,
        WILL_FIRE_RL_rl_cache_flush_finish,
        WILL_FIRE_RL_rl_cache_flush_start,
-       WILL_FIRE_RL_rl_pte_wb_cache_WAIT,
-       WILL_FIRE_RL_rl_pte_wb_req_A,
-       WILL_FIRE_RL_rl_pte_wb_req_B,
-       WILL_FIRE_RL_rl_ptw_deq_dt,
-       WILL_FIRE_RL_rl_ptw_rd_A,
-       WILL_FIRE_RL_rl_ptw_rd_B,
-       WILL_FIRE_RL_rl_ptw_rd_wait,
-       WILL_FIRE_dtmem_pte_writeback_p_put,
-       WILL_FIRE_dtmem_ptw_server_request_put,
-       WILL_FIRE_dtmem_ptw_server_response_get,
        WILL_FIRE_flush_server_request_put,
        WILL_FIRE_flush_server_response_get,
-       WILL_FIRE_imem_pte_writeback_p_put,
-       WILL_FIRE_imem_ptw_server_request_put,
-       WILL_FIRE_imem_ptw_server_response_get,
        WILL_FIRE_l1_to_l2_client_request_deq,
        WILL_FIRE_l1_to_l2_client_response_enq,
        WILL_FIRE_l2_to_l1_server_request_enq,
@@ -701,68 +534,49 @@ module mkD_MMU_Cache(CLK,
        WILL_FIRE_ma_req,
        WILL_FIRE_mmio_client_request_get,
        WILL_FIRE_mmio_client_response_put,
-       WILL_FIRE_set_watch_tohost,
+       WILL_FIRE_pte_writeback_g_get,
+       WILL_FIRE_ptw_client_request_get,
+       WILL_FIRE_ptw_client_response_put,
        WILL_FIRE_tlb_flush;
 
   // inputs to muxes for submodule ports
-  wire [207 : 0] MUX_cache$mav_request_pa_1__VAL_2,
-		 MUX_cache$mav_request_pa_1__VAL_3;
-  wire [64 : 0] MUX_ptw$mem_client_response_put_1__VAL_1;
-  wire [4 : 0] MUX_crg_exc_code$port0__write_1__VAL_2,
+  wire [4 : 0] MUX_crg_exc_code$port0__write_1__VAL_1,
+	       MUX_crg_exc_code$port0__write_1__VAL_2,
 	       MUX_crg_exc_code$port0__write_1__VAL_3;
-  wire [3 : 0] MUX_crg_state$port0__write_1__VAL_1,
-	       MUX_crg_state$port0__write_1__VAL_2,
-	       MUX_crg_state$port0__write_1__VAL_3,
-	       MUX_crg_state$port0__write_1__VAL_4;
+  wire [3 : 0] MUX_crg_state$port0__write_1__VAL_1;
   wire [1 : 0] MUX_crg_mmu_cache_req_state$port0__write_1__VAL_3;
   wire MUX_cache$ma_request_va_1__SEL_1,
-       MUX_cache$mav_request_pa_1__SEL_1,
        MUX_crg_exc$port0__write_1__SEL_1,
        MUX_crg_exc$port0__write_1__SEL_2,
        MUX_crg_exc$port0__write_1__SEL_3,
-       MUX_crg_exc$port0__write_1__VAL_3,
+       MUX_crg_exc$port0__write_1__VAL_2,
+       MUX_crg_exc_code$port0__write_1__SEL_1,
        MUX_crg_exc_code$port0__write_1__SEL_3,
        MUX_crg_final_st_val$port0__write_1__SEL_1,
-       MUX_crg_mmu_cache_req_state$port0__write_1__SEL_2,
+       MUX_crg_mmu_cache_req_state$port0__write_1__SEL_1,
        MUX_crg_mmu_cache_req_state$port0__write_1__SEL_4,
        MUX_crg_state$port0__write_1__SEL_1,
-       MUX_crg_state$port0__write_1__SEL_5,
-       MUX_crg_state$port0__write_1__SEL_8,
-       MUX_crg_valid$port0__write_1__SEL_3,
-       MUX_ptw$mem_client_response_put_1__SEL_1,
-       MUX_tlb$ma_insert_1__SEL_1,
-       MUX_tlb$ma_insert_1__SEL_2;
+       MUX_crg_state$port0__write_1__SEL_2,
+       MUX_crg_valid$port0__write_1__SEL_2,
+       MUX_crg_valid$port0__write_1__VAL_2,
+       MUX_tlb$ma_insert_1__SEL_1;
 
   // declarations used by system tasks
   // synopsys translate_off
-  reg [31 : 0] v__h5140;
-  reg [31 : 0] v__h9740;
-  reg [31 : 0] v__h7447;
-  reg [31 : 0] v__h8668;
-  reg [31 : 0] v__h2455;
-  reg [31 : 0] v__h2446;
-  reg [31 : 0] v__h5131;
-  reg [31 : 0] v__h7438;
-  reg [31 : 0] v__h8659;
-  reg [31 : 0] v__h9731;
+  reg [31 : 0] v__h2375;
+  reg [31 : 0] v__h2366;
   // synopsys translate_on
 
   // remaining internal signals
-  wire [63 : 0] test_num__h5109;
-  wire [4 : 0] x1__h3758, x1__h5631, x1__h6535;
+  wire [4 : 0] x1__h3589, x1__h4792, x1__h5749;
   wire NOT_crg_mmu_cache_req_port0__read__05_BITS_204_ETC___d128,
        NOT_crg_mmu_cache_req_port0__read__05_BITS_204_ETC___d157,
-       NOT_crg_mmu_cache_req_port0__read__05_BITS_204_ETC___d172,
-       NOT_crg_mmu_cache_req_port0__read__05_BITS_204_ETC___d188,
-       NOT_crg_mmu_cache_req_port0__read__05_BITS_204_ETC___d193,
-       cache_mv_is_idle__4_AND_crg_state_port0__read__ETC___d321,
-       crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d169,
-       crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d231,
-       crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d253,
-       rg_watch_tohost_37_AND_tlb_mv_vm_xlate_crg_mmu_ETC___d244,
+       NOT_crg_mmu_cache_req_port0__read__05_BITS_204_ETC___d181,
+       crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d192,
+       crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d223,
        tlb_mv_vm_xlate_crg_mmu_cache_req_port0__read__ETC___d155,
-       tlb_mv_vm_xlate_crg_mmu_cache_req_port0__read__ETC___d181,
-       tlb_mv_vm_xlate_crg_mmu_cache_req_port0__read__ETC___d202;
+       tlb_mv_vm_xlate_crg_mmu_cache_req_port0__read__ETC___d169,
+       tlb_mv_vm_xlate_crg_mmu_cache_req_port0__read__ETC___d197;
 
   // action method ma_req
   assign CAN_FIRE_ma_req = 1'd1 ;
@@ -801,46 +615,22 @@ module mkD_MMU_Cache(CLK,
   assign CAN_FIRE_tlb_flush = 1'd1 ;
   assign WILL_FIRE_tlb_flush = EN_tlb_flush ;
 
-  // action method imem_ptw_server_request_put
-  assign RDY_imem_ptw_server_request_put = ptw$RDY_imem_server_request_put ;
-  assign CAN_FIRE_imem_ptw_server_request_put =
-	     ptw$RDY_imem_server_request_put ;
-  assign WILL_FIRE_imem_ptw_server_request_put =
-	     EN_imem_ptw_server_request_put ;
+  // actionvalue method ptw_client_request_get
+  assign ptw_client_request_get = f_ptw_reqs$D_OUT ;
+  assign RDY_ptw_client_request_get = f_ptw_reqs$EMPTY_N ;
+  assign CAN_FIRE_ptw_client_request_get = f_ptw_reqs$EMPTY_N ;
+  assign WILL_FIRE_ptw_client_request_get = EN_ptw_client_request_get ;
 
-  // actionvalue method imem_ptw_server_response_get
-  assign imem_ptw_server_response_get = ptw$imem_server_response_get ;
-  assign RDY_imem_ptw_server_response_get = ptw$RDY_imem_server_response_get ;
-  assign CAN_FIRE_imem_ptw_server_response_get =
-	     ptw$RDY_imem_server_response_get ;
-  assign WILL_FIRE_imem_ptw_server_response_get =
-	     EN_imem_ptw_server_response_get ;
+  // action method ptw_client_response_put
+  assign RDY_ptw_client_response_put = f_ptw_rsps$FULL_N ;
+  assign CAN_FIRE_ptw_client_response_put = f_ptw_rsps$FULL_N ;
+  assign WILL_FIRE_ptw_client_response_put = EN_ptw_client_response_put ;
 
-  // action method imem_pte_writeback_p_put
-  assign RDY_imem_pte_writeback_p_put = f_imem_pte_writebacks$FULL_N ;
-  assign CAN_FIRE_imem_pte_writeback_p_put = f_imem_pte_writebacks$FULL_N ;
-  assign WILL_FIRE_imem_pte_writeback_p_put = EN_imem_pte_writeback_p_put ;
-
-  // action method dtmem_ptw_server_request_put
-  assign RDY_dtmem_ptw_server_request_put = ptw$RDY_dtmem_server_request_put ;
-  assign CAN_FIRE_dtmem_ptw_server_request_put =
-	     ptw$RDY_dtmem_server_request_put ;
-  assign WILL_FIRE_dtmem_ptw_server_request_put =
-	     EN_dtmem_ptw_server_request_put ;
-
-  // actionvalue method dtmem_ptw_server_response_get
-  assign dtmem_ptw_server_response_get = ptw$dtmem_server_response_get ;
-  assign RDY_dtmem_ptw_server_response_get =
-	     ptw$RDY_dtmem_server_response_get ;
-  assign CAN_FIRE_dtmem_ptw_server_response_get =
-	     ptw$RDY_dtmem_server_response_get ;
-  assign WILL_FIRE_dtmem_ptw_server_response_get =
-	     EN_dtmem_ptw_server_response_get ;
-
-  // action method dtmem_pte_writeback_p_put
-  assign RDY_dtmem_pte_writeback_p_put = f_dtmem_pte_writebacks$FULL_N ;
-  assign CAN_FIRE_dtmem_pte_writeback_p_put = f_dtmem_pte_writebacks$FULL_N ;
-  assign WILL_FIRE_dtmem_pte_writeback_p_put = EN_dtmem_pte_writeback_p_put ;
+  // actionvalue method pte_writeback_g_get
+  assign pte_writeback_g_get = f_dtmem_pte_writebacks$D_OUT ;
+  assign RDY_pte_writeback_g_get = f_dtmem_pte_writebacks$EMPTY_N ;
+  assign CAN_FIRE_pte_writeback_g_get = f_dtmem_pte_writebacks$EMPTY_N ;
+  assign WILL_FIRE_pte_writeback_g_get = EN_pte_writeback_g_get ;
 
   // value method l1_to_l2_client_request_first
   assign l1_to_l2_client_request_first = cache$l1_to_l2_client_request_first ;
@@ -917,55 +707,46 @@ module mkD_MMU_Cache(CLK,
 	     mmio$RDY_mmio_client_response_put ;
   assign WILL_FIRE_mmio_client_response_put = EN_mmio_client_response_put ;
 
-  // action method set_watch_tohost
-  assign RDY_set_watch_tohost = 1'd1 ;
-  assign CAN_FIRE_set_watch_tohost = 1'd1 ;
-  assign WILL_FIRE_set_watch_tohost = EN_set_watch_tohost ;
-
-  // value method mv_tohost_value
-  assign mv_tohost_value = rg_tohost_value ;
-  assign RDY_mv_tohost_value = 1'd1 ;
-
   // submodule cache
-  mkCache #(.dcache_not_icache(1'd1), .verbosity(3'd0)) cache(.CLK(CLK),
-							      .RST_N(RST_N),
-							      .flush_server_request_put(cache$flush_server_request_put),
-							      .l1_to_l2_client_response_enq_x(cache$l1_to_l2_client_response_enq_x),
-							      .l2_to_l1_server_request_enq_x(cache$l2_to_l1_server_request_enq_x),
-							      .ma_request_va_va(cache$ma_request_va_va),
-							      .mav_request_pa_pa(cache$mav_request_pa_pa),
-							      .mav_request_pa_req(cache$mav_request_pa_req),
-							      .EN_ma_request_va(cache$EN_ma_request_va),
-							      .EN_mav_request_pa(cache$EN_mav_request_pa),
-							      .EN_flush_server_request_put(cache$EN_flush_server_request_put),
-							      .EN_flush_server_response_get(cache$EN_flush_server_response_get),
-							      .EN_l1_to_l2_client_request_deq(cache$EN_l1_to_l2_client_request_deq),
-							      .EN_l1_to_l2_client_response_enq(cache$EN_l1_to_l2_client_response_enq),
-							      .EN_l2_to_l1_server_request_enq(cache$EN_l2_to_l1_server_request_enq),
-							      .EN_l2_to_l1_server_response_deq(cache$EN_l2_to_l1_server_response_deq),
-							      .mav_request_pa(cache$mav_request_pa),
-							      .RDY_mav_request_pa(cache$RDY_mav_request_pa),
-							      .mv_is_idle(cache$mv_is_idle),
-							      .mv_refill_ok(cache$mv_refill_ok),
-							      .RDY_mv_refill_ok(cache$RDY_mv_refill_ok),
-							      .RDY_flush_server_request_put(cache$RDY_flush_server_request_put),
-							      .RDY_flush_server_response_get(cache$RDY_flush_server_response_get),
-							      .l1_to_l2_client_request_first(cache$l1_to_l2_client_request_first),
-							      .RDY_l1_to_l2_client_request_first(cache$RDY_l1_to_l2_client_request_first),
-							      .RDY_l1_to_l2_client_request_deq(cache$RDY_l1_to_l2_client_request_deq),
-							      .l1_to_l2_client_request_notEmpty(cache$l1_to_l2_client_request_notEmpty),
-							      .RDY_l1_to_l2_client_request_notEmpty(),
-							      .RDY_l1_to_l2_client_response_enq(cache$RDY_l1_to_l2_client_response_enq),
-							      .l1_to_l2_client_response_notFull(cache$l1_to_l2_client_response_notFull),
-							      .RDY_l1_to_l2_client_response_notFull(),
-							      .RDY_l2_to_l1_server_request_enq(cache$RDY_l2_to_l1_server_request_enq),
-							      .l2_to_l1_server_request_notFull(cache$l2_to_l1_server_request_notFull),
-							      .RDY_l2_to_l1_server_request_notFull(),
-							      .l2_to_l1_server_response_first(cache$l2_to_l1_server_response_first),
-							      .RDY_l2_to_l1_server_response_first(cache$RDY_l2_to_l1_server_response_first),
-							      .RDY_l2_to_l1_server_response_deq(cache$RDY_l2_to_l1_server_response_deq),
-							      .l2_to_l1_server_response_notEmpty(cache$l2_to_l1_server_response_notEmpty),
-							      .RDY_l2_to_l1_server_response_notEmpty());
+  mkDTCache #(.dcache_not_icache(1'd1), .verbosity(3'd0)) cache(.CLK(CLK),
+								.RST_N(RST_N),
+								.flush_server_request_put(cache$flush_server_request_put),
+								.l1_to_l2_client_response_enq_x(cache$l1_to_l2_client_response_enq_x),
+								.l2_to_l1_server_request_enq_x(cache$l2_to_l1_server_request_enq_x),
+								.ma_request_va_va(cache$ma_request_va_va),
+								.mav_request_pa_pa(cache$mav_request_pa_pa),
+								.mav_request_pa_req(cache$mav_request_pa_req),
+								.EN_ma_request_va(cache$EN_ma_request_va),
+								.EN_mav_request_pa(cache$EN_mav_request_pa),
+								.EN_flush_server_request_put(cache$EN_flush_server_request_put),
+								.EN_flush_server_response_get(cache$EN_flush_server_response_get),
+								.EN_l1_to_l2_client_request_deq(cache$EN_l1_to_l2_client_request_deq),
+								.EN_l1_to_l2_client_response_enq(cache$EN_l1_to_l2_client_response_enq),
+								.EN_l2_to_l1_server_request_enq(cache$EN_l2_to_l1_server_request_enq),
+								.EN_l2_to_l1_server_response_deq(cache$EN_l2_to_l1_server_response_deq),
+								.mav_request_pa(cache$mav_request_pa),
+								.RDY_mav_request_pa(cache$RDY_mav_request_pa),
+								.mv_is_idle(cache$mv_is_idle),
+								.mv_refill_ok(cache$mv_refill_ok),
+								.RDY_mv_refill_ok(cache$RDY_mv_refill_ok),
+								.RDY_flush_server_request_put(cache$RDY_flush_server_request_put),
+								.RDY_flush_server_response_get(cache$RDY_flush_server_response_get),
+								.l1_to_l2_client_request_first(cache$l1_to_l2_client_request_first),
+								.RDY_l1_to_l2_client_request_first(cache$RDY_l1_to_l2_client_request_first),
+								.RDY_l1_to_l2_client_request_deq(cache$RDY_l1_to_l2_client_request_deq),
+								.l1_to_l2_client_request_notEmpty(cache$l1_to_l2_client_request_notEmpty),
+								.RDY_l1_to_l2_client_request_notEmpty(),
+								.RDY_l1_to_l2_client_response_enq(cache$RDY_l1_to_l2_client_response_enq),
+								.l1_to_l2_client_response_notFull(cache$l1_to_l2_client_response_notFull),
+								.RDY_l1_to_l2_client_response_notFull(),
+								.RDY_l2_to_l1_server_request_enq(cache$RDY_l2_to_l1_server_request_enq),
+								.l2_to_l1_server_request_notFull(cache$l2_to_l1_server_request_notFull),
+								.RDY_l2_to_l1_server_request_notFull(),
+								.l2_to_l1_server_response_first(cache$l2_to_l1_server_response_first),
+								.RDY_l2_to_l1_server_response_first(cache$RDY_l2_to_l1_server_response_first),
+								.RDY_l2_to_l1_server_response_deq(cache$RDY_l2_to_l1_server_response_deq),
+								.l2_to_l1_server_response_notEmpty(cache$l2_to_l1_server_response_notEmpty),
+								.RDY_l2_to_l1_server_response_notEmpty());
 
   // submodule f_cache_flush_reqs
   FIFO2 #(.width(32'd1), .guarded(1'd1)) f_cache_flush_reqs(.RST(RST_N),
@@ -987,17 +768,6 @@ module mkD_MMU_Cache(CLK,
 					      .FULL_N(f_cache_flush_rsps$FULL_N),
 					      .EMPTY_N(f_cache_flush_rsps$EMPTY_N));
 
-  // submodule f_dmem_pte_writebacks
-  FIFO2 #(.width(32'd128), .guarded(1'd1)) f_dmem_pte_writebacks(.RST(RST_N),
-								 .CLK(CLK),
-								 .D_IN(f_dmem_pte_writebacks$D_IN),
-								 .ENQ(f_dmem_pte_writebacks$ENQ),
-								 .DEQ(f_dmem_pte_writebacks$DEQ),
-								 .CLR(f_dmem_pte_writebacks$CLR),
-								 .D_OUT(f_dmem_pte_writebacks$D_OUT),
-								 .FULL_N(f_dmem_pte_writebacks$FULL_N),
-								 .EMPTY_N(f_dmem_pte_writebacks$EMPTY_N));
-
   // submodule f_dtmem_pte_writebacks
   FIFO2 #(.width(32'd128), .guarded(1'd1)) f_dtmem_pte_writebacks(.RST(RST_N),
 								  .CLK(CLK),
@@ -1009,27 +779,27 @@ module mkD_MMU_Cache(CLK,
 								  .FULL_N(f_dtmem_pte_writebacks$FULL_N),
 								  .EMPTY_N(f_dtmem_pte_writebacks$EMPTY_N));
 
-  // submodule f_imem_pte_writebacks
-  FIFO2 #(.width(32'd128), .guarded(1'd1)) f_imem_pte_writebacks(.RST(RST_N),
-								 .CLK(CLK),
-								 .D_IN(f_imem_pte_writebacks$D_IN),
-								 .ENQ(f_imem_pte_writebacks$ENQ),
-								 .DEQ(f_imem_pte_writebacks$DEQ),
-								 .CLR(f_imem_pte_writebacks$CLR),
-								 .D_OUT(f_imem_pte_writebacks$D_OUT),
-								 .FULL_N(f_imem_pte_writebacks$FULL_N),
-								 .EMPTY_N(f_imem_pte_writebacks$EMPTY_N));
+  // submodule f_ptw_reqs
+  FIFO2 #(.width(32'd128), .guarded(1'd1)) f_ptw_reqs(.RST(RST_N),
+						      .CLK(CLK),
+						      .D_IN(f_ptw_reqs$D_IN),
+						      .ENQ(f_ptw_reqs$ENQ),
+						      .DEQ(f_ptw_reqs$DEQ),
+						      .CLR(f_ptw_reqs$CLR),
+						      .D_OUT(f_ptw_reqs$D_OUT),
+						      .FULL_N(f_ptw_reqs$FULL_N),
+						      .EMPTY_N(f_ptw_reqs$EMPTY_N));
 
-  // submodule f_pte_writebacks
-  FIFO2 #(.width(32'd128), .guarded(1'd1)) f_pte_writebacks(.RST(RST_N),
-							    .CLK(CLK),
-							    .D_IN(f_pte_writebacks$D_IN),
-							    .ENQ(f_pte_writebacks$ENQ),
-							    .DEQ(f_pte_writebacks$DEQ),
-							    .CLR(f_pte_writebacks$CLR),
-							    .D_OUT(f_pte_writebacks$D_OUT),
-							    .FULL_N(f_pte_writebacks$FULL_N),
-							    .EMPTY_N(f_pte_writebacks$EMPTY_N));
+  // submodule f_ptw_rsps
+  FIFO2 #(.width(32'd132), .guarded(1'd1)) f_ptw_rsps(.RST(RST_N),
+						      .CLK(CLK),
+						      .D_IN(f_ptw_rsps$D_IN),
+						      .ENQ(f_ptw_rsps$ENQ),
+						      .DEQ(f_ptw_rsps$DEQ),
+						      .CLR(f_ptw_rsps$CLR),
+						      .D_OUT(f_ptw_rsps$D_OUT),
+						      .FULL_N(f_ptw_rsps$FULL_N),
+						      .EMPTY_N(f_ptw_rsps$EMPTY_N));
 
   // submodule mmio
   mkMMIO #(.verbosity(3'd0)) mmio(.CLK(CLK),
@@ -1052,42 +822,6 @@ module mkD_MMU_Cache(CLK,
 				  .mmio_client_request_get(mmio$mmio_client_request_get),
 				  .RDY_mmio_client_request_get(mmio$RDY_mmio_client_request_get),
 				  .RDY_mmio_client_response_put(mmio$RDY_mmio_client_response_put));
-
-  // submodule ptw
-  mkPTW #(.verbosity(3'd0)) ptw(.CLK(CLK),
-				.RST_N(RST_N),
-				.dmem_server_request_put(ptw$dmem_server_request_put),
-				.dtmem_server_request_put(ptw$dtmem_server_request_put),
-				.imem_server_request_put(ptw$imem_server_request_put),
-				.mem_client_response_put(ptw$mem_client_response_put),
-				.EN_imem_server_request_put(ptw$EN_imem_server_request_put),
-				.EN_imem_server_response_get(ptw$EN_imem_server_response_get),
-				.EN_dtmem_server_request_put(ptw$EN_dtmem_server_request_put),
-				.EN_dtmem_server_response_get(ptw$EN_dtmem_server_response_get),
-				.EN_dmem_server_request_put(ptw$EN_dmem_server_request_put),
-				.EN_dmem_server_response_get(ptw$EN_dmem_server_response_get),
-				.EN_mem_client_request_get(ptw$EN_mem_client_request_get),
-				.EN_mem_client_response_put(ptw$EN_mem_client_response_put),
-				.EN_dt_ptw_rsp_enq(ptw$EN_dt_ptw_rsp_enq),
-				.EN_dt_ptw_flush(ptw$EN_dt_ptw_flush),
-				.EN_dt_ptw_walk(ptw$EN_dt_ptw_walk),
-				.RDY_imem_server_request_put(ptw$RDY_imem_server_request_put),
-				.imem_server_response_get(ptw$imem_server_response_get),
-				.RDY_imem_server_response_get(ptw$RDY_imem_server_response_get),
-				.RDY_dtmem_server_request_put(ptw$RDY_dtmem_server_request_put),
-				.dtmem_server_response_get(ptw$dtmem_server_response_get),
-				.RDY_dtmem_server_response_get(ptw$RDY_dtmem_server_response_get),
-				.RDY_dmem_server_request_put(ptw$RDY_dmem_server_request_put),
-				.dmem_server_response_get(ptw$dmem_server_response_get),
-				.RDY_dmem_server_response_get(ptw$RDY_dmem_server_response_get),
-				.mem_client_request_get(ptw$mem_client_request_get),
-				.RDY_mem_client_request_get(ptw$RDY_mem_client_request_get),
-				.RDY_mem_client_response_put(ptw$RDY_mem_client_response_put),
-				.RDY_dt_ptw_rsp_enq(ptw$RDY_dt_ptw_rsp_enq),
-				.RDY_dt_ptw_flush(),
-				.RDY_dt_ptw_walk(),
-				.dt_ptw_count(ptw$dt_ptw_count),
-				.RDY_dt_ptw_count());
 
   // submodule soc_map
   mkSoC_Map soc_map(.CLK(CLK),
@@ -1172,8 +906,7 @@ module mkD_MMU_Cache(CLK,
 	     CAN_FIRE_RL_rl_CPU_req_mmio_WAIT ;
 
   // rule RL_rl_PTW_wait
-  assign CAN_FIRE_RL_rl_PTW_wait =
-	     ptw$RDY_dmem_server_response_get && crg_state == 4'd5 ;
+  assign CAN_FIRE_RL_rl_PTW_wait = f_ptw_rsps$EMPTY_N && crg_state == 4'd5 ;
   assign WILL_FIRE_RL_rl_PTW_wait = CAN_FIRE_RL_rl_PTW_wait ;
 
   // rule RL_rl_cache_flush_start
@@ -1194,81 +927,6 @@ module mkD_MMU_Cache(CLK,
   assign WILL_FIRE_RL_rl_cache_flush_finish =
 	     CAN_FIRE_RL_rl_cache_flush_finish ;
 
-  // rule RL_rl_ptw_rd_A
-  assign CAN_FIRE_RL_rl_ptw_rd_A =
-	     ptw$RDY_mem_client_request_get &&
-	     cache_mv_is_idle__4_AND_crg_state_port0__read__ETC___d321 ;
-  assign WILL_FIRE_RL_rl_ptw_rd_A =
-	     CAN_FIRE_RL_rl_ptw_rd_A && !WILL_FIRE_RL_rl_cache_flush_start &&
-	     !WILL_FIRE_RL_rl_PTW_wait &&
-	     !EN_ma_req ;
-
-  // rule RL_rl_ptw_rd_B
-  assign CAN_FIRE_RL_rl_ptw_rd_B =
-	     cache$RDY_mav_request_pa && ptw$RDY_mem_client_response_put &&
-	     crg_state == 4'd6 ;
-  assign WILL_FIRE_RL_rl_ptw_rd_B = CAN_FIRE_RL_rl_ptw_rd_B && !EN_ma_req ;
-
-  // rule RL_rl_ptw_rd_wait
-  assign CAN_FIRE_RL_rl_ptw_rd_wait =
-	     cache$RDY_mv_refill_ok &&
-	     (cache$mv_refill_ok || ptw$RDY_mem_client_response_put) &&
-	     crg_state == 4'd7 ;
-  assign WILL_FIRE_RL_rl_ptw_rd_wait = CAN_FIRE_RL_rl_ptw_rd_wait ;
-
-  // rule RL_rl_ptw_deq_dt
-  assign CAN_FIRE_RL_rl_ptw_deq_dt =
-	     ptw$RDY_dt_ptw_rsp_enq && dequeue_dtmem_ptw ;
-  assign WILL_FIRE_RL_rl_ptw_deq_dt =
-	     CAN_FIRE_RL_rl_ptw_deq_dt && !WILL_FIRE_RL_rl_PTW_wait &&
-	     !WILL_FIRE_RL_rl_CPU_cache_wait &&
-	     !WILL_FIRE_RL_rl_CPU_req_B ;
-
-  // rule RL_mkConnectionGetPut
-  assign CAN_FIRE_RL_mkConnectionGetPut =
-	     f_imem_pte_writebacks$EMPTY_N && f_pte_writebacks$FULL_N ;
-  assign WILL_FIRE_RL_mkConnectionGetPut = CAN_FIRE_RL_mkConnectionGetPut ;
-
-  // rule RL_mkConnectionGetPut_1
-  assign CAN_FIRE_RL_mkConnectionGetPut_1 =
-	     f_pte_writebacks$FULL_N && f_dtmem_pte_writebacks$EMPTY_N ;
-  assign WILL_FIRE_RL_mkConnectionGetPut_1 =
-	     CAN_FIRE_RL_mkConnectionGetPut_1 &&
-	     !WILL_FIRE_RL_mkConnectionGetPut ;
-
-  // rule RL_mkConnectionGetPut_2
-  assign CAN_FIRE_RL_mkConnectionGetPut_2 =
-	     f_pte_writebacks$FULL_N && f_dmem_pte_writebacks$EMPTY_N ;
-  assign WILL_FIRE_RL_mkConnectionGetPut_2 =
-	     CAN_FIRE_RL_mkConnectionGetPut_2 &&
-	     !WILL_FIRE_RL_mkConnectionGetPut_1 &&
-	     !WILL_FIRE_RL_mkConnectionGetPut ;
-
-  // rule RL_rl_pte_wb_req_A
-  assign CAN_FIRE_RL_rl_pte_wb_req_A =
-	     f_pte_writebacks$EMPTY_N && crg_state == 4'd0 &&
-	     cache$mv_is_idle &&
-	     crg_mmu_cache_req_state == 2'd0 ;
-  assign WILL_FIRE_RL_rl_pte_wb_req_A =
-	     CAN_FIRE_RL_rl_pte_wb_req_A && !WILL_FIRE_RL_rl_ptw_rd_A &&
-	     !WILL_FIRE_RL_rl_cache_flush_start &&
-	     !EN_ma_req ;
-
-  // rule RL_rl_pte_wb_req_B
-  assign CAN_FIRE_RL_rl_pte_wb_req_B =
-	     cache$RDY_mav_request_pa && f_pte_writebacks$EMPTY_N &&
-	     crg_state == 4'd8 ;
-  assign WILL_FIRE_RL_rl_pte_wb_req_B =
-	     CAN_FIRE_RL_rl_pte_wb_req_B && !EN_ma_req ;
-
-  // rule RL_rl_pte_wb_cache_WAIT
-  assign CAN_FIRE_RL_rl_pte_wb_cache_WAIT =
-	     cache$RDY_mv_refill_ok &&
-	     (cache$mv_refill_ok || f_pte_writebacks$EMPTY_N) &&
-	     crg_state == 4'd9 ;
-  assign WILL_FIRE_RL_rl_pte_wb_cache_WAIT =
-	     CAN_FIRE_RL_rl_pte_wb_cache_WAIT ;
-
   // rule RL_rl_CPU_req
   assign CAN_FIRE_RL_rl_CPU_req = EN_ma_req ;
   assign WILL_FIRE_RL_rl_CPU_req = EN_ma_req ;
@@ -1276,140 +934,100 @@ module mkD_MMU_Cache(CLK,
   // inputs to muxes for submodule ports
   assign MUX_cache$ma_request_va_1__SEL_1 =
 	     EN_ma_req && crg_state$port1__read == 4'd0 && cache$mv_is_idle ;
-  assign MUX_cache$mav_request_pa_1__SEL_1 =
-	     WILL_FIRE_RL_rl_CPU_req_B &&
-	     crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d169 &&
-	     tlb$mv_vm_xlate[201:200] != 2'd1 &&
-	     tlb$mv_vm_xlate[201:200] != 2'd2 &&
-	     soc_map$m_is_mem_addr ;
   assign MUX_crg_exc$port0__write_1__SEL_1 =
-	     WILL_FIRE_RL_rl_CPU_cache_wait && !cache$mv_refill_ok ;
+	     WILL_FIRE_RL_rl_PTW_wait && f_ptw_rsps$D_OUT[131:130] != 2'd0 ;
   assign MUX_crg_exc$port0__write_1__SEL_2 =
-	     WILL_FIRE_RL_rl_PTW_wait &&
-	     ptw$dmem_server_response_get[131:130] != 2'd0 ;
-  assign MUX_crg_exc$port0__write_1__SEL_3 =
 	     WILL_FIRE_RL_rl_CPU_req_B &&
-	     NOT_crg_mmu_cache_req_port0__read__05_BITS_204_ETC___d193 ;
-  assign MUX_crg_exc_code$port0__write_1__SEL_3 =
+	     NOT_crg_mmu_cache_req_port0__read__05_BITS_204_ETC___d181 ;
+  assign MUX_crg_exc$port0__write_1__SEL_3 =
+	     WILL_FIRE_RL_rl_CPU_cache_wait && !cache$mv_refill_ok ;
+  assign MUX_crg_exc_code$port0__write_1__SEL_1 =
 	     WILL_FIRE_RL_rl_CPU_req_B &&
 	     (NOT_crg_mmu_cache_req_port0__read__05_BITS_204_ETC___d128 ||
 	      tlb$mv_vm_xlate[201:200] == 2'd2) ;
+  assign MUX_crg_exc_code$port0__write_1__SEL_3 =
+	     WILL_FIRE_RL_rl_PTW_wait && f_ptw_rsps$D_OUT[131:130] != 2'd0 &&
+	     f_ptw_rsps$D_OUT[131:130] != 2'd3 ;
   assign MUX_crg_final_st_val$port0__write_1__SEL_1 =
 	     WILL_FIRE_RL_rl_CPU_req_B &&
-	     crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d231 ;
-  assign MUX_crg_mmu_cache_req_state$port0__write_1__SEL_2 =
+	     crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d223 ;
+  assign MUX_crg_mmu_cache_req_state$port0__write_1__SEL_1 =
 	     WILL_FIRE_RL_rl_CPU_req_B &&
-	     NOT_crg_mmu_cache_req_port0__read__05_BITS_204_ETC___d188 ;
+	     MUX_crg_valid$port0__write_1__VAL_2 ;
   assign MUX_crg_mmu_cache_req_state$port0__write_1__SEL_4 =
 	     WILL_FIRE_RL_rl_CPU_req_mmio_WAIT ||
 	     WILL_FIRE_RL_rl_CPU_ST_wait ;
   assign MUX_crg_state$port0__write_1__SEL_1 =
 	     WILL_FIRE_RL_rl_CPU_req_B &&
-	     crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d169 &&
-	     tlb_mv_vm_xlate_crg_mmu_cache_req_port0__read__ETC___d202 ;
-  assign MUX_crg_state$port0__write_1__SEL_5 =
+	     crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d192 &&
+	     tlb_mv_vm_xlate_crg_mmu_cache_req_port0__read__ETC___d197 ;
+  assign MUX_crg_state$port0__write_1__SEL_2 =
 	     WILL_FIRE_RL_rl_cache_flush_finish || WILL_FIRE_RL_rl_PTW_wait ||
 	     WILL_FIRE_RL_rl_CPU_req_mmio_WAIT ||
 	     WILL_FIRE_RL_rl_CPU_cache_wait ||
 	     WILL_FIRE_RL_rl_CPU_ST_wait ;
-  assign MUX_crg_state$port0__write_1__SEL_8 =
-	     WILL_FIRE_RL_rl_pte_wb_cache_WAIT ||
-	     WILL_FIRE_RL_rl_pte_wb_req_A ;
-  assign MUX_crg_valid$port0__write_1__SEL_3 =
+  assign MUX_crg_valid$port0__write_1__SEL_2 =
 	     WILL_FIRE_RL_rl_CPU_req_B &&
 	     (NOT_crg_mmu_cache_req_port0__read__05_BITS_204_ETC___d128 ||
 	      tlb$mv_vm_xlate[201:200] == 2'd1 ||
-	      tlb_mv_vm_xlate_crg_mmu_cache_req_port0__read__ETC___d181) ;
-  assign MUX_ptw$mem_client_response_put_1__SEL_1 =
-	     WILL_FIRE_RL_rl_ptw_rd_B &&
-	     cache$mav_request_pa[129:128] == 2'd1 ;
+	      tlb_mv_vm_xlate_crg_mmu_cache_req_port0__read__ETC___d169) ;
   assign MUX_tlb$ma_insert_1__SEL_1 =
-	     WILL_FIRE_RL_rl_PTW_wait &&
-	     ptw$dmem_server_response_get[131:130] == 2'd0 ;
-  assign MUX_tlb$ma_insert_1__SEL_2 =
 	     WILL_FIRE_RL_rl_CPU_req_B &&
-	     crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d169 &&
+	     crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d192 &&
 	     tlb$mv_vm_xlate[201:200] != 2'd1 &&
 	     tlb$mv_vm_xlate[201:200] != 2'd2 &&
 	     tlb$mv_vm_xlate[130] ;
-  assign MUX_cache$mav_request_pa_1__VAL_2 =
-	     { 5'd3,
-	       rg_ptw_mem_req,
-	       139'h555555555555555500C0000000000000000 } ;
-  assign MUX_cache$mav_request_pa_1__VAL_3 =
-	     { 5'd11, f_pte_writebacks$D_OUT, 75'h00C0000000000000000 } ;
-  assign MUX_crg_exc$port0__write_1__VAL_3 =
+  assign MUX_crg_exc$port0__write_1__VAL_2 =
 	     NOT_crg_mmu_cache_req_port0__read__05_BITS_204_ETC___d128 ||
 	     tlb$mv_vm_xlate[201:200] == 2'd2 ;
-  assign MUX_crg_exc_code$port0__write_1__VAL_2 =
-	     (ptw$dmem_server_response_get[131:130] == 2'd1) ?
-	       x1__h5631 :
-	       x1__h6535 ;
-  assign MUX_crg_exc_code$port0__write_1__VAL_3 =
+  assign MUX_crg_exc_code$port0__write_1__VAL_1 =
 	     NOT_crg_mmu_cache_req_port0__read__05_BITS_204_ETC___d128 ?
-	       x1__h3758 :
+	       x1__h3589 :
 	       tlb$mv_vm_xlate[135:131] ;
+  assign MUX_crg_exc_code$port0__write_1__VAL_2 =
+	     (crg_mmu_cache_req[207:206] == 2'd0 ||
+	      crg_mmu_cache_req[207:206] == 2'd2 &&
+	      crg_mmu_cache_req[74:70] == 5'b00010) ?
+	       5'd5 :
+	       5'd7 ;
+  assign MUX_crg_exc_code$port0__write_1__VAL_3 =
+	     (f_ptw_rsps$D_OUT[131:130] == 2'd1) ? x1__h4792 : x1__h5749 ;
   assign MUX_crg_mmu_cache_req_state$port0__write_1__VAL_3 =
-	     (ptw$dmem_server_response_get[131:130] == 2'd0) ? 2'd1 : 2'd0 ;
+	     (f_ptw_rsps$D_OUT[131:130] == 2'd0) ? 2'd1 : 2'd0 ;
   assign MUX_crg_state$port0__write_1__VAL_1 =
 	     (tlb$mv_vm_xlate[201:200] == 2'd1) ?
 	       4'd5 :
 	       (soc_map$m_is_mem_addr ?
 		  ((cache$mav_request_pa[129:128] == 2'd0) ? 4'd2 : 4'd1) :
 		  4'd3) ;
-  assign MUX_crg_state$port0__write_1__VAL_2 =
-	     (cache$mav_request_pa[129:128] == 2'd1) ?
-	       rg_state_stack_during_ptw_rd :
-	       4'd7 ;
-  assign MUX_crg_state$port0__write_1__VAL_3 =
-	     cache$mv_refill_ok ? 4'd6 : 4'd0 ;
-  assign MUX_crg_state$port0__write_1__VAL_4 =
-	     (cache$mav_request_pa[129:128] == 2'd2) ? 4'd0 : 4'd9 ;
-  assign MUX_ptw$mem_client_response_put_1__VAL_1 =
-	     { 1'd1, cache$mav_request_pa[127:64] } ;
+  assign MUX_crg_valid$port0__write_1__VAL_2 =
+	     NOT_crg_mmu_cache_req_port0__read__05_BITS_204_ETC___d128 ||
+	     tlb$mv_vm_xlate[201:200] != 2'd1 &&
+	     (tlb$mv_vm_xlate[201:200] == 2'd2 ||
+	      soc_map$m_is_mem_addr &&
+	      cache$mav_request_pa[129:128] == 2'd1) ;
 
   // inlined wires
   assign crg_state$EN_port0__write =
 	     WILL_FIRE_RL_rl_CPU_req_B &&
-	     crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d169 &&
-	     tlb_mv_vm_xlate_crg_mmu_cache_req_port0__read__ETC___d202 ||
-	     WILL_FIRE_RL_rl_ptw_rd_B ||
-	     WILL_FIRE_RL_rl_ptw_rd_wait ||
-	     WILL_FIRE_RL_rl_pte_wb_req_B ||
+	     crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d192 &&
+	     tlb_mv_vm_xlate_crg_mmu_cache_req_port0__read__ETC___d197 ||
 	     WILL_FIRE_RL_rl_cache_flush_finish ||
 	     WILL_FIRE_RL_rl_PTW_wait ||
 	     WILL_FIRE_RL_rl_CPU_req_mmio_WAIT ||
 	     WILL_FIRE_RL_rl_CPU_cache_wait ||
 	     WILL_FIRE_RL_rl_CPU_ST_wait ||
-	     WILL_FIRE_RL_rl_cache_flush_start ||
-	     WILL_FIRE_RL_rl_ptw_rd_A ||
-	     WILL_FIRE_RL_rl_pte_wb_cache_WAIT ||
-	     WILL_FIRE_RL_rl_pte_wb_req_A ;
+	     WILL_FIRE_RL_rl_cache_flush_start ;
   always@(MUX_crg_state$port0__write_1__SEL_1 or
 	  MUX_crg_state$port0__write_1__VAL_1 or
-	  WILL_FIRE_RL_rl_ptw_rd_B or
-	  MUX_crg_state$port0__write_1__VAL_2 or
-	  WILL_FIRE_RL_rl_ptw_rd_wait or
-	  MUX_crg_state$port0__write_1__VAL_3 or
-	  WILL_FIRE_RL_rl_pte_wb_req_B or
-	  MUX_crg_state$port0__write_1__VAL_4 or
-	  MUX_crg_state$port0__write_1__SEL_5 or
-	  WILL_FIRE_RL_rl_cache_flush_start or
-	  WILL_FIRE_RL_rl_ptw_rd_A or MUX_crg_state$port0__write_1__SEL_8)
+	  MUX_crg_state$port0__write_1__SEL_2 or
+	  WILL_FIRE_RL_rl_cache_flush_start)
   begin
     case (1'b1) // synopsys parallel_case
       MUX_crg_state$port0__write_1__SEL_1:
 	  crg_state$port0__write_1 = MUX_crg_state$port0__write_1__VAL_1;
-      WILL_FIRE_RL_rl_ptw_rd_B:
-	  crg_state$port0__write_1 = MUX_crg_state$port0__write_1__VAL_2;
-      WILL_FIRE_RL_rl_ptw_rd_wait:
-	  crg_state$port0__write_1 = MUX_crg_state$port0__write_1__VAL_3;
-      WILL_FIRE_RL_rl_pte_wb_req_B:
-	  crg_state$port0__write_1 = MUX_crg_state$port0__write_1__VAL_4;
-      MUX_crg_state$port0__write_1__SEL_5: crg_state$port0__write_1 = 4'd0;
+      MUX_crg_state$port0__write_1__SEL_2: crg_state$port0__write_1 = 4'd0;
       WILL_FIRE_RL_rl_cache_flush_start: crg_state$port0__write_1 = 4'd4;
-      WILL_FIRE_RL_rl_ptw_rd_A: crg_state$port0__write_1 = 4'd6;
-      MUX_crg_state$port0__write_1__SEL_8: crg_state$port0__write_1 = 4'd8;
       default: crg_state$port0__write_1 = 4'b1010 /* unspecified value */ ;
     endcase
   end
@@ -1418,17 +1036,17 @@ module mkD_MMU_Cache(CLK,
 	       crg_state$port0__write_1 :
 	       crg_state ;
   assign crg_mmu_cache_req_state$EN_port0__write =
-	     WILL_FIRE_RL_rl_CPU_cache_wait && !cache$mv_refill_ok ||
 	     WILL_FIRE_RL_rl_CPU_req_B &&
-	     NOT_crg_mmu_cache_req_port0__read__05_BITS_204_ETC___d188 ||
+	     MUX_crg_valid$port0__write_1__VAL_2 ||
+	     WILL_FIRE_RL_rl_CPU_cache_wait && !cache$mv_refill_ok ||
 	     WILL_FIRE_RL_rl_PTW_wait ||
 	     WILL_FIRE_RL_rl_CPU_req_mmio_WAIT ||
 	     WILL_FIRE_RL_rl_CPU_ST_wait ||
 	     WILL_FIRE_RL_rl_CPU_req_A ;
   always@(WILL_FIRE_RL_rl_PTW_wait or
 	  MUX_crg_mmu_cache_req_state$port0__write_1__VAL_3 or
-	  MUX_crg_exc$port0__write_1__SEL_1 or
-	  MUX_crg_mmu_cache_req_state$port0__write_1__SEL_2 or
+	  MUX_crg_mmu_cache_req_state$port0__write_1__SEL_1 or
+	  MUX_crg_exc$port0__write_1__SEL_3 or
 	  MUX_crg_mmu_cache_req_state$port0__write_1__SEL_4 or
 	  WILL_FIRE_RL_rl_CPU_req_A)
   begin
@@ -1436,8 +1054,8 @@ module mkD_MMU_Cache(CLK,
       WILL_FIRE_RL_rl_PTW_wait:
 	  crg_mmu_cache_req_state$port0__write_1 =
 	      MUX_crg_mmu_cache_req_state$port0__write_1__VAL_3;
-      MUX_crg_exc$port0__write_1__SEL_1 ||
-      MUX_crg_mmu_cache_req_state$port0__write_1__SEL_2 ||
+      MUX_crg_mmu_cache_req_state$port0__write_1__SEL_1 ||
+      MUX_crg_exc$port0__write_1__SEL_3 ||
       MUX_crg_mmu_cache_req_state$port0__write_1__SEL_4:
 	  crg_mmu_cache_req_state$port0__write_1 = 2'd0;
       WILL_FIRE_RL_rl_CPU_req_A:
@@ -1473,76 +1091,77 @@ module mkD_MMU_Cache(CLK,
 	       crg_mmu_cache_req$port1__write_1 :
 	       crg_mmu_cache_req ;
   assign crg_valid$EN_port0__write =
-	     WILL_FIRE_RL_rl_CPU_cache_wait && !cache$mv_refill_ok ||
-	     WILL_FIRE_RL_rl_PTW_wait &&
-	     ptw$dmem_server_response_get[131:130] != 2'd0 ||
+	     WILL_FIRE_RL_rl_PTW_wait && f_ptw_rsps$D_OUT[131:130] != 2'd0 ||
 	     WILL_FIRE_RL_rl_CPU_req_B &&
 	     (NOT_crg_mmu_cache_req_port0__read__05_BITS_204_ETC___d128 ||
 	      tlb$mv_vm_xlate[201:200] == 2'd1 ||
-	      tlb_mv_vm_xlate_crg_mmu_cache_req_port0__read__ETC___d181) ||
+	      tlb_mv_vm_xlate_crg_mmu_cache_req_port0__read__ETC___d169) ||
+	     WILL_FIRE_RL_rl_CPU_cache_wait && !cache$mv_refill_ok ||
 	     WILL_FIRE_RL_rl_CPU_req_mmio_WAIT ||
 	     WILL_FIRE_RL_rl_CPU_ST_wait ;
   assign crg_valid$port0__write_1 =
-	     !MUX_crg_valid$port0__write_1__SEL_3 ||
-	     NOT_crg_mmu_cache_req_port0__read__05_BITS_204_ETC___d188 ;
+	     !MUX_crg_valid$port0__write_1__SEL_2 ||
+	     MUX_crg_valid$port0__write_1__VAL_2 ;
   assign crg_valid$port1__read =
 	     crg_valid$EN_port0__write ?
 	       crg_valid$port0__write_1 :
 	       crg_valid ;
   assign crg_valid$port2__read = !EN_ma_req && crg_valid$port1__read ;
   assign crg_exc$EN_port0__write =
-	     WILL_FIRE_RL_rl_CPU_cache_wait && !cache$mv_refill_ok ||
-	     WILL_FIRE_RL_rl_PTW_wait &&
-	     ptw$dmem_server_response_get[131:130] != 2'd0 ||
+	     WILL_FIRE_RL_rl_PTW_wait && f_ptw_rsps$D_OUT[131:130] != 2'd0 ||
 	     WILL_FIRE_RL_rl_CPU_req_B &&
-	     NOT_crg_mmu_cache_req_port0__read__05_BITS_204_ETC___d193 ||
+	     NOT_crg_mmu_cache_req_port0__read__05_BITS_204_ETC___d181 ||
+	     WILL_FIRE_RL_rl_CPU_cache_wait && !cache$mv_refill_ok ||
 	     WILL_FIRE_RL_rl_CPU_req_mmio_WAIT ;
-  always@(WILL_FIRE_RL_rl_CPU_req_mmio_WAIT or
-	  mmio$result_fst or
+  always@(MUX_crg_exc$port0__write_1__SEL_1 or
+	  f_ptw_rsps$D_OUT or
+	  MUX_crg_exc$port0__write_1__SEL_2 or
+	  MUX_crg_exc$port0__write_1__VAL_2 or
 	  MUX_crg_exc$port0__write_1__SEL_3 or
-	  MUX_crg_exc$port0__write_1__VAL_3 or
-	  MUX_crg_exc$port0__write_1__SEL_1 or
-	  MUX_crg_exc$port0__write_1__SEL_2)
+	  WILL_FIRE_RL_rl_CPU_req_mmio_WAIT or mmio$result_fst)
   begin
     case (1'b1) // synopsys parallel_case
+      MUX_crg_exc$port0__write_1__SEL_1:
+	  crg_exc$port0__write_1 = f_ptw_rsps$D_OUT[131:130] != 2'd3;
+      MUX_crg_exc$port0__write_1__SEL_2:
+	  crg_exc$port0__write_1 = MUX_crg_exc$port0__write_1__VAL_2;
+      MUX_crg_exc$port0__write_1__SEL_3: crg_exc$port0__write_1 = 1'd1;
       WILL_FIRE_RL_rl_CPU_req_mmio_WAIT:
 	  crg_exc$port0__write_1 = mmio$result_fst;
-      MUX_crg_exc$port0__write_1__SEL_3:
-	  crg_exc$port0__write_1 = MUX_crg_exc$port0__write_1__VAL_3;
-      MUX_crg_exc$port0__write_1__SEL_1 || MUX_crg_exc$port0__write_1__SEL_2:
-	  crg_exc$port0__write_1 = 1'd1;
       default: crg_exc$port0__write_1 = 1'b0 /* unspecified value */ ;
     endcase
   end
   assign crg_exc$port1__read =
 	     crg_exc$EN_port0__write ? crg_exc$port0__write_1 : crg_exc ;
   assign crg_exc_code$EN_port0__write =
-	     WILL_FIRE_RL_rl_CPU_cache_wait && !cache$mv_refill_ok ||
-	     WILL_FIRE_RL_rl_PTW_wait &&
-	     ptw$dmem_server_response_get[131:130] != 2'd0 ||
 	     WILL_FIRE_RL_rl_CPU_req_B &&
 	     (NOT_crg_mmu_cache_req_port0__read__05_BITS_204_ETC___d128 ||
 	      tlb$mv_vm_xlate[201:200] == 2'd2) ||
+	     WILL_FIRE_RL_rl_CPU_cache_wait && !cache$mv_refill_ok ||
+	     WILL_FIRE_RL_rl_PTW_wait && f_ptw_rsps$D_OUT[131:130] != 2'd0 &&
+	     f_ptw_rsps$D_OUT[131:130] != 2'd3 ||
 	     WILL_FIRE_RL_rl_CPU_req_mmio_WAIT ;
-  always@(MUX_crg_exc$port0__write_1__SEL_1 or
-	  x1__h5631 or
-	  MUX_crg_exc$port0__write_1__SEL_2 or
+  always@(MUX_crg_exc_code$port0__write_1__SEL_1 or
+	  MUX_crg_exc_code$port0__write_1__VAL_1 or
+	  MUX_crg_exc$port0__write_1__SEL_3 or
 	  MUX_crg_exc_code$port0__write_1__VAL_2 or
 	  MUX_crg_exc_code$port0__write_1__SEL_3 or
 	  MUX_crg_exc_code$port0__write_1__VAL_3 or
 	  WILL_FIRE_RL_rl_CPU_req_mmio_WAIT)
   begin
     case (1'b1) // synopsys parallel_case
-      MUX_crg_exc$port0__write_1__SEL_1:
-	  crg_exc_code$port0__write_1 = x1__h5631;
-      MUX_crg_exc$port0__write_1__SEL_2:
+      MUX_crg_exc_code$port0__write_1__SEL_1:
+	  crg_exc_code$port0__write_1 =
+	      MUX_crg_exc_code$port0__write_1__VAL_1;
+      MUX_crg_exc$port0__write_1__SEL_3:
 	  crg_exc_code$port0__write_1 =
 	      MUX_crg_exc_code$port0__write_1__VAL_2;
       MUX_crg_exc_code$port0__write_1__SEL_3:
 	  crg_exc_code$port0__write_1 =
 	      MUX_crg_exc_code$port0__write_1__VAL_3;
       WILL_FIRE_RL_rl_CPU_req_mmio_WAIT:
-	  crg_exc_code$port0__write_1 = x1__h5631;
+	  crg_exc_code$port0__write_1 =
+	      MUX_crg_exc_code$port0__write_1__VAL_2;
       default: crg_exc_code$port0__write_1 =
 		   5'b01010 /* unspecified value */ ;
     endcase
@@ -1553,7 +1172,7 @@ module mkD_MMU_Cache(CLK,
 	       crg_exc_code ;
   assign crg_ld_val$EN_port0__write =
 	     WILL_FIRE_RL_rl_CPU_req_B &&
-	     crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d231 ||
+	     crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d223 ||
 	     WILL_FIRE_RL_rl_CPU_req_mmio_WAIT ;
   assign crg_ld_val$port0__write_1 =
 	     MUX_crg_final_st_val$port0__write_1__SEL_1 ?
@@ -1565,7 +1184,7 @@ module mkD_MMU_Cache(CLK,
 	       crg_ld_val ;
   assign crg_final_st_val$EN_port0__write =
 	     WILL_FIRE_RL_rl_CPU_req_B &&
-	     crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d231 ||
+	     crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d223 ||
 	     WILL_FIRE_RL_rl_CPU_req_mmio_WAIT ;
   assign crg_final_st_val$port0__write_1 =
 	     MUX_crg_final_st_val$port0__write_1__SEL_1 ?
@@ -1608,121 +1227,26 @@ module mkD_MMU_Cache(CLK,
   assign crg_valid$D_IN = crg_valid$port2__read ;
   assign crg_valid$EN = 1'b1 ;
 
-  // register dequeue_dtmem_ptw
-  assign dequeue_dtmem_ptw$D_IN = !WILL_FIRE_RL_rl_ptw_deq_dt ;
-  assign dequeue_dtmem_ptw$EN =
-	     WILL_FIRE_RL_rl_CPU_req_B &&
-	     NOT_crg_mmu_cache_req_port0__read__05_BITS_204_ETC___d172 ||
-	     WILL_FIRE_RL_rl_CPU_cache_wait && !cache$mv_refill_ok &&
-	     ptw$dt_ptw_count ||
-	     WILL_FIRE_RL_rl_PTW_wait &&
-	     ptw$dmem_server_response_get[131:130] != 2'd0 &&
-	     ptw$dt_ptw_count ||
-	     WILL_FIRE_RL_rl_ptw_deq_dt ;
-
-  // register rg_pass_fail_msg_printed
-  assign rg_pass_fail_msg_printed$D_IN = 1'd1 ;
-  assign rg_pass_fail_msg_printed$EN =
-	     WILL_FIRE_RL_rl_CPU_req_B &&
-	     crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d253 ;
-
-  // register rg_ptw_mem_req
-  assign rg_ptw_mem_req$D_IN = ptw$mem_client_request_get ;
-  assign rg_ptw_mem_req$EN = WILL_FIRE_RL_rl_ptw_rd_A ;
-
-  // register rg_state_stack_during_ptw_rd
-  assign rg_state_stack_during_ptw_rd$D_IN = crg_state ;
-  assign rg_state_stack_during_ptw_rd$EN = WILL_FIRE_RL_rl_ptw_rd_A ;
-
-  // register rg_tohost_addr
-  assign rg_tohost_addr$D_IN = set_watch_tohost_tohost_addr ;
-  assign rg_tohost_addr$EN = EN_set_watch_tohost ;
-
-  // register rg_tohost_value
-  assign rg_tohost_value$D_IN = crg_mmu_cache_req[138:75] ;
-  assign rg_tohost_value$EN =
-	     WILL_FIRE_RL_rl_CPU_req_B &&
-	     crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d169 &&
-	     tlb$mv_vm_xlate[201:200] != 2'd1 &&
-	     tlb$mv_vm_xlate[201:200] != 2'd2 &&
-	     rg_watch_tohost_37_AND_tlb_mv_vm_xlate_crg_mmu_ETC___d244 ;
-
-  // register rg_watch_tohost
-  assign rg_watch_tohost$D_IN = set_watch_tohost_watch_tohost ;
-  assign rg_watch_tohost$EN = EN_set_watch_tohost ;
-
   // submodule cache
   assign cache$flush_server_request_put = f_cache_flush_reqs$D_OUT ;
   assign cache$l1_to_l2_client_response_enq_x =
 	     l1_to_l2_client_response_enq_x ;
   assign cache$l2_to_l1_server_request_enq_x = l2_to_l1_server_request_enq_x ;
-  always@(MUX_cache$ma_request_va_1__SEL_1 or
-	  crg_mmu_cache_req$port1__write_1 or
-	  WILL_FIRE_RL_rl_CPU_req_A or
-	  crg_mmu_cache_req or
-	  WILL_FIRE_RL_rl_pte_wb_req_A or
-	  f_pte_writebacks$D_OUT or
-	  WILL_FIRE_RL_rl_ptw_rd_A or ptw$mem_client_request_get)
-  begin
-    case (1'b1) // synopsys parallel_case
-      MUX_cache$ma_request_va_1__SEL_1:
-	  cache$ma_request_va_va = crg_mmu_cache_req$port1__write_1[202:139];
-      WILL_FIRE_RL_rl_CPU_req_A:
-	  cache$ma_request_va_va = crg_mmu_cache_req[202:139];
-      WILL_FIRE_RL_rl_pte_wb_req_A:
-	  cache$ma_request_va_va = f_pte_writebacks$D_OUT[127:64];
-      WILL_FIRE_RL_rl_ptw_rd_A:
-	  cache$ma_request_va_va = ptw$mem_client_request_get;
-      default: cache$ma_request_va_va =
-		   64'hAAAAAAAAAAAAAAAA /* unspecified value */ ;
-    endcase
-  end
-  always@(MUX_cache$mav_request_pa_1__SEL_1 or
-	  tlb$mv_vm_xlate or
-	  WILL_FIRE_RL_rl_ptw_rd_B or
-	  rg_ptw_mem_req or
-	  WILL_FIRE_RL_rl_pte_wb_req_B or f_pte_writebacks$D_OUT)
-  begin
-    case (1'b1) // synopsys parallel_case
-      MUX_cache$mav_request_pa_1__SEL_1:
-	  cache$mav_request_pa_pa = tlb$mv_vm_xlate[199:136];
-      WILL_FIRE_RL_rl_ptw_rd_B: cache$mav_request_pa_pa = rg_ptw_mem_req;
-      WILL_FIRE_RL_rl_pte_wb_req_B:
-	  cache$mav_request_pa_pa = f_pte_writebacks$D_OUT[127:64];
-      default: cache$mav_request_pa_pa =
-		   64'hAAAAAAAAAAAAAAAA /* unspecified value */ ;
-    endcase
-  end
-  always@(MUX_cache$mav_request_pa_1__SEL_1 or
-	  crg_mmu_cache_req or
-	  WILL_FIRE_RL_rl_ptw_rd_B or
-	  MUX_cache$mav_request_pa_1__VAL_2 or
-	  WILL_FIRE_RL_rl_pte_wb_req_B or MUX_cache$mav_request_pa_1__VAL_3)
-  begin
-    case (1'b1) // synopsys parallel_case
-      MUX_cache$mav_request_pa_1__SEL_1:
-	  cache$mav_request_pa_req = crg_mmu_cache_req;
-      WILL_FIRE_RL_rl_ptw_rd_B:
-	  cache$mav_request_pa_req = MUX_cache$mav_request_pa_1__VAL_2;
-      WILL_FIRE_RL_rl_pte_wb_req_B:
-	  cache$mav_request_pa_req = MUX_cache$mav_request_pa_1__VAL_3;
-      default: cache$mav_request_pa_req =
-		   208'hAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA /* unspecified value */ ;
-    endcase
-  end
+  assign cache$ma_request_va_va =
+	     MUX_cache$ma_request_va_1__SEL_1 ?
+	       crg_mmu_cache_req$port1__write_1[202:139] :
+	       crg_mmu_cache_req[202:139] ;
+  assign cache$mav_request_pa_pa = tlb$mv_vm_xlate[199:136] ;
+  assign cache$mav_request_pa_req = crg_mmu_cache_req ;
   assign cache$EN_ma_request_va =
 	     EN_ma_req && crg_state$port1__read == 4'd0 && cache$mv_is_idle ||
-	     WILL_FIRE_RL_rl_CPU_req_A ||
-	     WILL_FIRE_RL_rl_pte_wb_req_A ||
-	     WILL_FIRE_RL_rl_ptw_rd_A ;
+	     WILL_FIRE_RL_rl_CPU_req_A ;
   assign cache$EN_mav_request_pa =
 	     WILL_FIRE_RL_rl_CPU_req_B &&
-	     crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d169 &&
+	     crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d192 &&
 	     tlb$mv_vm_xlate[201:200] != 2'd1 &&
 	     tlb$mv_vm_xlate[201:200] != 2'd2 &&
-	     soc_map$m_is_mem_addr ||
-	     WILL_FIRE_RL_rl_ptw_rd_B ||
-	     WILL_FIRE_RL_rl_pte_wb_req_B ;
+	     soc_map$m_is_mem_addr ;
   assign cache$EN_flush_server_request_put =
 	     CAN_FIRE_RL_rl_cache_flush_start ;
   assign cache$EN_flush_server_response_get =
@@ -1747,51 +1271,28 @@ module mkD_MMU_Cache(CLK,
   assign f_cache_flush_rsps$DEQ = EN_flush_server_response_get ;
   assign f_cache_flush_rsps$CLR = 1'b0 ;
 
-  // submodule f_dmem_pte_writebacks
-  assign f_dmem_pte_writebacks$D_IN =
-	     { tlb$mv_vm_xlate[63:0], tlb$mv_vm_xlate[129:66] } ;
-  assign f_dmem_pte_writebacks$ENQ = MUX_tlb$ma_insert_1__SEL_2 ;
-  assign f_dmem_pte_writebacks$DEQ = WILL_FIRE_RL_mkConnectionGetPut_2 ;
-  assign f_dmem_pte_writebacks$CLR = 1'b0 ;
-
   // submodule f_dtmem_pte_writebacks
-  assign f_dtmem_pte_writebacks$D_IN = dtmem_pte_writeback_p_put ;
-  assign f_dtmem_pte_writebacks$ENQ = EN_dtmem_pte_writeback_p_put ;
-  assign f_dtmem_pte_writebacks$DEQ = WILL_FIRE_RL_mkConnectionGetPut_1 ;
+  assign f_dtmem_pte_writebacks$D_IN =
+	     { tlb$mv_vm_xlate[63:0], tlb$mv_vm_xlate[129:66] } ;
+  assign f_dtmem_pte_writebacks$ENQ = MUX_tlb$ma_insert_1__SEL_1 ;
+  assign f_dtmem_pte_writebacks$DEQ = EN_pte_writeback_g_get ;
   assign f_dtmem_pte_writebacks$CLR = 1'b0 ;
 
-  // submodule f_imem_pte_writebacks
-  assign f_imem_pte_writebacks$D_IN = imem_pte_writeback_p_put ;
-  assign f_imem_pte_writebacks$ENQ = EN_imem_pte_writeback_p_put ;
-  assign f_imem_pte_writebacks$DEQ = CAN_FIRE_RL_mkConnectionGetPut ;
-  assign f_imem_pte_writebacks$CLR = 1'b0 ;
+  // submodule f_ptw_reqs
+  assign f_ptw_reqs$D_IN =
+	     { crg_mmu_cache_req[202:139], crg_mmu_cache_req[63:0] } ;
+  assign f_ptw_reqs$ENQ =
+	     WILL_FIRE_RL_rl_CPU_req_B &&
+	     crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d192 &&
+	     tlb$mv_vm_xlate[201:200] == 2'd1 ;
+  assign f_ptw_reqs$DEQ = EN_ptw_client_request_get ;
+  assign f_ptw_reqs$CLR = 1'b0 ;
 
-  // submodule f_pte_writebacks
-  always@(WILL_FIRE_RL_mkConnectionGetPut or
-	  f_imem_pte_writebacks$D_OUT or
-	  WILL_FIRE_RL_mkConnectionGetPut_1 or
-	  f_dtmem_pte_writebacks$D_OUT or
-	  WILL_FIRE_RL_mkConnectionGetPut_2 or f_dmem_pte_writebacks$D_OUT)
-  begin
-    case (1'b1) // synopsys parallel_case
-      WILL_FIRE_RL_mkConnectionGetPut:
-	  f_pte_writebacks$D_IN = f_imem_pte_writebacks$D_OUT;
-      WILL_FIRE_RL_mkConnectionGetPut_1:
-	  f_pte_writebacks$D_IN = f_dtmem_pte_writebacks$D_OUT;
-      WILL_FIRE_RL_mkConnectionGetPut_2:
-	  f_pte_writebacks$D_IN = f_dmem_pte_writebacks$D_OUT;
-      default: f_pte_writebacks$D_IN =
-		   128'hAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA /* unspecified value */ ;
-    endcase
-  end
-  assign f_pte_writebacks$ENQ =
-	     WILL_FIRE_RL_mkConnectionGetPut ||
-	     WILL_FIRE_RL_mkConnectionGetPut_1 ||
-	     WILL_FIRE_RL_mkConnectionGetPut_2 ;
-  assign f_pte_writebacks$DEQ =
-	     WILL_FIRE_RL_rl_pte_wb_req_B &&
-	     cache$mav_request_pa[129:128] == 2'd2 ;
-  assign f_pte_writebacks$CLR = 1'b0 ;
+  // submodule f_ptw_rsps
+  assign f_ptw_rsps$D_IN = ptw_client_response_put ;
+  assign f_ptw_rsps$ENQ = EN_ptw_client_response_put ;
+  assign f_ptw_rsps$DEQ = CAN_FIRE_RL_rl_PTW_wait ;
+  assign f_ptw_rsps$CLR = 1'b0 ;
 
   // submodule mmio
   assign mmio$mmio_client_response_put = mmio_client_response_put ;
@@ -1800,51 +1301,12 @@ module mkD_MMU_Cache(CLK,
   assign mmio$EN_req = EN_ma_req ;
   assign mmio$EN_start =
 	     WILL_FIRE_RL_rl_CPU_req_B &&
-	     crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d169 &&
+	     crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d192 &&
 	     tlb$mv_vm_xlate[201:200] != 2'd1 &&
 	     tlb$mv_vm_xlate[201:200] != 2'd2 &&
 	     !soc_map$m_is_mem_addr ;
   assign mmio$EN_mmio_client_request_get = EN_mmio_client_request_get ;
   assign mmio$EN_mmio_client_response_put = EN_mmio_client_response_put ;
-
-  // submodule ptw
-  assign ptw$dmem_server_request_put =
-	     { crg_mmu_cache_req[202:139], crg_mmu_cache_req[63:0] } ;
-  assign ptw$dtmem_server_request_put = dtmem_ptw_server_request_put ;
-  assign ptw$imem_server_request_put = imem_ptw_server_request_put ;
-  assign ptw$mem_client_response_put =
-	     MUX_ptw$mem_client_response_put_1__SEL_1 ?
-	       MUX_ptw$mem_client_response_put_1__VAL_1 :
-	       65'h0AAAAAAAAAAAAAAAA ;
-  assign ptw$EN_imem_server_request_put = EN_imem_ptw_server_request_put ;
-  assign ptw$EN_imem_server_response_get = EN_imem_ptw_server_response_get ;
-  assign ptw$EN_dtmem_server_request_put = EN_dtmem_ptw_server_request_put ;
-  assign ptw$EN_dtmem_server_response_get = EN_dtmem_ptw_server_response_get ;
-  assign ptw$EN_dmem_server_request_put =
-	     WILL_FIRE_RL_rl_CPU_req_B &&
-	     crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d169 &&
-	     tlb$mv_vm_xlate[201:200] == 2'd1 ;
-  assign ptw$EN_dmem_server_response_get = CAN_FIRE_RL_rl_PTW_wait ;
-  assign ptw$EN_mem_client_request_get = WILL_FIRE_RL_rl_ptw_rd_A ;
-  assign ptw$EN_mem_client_response_put =
-	     WILL_FIRE_RL_rl_ptw_rd_B &&
-	     cache$mav_request_pa[129:128] == 2'd1 ||
-	     WILL_FIRE_RL_rl_ptw_rd_wait && !cache$mv_refill_ok ;
-  assign ptw$EN_dt_ptw_rsp_enq = WILL_FIRE_RL_rl_ptw_deq_dt ;
-  assign ptw$EN_dt_ptw_flush =
-	     WILL_FIRE_RL_rl_CPU_req_B &&
-	     NOT_crg_mmu_cache_req_port0__read__05_BITS_204_ETC___d172 ||
-	     WILL_FIRE_RL_rl_CPU_cache_wait && !cache$mv_refill_ok &&
-	     ptw$dt_ptw_count ||
-	     WILL_FIRE_RL_rl_PTW_wait &&
-	     ptw$dmem_server_response_get[131:130] != 2'd0 &&
-	     ptw$dt_ptw_count ;
-  assign ptw$EN_dt_ptw_walk =
-	     WILL_FIRE_RL_rl_CPU_req_B &&
-	     crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d169 &&
-	     tlb$mv_vm_xlate[201:200] != 2'd1 &&
-	     tlb$mv_vm_xlate[201:200] != 2'd2 &&
-	     ptw$dt_ptw_count ;
 
   // submodule soc_map
   assign soc_map$m_is_IO_addr_addr = 64'h0 ;
@@ -1855,16 +1317,16 @@ module mkD_MMU_Cache(CLK,
   assign tlb$ma_insert_asid = crg_mmu_cache_req[59:44] ;
   assign tlb$ma_insert_level =
 	     MUX_tlb$ma_insert_1__SEL_1 ?
-	       ptw$dmem_server_response_get[65:64] :
-	       tlb$mv_vm_xlate[65:64] ;
+	       tlb$mv_vm_xlate[65:64] :
+	       f_ptw_rsps$D_OUT[65:64] ;
   assign tlb$ma_insert_pte =
 	     MUX_tlb$ma_insert_1__SEL_1 ?
-	       ptw$dmem_server_response_get[129:66] :
-	       tlb$mv_vm_xlate[129:66] ;
+	       tlb$mv_vm_xlate[129:66] :
+	       f_ptw_rsps$D_OUT[129:66] ;
   assign tlb$ma_insert_pte_pa =
 	     MUX_tlb$ma_insert_1__SEL_1 ?
-	       ptw$dmem_server_response_get[63:0] :
-	       tlb$mv_vm_xlate[63:0] ;
+	       tlb$mv_vm_xlate[63:0] :
+	       f_ptw_rsps$D_OUT[63:0] ;
   assign tlb$ma_insert_vpn = crg_mmu_cache_req[177:151] ;
   assign tlb$mv_vm_xlate_mstatus_MXR = crg_mmu_cache_req[64] ;
   assign tlb$mv_vm_xlate_priv = crg_mmu_cache_req[67:66] ;
@@ -1876,13 +1338,12 @@ module mkD_MMU_Cache(CLK,
   assign tlb$mv_vm_xlate_sstatus_SUM = crg_mmu_cache_req[65] ;
   assign tlb$mv_vm_xlate_va = crg_mmu_cache_req[202:139] ;
   assign tlb$EN_ma_insert =
-	     WILL_FIRE_RL_rl_PTW_wait &&
-	     ptw$dmem_server_response_get[131:130] == 2'd0 ||
 	     WILL_FIRE_RL_rl_CPU_req_B &&
-	     crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d169 &&
+	     crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d192 &&
 	     tlb$mv_vm_xlate[201:200] != 2'd1 &&
 	     tlb$mv_vm_xlate[201:200] != 2'd2 &&
-	     tlb$mv_vm_xlate[130] ;
+	     tlb$mv_vm_xlate[130] ||
+	     WILL_FIRE_RL_rl_PTW_wait && f_ptw_rsps$D_OUT[131:130] == 2'd0 ;
   assign tlb$EN_ma_flush = EN_tlb_flush ;
 
   // remaining internal signals
@@ -1897,83 +1358,51 @@ module mkD_MMU_Cache(CLK,
   assign NOT_crg_mmu_cache_req_port0__read__05_BITS_204_ETC___d157 =
 	     NOT_crg_mmu_cache_req_port0__read__05_BITS_204_ETC___d128 ||
 	     ((tlb$mv_vm_xlate[201:200] == 2'd1) ?
-		ptw$RDY_dmem_server_request_put :
+		f_ptw_reqs$FULL_N :
 		tlb_mv_vm_xlate_crg_mmu_cache_req_port0__read__ETC___d155) ;
-  assign NOT_crg_mmu_cache_req_port0__read__05_BITS_204_ETC___d172 =
-	     NOT_crg_mmu_cache_req_port0__read__05_BITS_204_ETC___d128 &&
-	     ptw$dt_ptw_count ||
-	     crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d169 &&
-	     tlb$mv_vm_xlate[201:200] == 2'd2 &&
-	     ptw$dt_ptw_count ;
-  assign NOT_crg_mmu_cache_req_port0__read__05_BITS_204_ETC___d188 =
-	     NOT_crg_mmu_cache_req_port0__read__05_BITS_204_ETC___d128 ||
-	     tlb$mv_vm_xlate[201:200] != 2'd1 &&
-	     (tlb$mv_vm_xlate[201:200] == 2'd2 ||
-	      soc_map$m_is_mem_addr &&
-	      cache$mav_request_pa[129:128] == 2'd1) ;
-  assign NOT_crg_mmu_cache_req_port0__read__05_BITS_204_ETC___d193 =
+  assign NOT_crg_mmu_cache_req_port0__read__05_BITS_204_ETC___d181 =
 	     NOT_crg_mmu_cache_req_port0__read__05_BITS_204_ETC___d128 ||
 	     tlb$mv_vm_xlate[201:200] != 2'd1 &&
 	     (tlb$mv_vm_xlate[201:200] == 2'd2 ||
 	      soc_map$m_is_mem_addr &&
 	      cache$mav_request_pa[129:128] != 2'd0) ;
-  assign cache_mv_is_idle__4_AND_crg_state_port0__read__ETC___d321 =
-	     cache$mv_is_idle &&
-	     (crg_state == 4'd5 ||
-	      crg_state == 4'd0 && crg_mmu_cache_req_state == 2'd0) &&
-	     !dequeue_dtmem_ptw ;
-  assign crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d169 =
+  assign crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d192 =
 	     crg_mmu_cache_req[204:203] == 2'b0 ||
 	     crg_mmu_cache_req[204:203] == 2'b01 && !crg_mmu_cache_req[139] ||
 	     crg_mmu_cache_req[204:203] == 2'b10 &&
 	     crg_mmu_cache_req[140:139] == 2'b0 ||
 	     crg_mmu_cache_req[204:203] == 2'b11 &&
 	     crg_mmu_cache_req[141:139] == 3'b0 ;
-  assign crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d231 =
-	     crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d169 &&
+  assign crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d223 =
+	     crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d192 &&
 	     tlb$mv_vm_xlate[201:200] != 2'd1 &&
 	     tlb$mv_vm_xlate[201:200] != 2'd2 &&
 	     soc_map$m_is_mem_addr &&
 	     cache$mav_request_pa[129:128] != 2'd0 ;
-  assign crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d253 =
-	     crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d169 &&
-	     tlb$mv_vm_xlate[201:200] != 2'd1 &&
-	     tlb$mv_vm_xlate[201:200] != 2'd2 &&
-	     rg_watch_tohost_37_AND_tlb_mv_vm_xlate_crg_mmu_ETC___d244 &&
-	     !rg_pass_fail_msg_printed ;
-  assign rg_watch_tohost_37_AND_tlb_mv_vm_xlate_crg_mmu_ETC___d244 =
-	     rg_watch_tohost && tlb$mv_vm_xlate[199:136] == rg_tohost_addr &&
-	     crg_mmu_cache_req[138:75] != 64'd0 ;
-  assign test_num__h5109 = { 1'd0, crg_mmu_cache_req[138:76] } ;
   assign tlb_mv_vm_xlate_crg_mmu_cache_req_port0__read__ETC___d155 =
 	     tlb$mv_vm_xlate[201:200] == 2'd2 ||
-	     (!tlb$mv_vm_xlate[130] || f_dmem_pte_writebacks$FULL_N) &&
+	     (!tlb$mv_vm_xlate[130] || f_dtmem_pte_writebacks$FULL_N) &&
 	     (!soc_map$m_is_mem_addr || cache$RDY_mav_request_pa) ;
-  assign tlb_mv_vm_xlate_crg_mmu_cache_req_port0__read__ETC___d181 =
+  assign tlb_mv_vm_xlate_crg_mmu_cache_req_port0__read__ETC___d169 =
 	     tlb$mv_vm_xlate[201:200] == 2'd2 ||
 	     cache$mav_request_pa[129:128] == 2'd0 ||
 	     cache$mav_request_pa[129:128] == 2'd1 ||
 	     cache$mav_request_pa[129:128] == 2'd2 ||
 	     !soc_map$m_is_mem_addr ;
-  assign tlb_mv_vm_xlate_crg_mmu_cache_req_port0__read__ETC___d202 =
+  assign tlb_mv_vm_xlate_crg_mmu_cache_req_port0__read__ETC___d197 =
 	     tlb$mv_vm_xlate[201:200] == 2'd1 ||
 	     tlb$mv_vm_xlate[201:200] != 2'd2 &&
 	     (cache$mav_request_pa[129:128] == 2'd0 ||
 	      cache$mav_request_pa[129:128] == 2'd2 ||
 	      !soc_map$m_is_mem_addr) ;
-  assign x1__h3758 =
+  assign x1__h3589 =
 	     (crg_mmu_cache_req[207:206] == 2'd0 ||
 	      crg_mmu_cache_req[207:206] == 2'd2 &&
 	      crg_mmu_cache_req[74:70] == 5'b00010) ?
 	       5'd4 :
 	       5'd6 ;
-  assign x1__h5631 =
-	     (crg_mmu_cache_req[207:206] == 2'd0 ||
-	      crg_mmu_cache_req[207:206] == 2'd2 &&
-	      crg_mmu_cache_req[74:70] == 5'b00010) ?
-	       5'd5 :
-	       5'd7 ;
-  assign x1__h6535 =
+  assign x1__h4792 = MUX_crg_exc_code$port0__write_1__VAL_2 ;
+  assign x1__h5749 =
 	     (crg_mmu_cache_req[207:206] == 2'd0 ||
 	      crg_mmu_cache_req[207:206] == 2'd2 &&
 	      crg_mmu_cache_req[74:70] == 5'b00010) ?
@@ -1989,11 +1418,6 @@ module mkD_MMU_Cache(CLK,
         crg_mmu_cache_req_state <= `BSV_ASSIGNMENT_DELAY 2'd0;
 	crg_state <= `BSV_ASSIGNMENT_DELAY 4'd0;
 	crg_valid <= `BSV_ASSIGNMENT_DELAY 1'd0;
-	dequeue_dtmem_ptw <= `BSV_ASSIGNMENT_DELAY 1'd0;
-	rg_pass_fail_msg_printed <= `BSV_ASSIGNMENT_DELAY 1'd0;
-	rg_tohost_addr <= `BSV_ASSIGNMENT_DELAY 64'h0000000080001000;
-	rg_tohost_value <= `BSV_ASSIGNMENT_DELAY 64'd0;
-	rg_watch_tohost <= `BSV_ASSIGNMENT_DELAY 1'd0;
       end
     else
       begin
@@ -2002,17 +1426,6 @@ module mkD_MMU_Cache(CLK,
 	      crg_mmu_cache_req_state$D_IN;
 	if (crg_state$EN) crg_state <= `BSV_ASSIGNMENT_DELAY crg_state$D_IN;
 	if (crg_valid$EN) crg_valid <= `BSV_ASSIGNMENT_DELAY crg_valid$D_IN;
-	if (dequeue_dtmem_ptw$EN)
-	  dequeue_dtmem_ptw <= `BSV_ASSIGNMENT_DELAY dequeue_dtmem_ptw$D_IN;
-	if (rg_pass_fail_msg_printed$EN)
-	  rg_pass_fail_msg_printed <= `BSV_ASSIGNMENT_DELAY
-	      rg_pass_fail_msg_printed$D_IN;
-	if (rg_tohost_addr$EN)
-	  rg_tohost_addr <= `BSV_ASSIGNMENT_DELAY rg_tohost_addr$D_IN;
-	if (rg_tohost_value$EN)
-	  rg_tohost_value <= `BSV_ASSIGNMENT_DELAY rg_tohost_value$D_IN;
-	if (rg_watch_tohost$EN)
-	  rg_watch_tohost <= `BSV_ASSIGNMENT_DELAY rg_watch_tohost$D_IN;
       end
     if (crg_exc$EN) crg_exc <= `BSV_ASSIGNMENT_DELAY crg_exc$D_IN;
     if (crg_exc_code$EN)
@@ -2022,11 +1435,6 @@ module mkD_MMU_Cache(CLK,
     if (crg_ld_val$EN) crg_ld_val <= `BSV_ASSIGNMENT_DELAY crg_ld_val$D_IN;
     if (crg_mmu_cache_req$EN)
       crg_mmu_cache_req <= `BSV_ASSIGNMENT_DELAY crg_mmu_cache_req$D_IN;
-    if (rg_ptw_mem_req$EN)
-      rg_ptw_mem_req <= `BSV_ASSIGNMENT_DELAY rg_ptw_mem_req$D_IN;
-    if (rg_state_stack_during_ptw_rd$EN)
-      rg_state_stack_during_ptw_rd <= `BSV_ASSIGNMENT_DELAY
-	  rg_state_stack_during_ptw_rd$D_IN;
   end
 
   // synopsys translate_off
@@ -2043,13 +1451,6 @@ module mkD_MMU_Cache(CLK,
     crg_mmu_cache_req_state = 2'h2;
     crg_state = 4'hA;
     crg_valid = 1'h0;
-    dequeue_dtmem_ptw = 1'h0;
-    rg_pass_fail_msg_printed = 1'h0;
-    rg_ptw_mem_req = 64'hAAAAAAAAAAAAAAAA;
-    rg_state_stack_during_ptw_rd = 4'hA;
-    rg_tohost_addr = 64'hAAAAAAAAAAAAAAAA;
-    rg_tohost_value = 64'hAAAAAAAAAAAAAAAA;
-    rg_watch_tohost = 1'h0;
   end
   `endif // BSV_NO_INITIAL_BLOCKS
   // synopsys translate_on
@@ -2062,137 +1463,31 @@ module mkD_MMU_Cache(CLK,
     #0;
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_CPU_req_B &&
-	  crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d169 &&
+	  crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d192 &&
 	  tlb$mv_vm_xlate[201:200] != 2'd1 &&
 	  tlb$mv_vm_xlate[201:200] != 2'd2 &&
 	  tlb$mv_vm_xlate[201:200] != 2'd0)
-	$display("Dynamic assertion failed: \"../../src_Core/Near_Mem_VM_WB_L1_L2/D_MMU_Cache.bsv\", line 498, column 67\nFAIL: unknown vm_xlate result");
+	$display("Dynamic assertion failed: \"../../src_Core/Near_Mem_VM_WB_L1_L2/DT_MMU_Cache.bsv\", line 439, column 67\nFAIL: unknown vm_xlate result");
     if (RST_N != `BSV_RESET_VALUE)
       if (WILL_FIRE_RL_rl_CPU_req_B &&
-	  crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d169 &&
+	  crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d192 &&
 	  tlb$mv_vm_xlate[201:200] != 2'd1 &&
 	  tlb$mv_vm_xlate[201:200] != 2'd2 &&
 	  tlb$mv_vm_xlate[201:200] != 2'd0)
 	$finish(32'd0);
     if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_CPU_req_B &&
-	  crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d253)
-	begin
-	  v__h5140 = $stime;
-	  #0;
-	end
-    v__h5131 = v__h5140 / 32'd10;
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_CPU_req_B &&
-	  crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d253)
-	$display("%0d: %m.fa_watch_tohost", v__h5131);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_CPU_req_B &&
-	  crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d169 &&
-	  tlb$mv_vm_xlate[201:200] != 2'd1 &&
-	  tlb$mv_vm_xlate[201:200] != 2'd2 &&
-	  rg_watch_tohost_37_AND_tlb_mv_vm_xlate_crg_mmu_ETC___d244 &&
-	  !rg_pass_fail_msg_printed &&
-	  crg_mmu_cache_req[138:76] == 63'd0)
-	$write("    PASS");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_CPU_req_B &&
-	  crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d169 &&
-	  tlb$mv_vm_xlate[201:200] != 2'd1 &&
-	  tlb$mv_vm_xlate[201:200] != 2'd2 &&
-	  rg_watch_tohost_37_AND_tlb_mv_vm_xlate_crg_mmu_ETC___d244 &&
-	  !rg_pass_fail_msg_printed &&
-	  crg_mmu_cache_req[138:76] != 63'd0)
-	$write("    FAIL <test_%0d>", test_num__h5109);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_CPU_req_B &&
-	  crg_mmu_cache_req_port0__read__05_BITS_204_TO__ETC___d253)
-	$display("  (<tohost>  addr %0h  data %0h)",
-		 tlb$mv_vm_xlate[199:136],
-		 crg_mmu_cache_req[138:75]);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (EN_set_watch_tohost)
-	begin
-	  v__h9740 = $stime;
-	  #0;
-	end
-    v__h9731 = v__h9740 / 32'd10;
-    if (RST_N != `BSV_RESET_VALUE)
-      if (EN_set_watch_tohost)
-	$display("%0d: %m.set_watch_tohost: watch %0d, addr %0h",
-		 v__h9731,
-		 set_watch_tohost_watch_tohost,
-		 set_watch_tohost_tohost_addr);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_ptw_rd_B && cache$mav_request_pa[129:128] == 2'd2)
-	begin
-	  v__h7447 = $stime;
-	  #0;
-	end
-    v__h7438 = v__h7447 / 32'd10;
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_ptw_rd_B && cache$mav_request_pa[129:128] == 2'd2)
-	$display("%0d: %m.rl_ptw_rd_B", v__h7438);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_ptw_rd_B && cache$mav_request_pa[129:128] == 2'd2)
-	$display("    INTERNAL ERROR: cannot have CACHE_WRITE_HIT for PTW read-request to cache");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_ptw_rd_B && cache$mav_request_pa[129:128] == 2'd2)
-	$write("    ");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_ptw_rd_B && cache$mav_request_pa[129:128] == 2'd2)
-	$write("MMU_Cache_Req{");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_ptw_rd_B && cache$mav_request_pa[129:128] == 2'd2)
-	$write("CACHE_LD", " f3 %3b", 3'b011);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_ptw_rd_B && cache$mav_request_pa[129:128] == 2'd2)
-	$write(" va %0h", rg_ptw_mem_req);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_ptw_rd_B && cache$mav_request_pa[129:128] == 2'd2)
-	$write(" priv %0d sstatus_SUM %0d mstatus_MXR %0d satp %0h",
-	       2'b11,
-	       1'd0,
-	       1'd0,
-	       64'd0);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_ptw_rd_B && cache$mav_request_pa[129:128] == 2'd2)
-	$write("}");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_ptw_rd_B && cache$mav_request_pa[129:128] == 2'd2)
-	$write("\n");
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_ptw_rd_B && cache$mav_request_pa[129:128] == 2'd2)
-	$finish(32'd1);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_pte_wb_cache_WAIT && !cache$mv_refill_ok)
-	begin
-	  v__h8668 = $stime;
-	  #0;
-	end
-    v__h8659 = v__h8668 / 32'd10;
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_pte_wb_cache_WAIT && !cache$mv_refill_ok)
-	$display("%0d: %m.rl_pte_wb_req_cache_WAIT: ERROR: unexpected cache error response",
-		 v__h8659);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_pte_wb_cache_WAIT && !cache$mv_refill_ok)
-	$display("    pte_pa %0d  pa %0h",
-		 f_pte_writebacks$D_OUT[127:64],
-		 f_pte_writebacks$D_OUT[63:0]);
-    if (RST_N != `BSV_RESET_VALUE)
-      if (WILL_FIRE_RL_rl_pte_wb_cache_WAIT && !cache$mv_refill_ok)
-	$finish(32'd1);
+      if (WILL_FIRE_RL_rl_PTW_wait && f_ptw_rsps$D_OUT[131:130] == 2'd3)
+	$display("DT:  Dcache Fault");
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_ma_req && crg_mmu_cache_req_state$port1__read != 2'd0)
 	begin
-	  v__h2455 = $stime;
+	  v__h2375 = $stime;
 	  #0;
 	end
-    v__h2446 = v__h2455 / 32'd10;
+    v__h2366 = v__h2375 / 32'd10;
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_ma_req && crg_mmu_cache_req_state$port1__read != 2'd0)
-	$display("%0d: %m.rl_CPU_req", v__h2446);
+	$display("%0d: %m.rl_CPU_req", v__h2366);
     if (RST_N != `BSV_RESET_VALUE)
       if (EN_ma_req && crg_mmu_cache_req_state$port1__read != 2'd0)
 	$write("    INTERNAL ERROR: crg_mmu_cache_req_state: ");
@@ -2376,5 +1671,5 @@ module mkD_MMU_Cache(CLK,
 	$finish(32'd1);
   end
   // synopsys translate_on
-endmodule  // mkD_MMU_Cache
+endmodule  // mkDT_MMU_Cache
 

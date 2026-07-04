@@ -166,7 +166,7 @@ TPRF), the forwarding paths, and the memory-tag encoding. Concludes by packing C
 - **`64bfd9f`** — Gates the tag machinery to user mode (`priv==0`); reworks the context
   path (later re-targeted in `b6f2fa2`/`8b68a36`).
 
-### 2026 (fix / spec-alignment layer — source-audited, NOT `bsc`-compiled)
+### 2026 (fix / spec-alignment layer — now `bsc`-compiles clean, see [ch 10](10-building.md))
 
 | Hash | Date | Title |
 |---|---|---|
@@ -206,7 +206,9 @@ TPRF), the forwarding paths, and the memory-tag encoding. Concludes by packing C
 - **`b6f2fa2`** — Re-targets context ops to the TPRF; drops the latch CSR (latch now
   saved via the instructions); gates the U-mode latch commit. ([ch 08](08-context-switch.md))
 - **`6280c1a`** — Enforces Stage-1 CFI violations: `cfi_exec_code != 0` now sets
-  `exc_code` + `CONTROL_TRAP` (was computed but never applied).
+  `exc_code` + `CONTROL_TRAP` (was computed but never applied). *(Its direct write to the
+  module-level `alu_outputs` was P0039-illegal; corrected to function-local effective
+  values on 2026-07-04 — see [ch 10](10-building.md). Behavior unchanged.)*
   ([ch 07](07-cfi-and-pointer-integrity.md))
 - **`54afe51` / `09ce3ed` / `ebf18f6`** — Comment-only doc passes across ISA / regfiles /
   caches / pipeline / EX.
@@ -263,10 +265,13 @@ TPRF), the forwarding paths, and the memory-tag encoding. Concludes by packing C
 
 1. **Phases split by ~2-year gaps.** 2021 = data-tag memory path; 2023 = CFI; 2024 =
    pointer integrity; 2026 = source-audit refinement.
-2. **The entire 2026 layer is source-audited only** — every 2026 commit message ends with
-   "NOT bsc-compiled." Several fix bugs from earlier 2026 commits (`d13d3c0` fixes two
-   compile-breaking regressions; `3f7c56f`/`8b68a36` build on `e75cb8d`/`2eab4f6`).
-   **Build with `bsc` before relying on any of it.**
+2. **The 2026 layer now `bsc`-compiles clean (2026-07-04, `bsc` 2026.01)** — see
+   [chapter 10](10-building.md). The commit *messages* still say "NOT bsc-compiled"
+   because that was true when each was written; getting to a clean build needed one
+   further fix (`CPU_Stage1.bsv` P0039). Note several 2026 commits fix bugs from earlier
+   2026 commits (`d13d3c0` fixes two compile-breaking regressions; `3f7c56f`/`8b68a36`
+   build on `e75cb8d`/`2eab4f6`). **"Compiles clean" ≠ "behaviorally validated"** — that
+   still needs STAR-compiler-produced tagged binaries (see [ch 10 §10.5.1](10-building.md)).
 3. **`659ec00` includes `bsc`-generated RTL** (`Verilog_RTL/*.v`) — artifacts, not design.
 4. **The memory-tag encoding order was wrong from Phase 2 until `8aa5e13`** (`CP=01,
    DP=10`) — any rank comparison over that window used the swapped order.

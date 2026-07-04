@@ -85,17 +85,30 @@ transfers: a caller emits a source label with a 19-bit signature, and the destin
 must present a matching label. `instr[31]` is the label *type* bit (source vs dest);
 `instr[30:12]` is the 19-bit signature.
 
-### Enforcement (the commit `6280c1a` fix)
+### Enforcement (commit `6280c1a`, then the `bsc` fix)
 
 The FSM computes `cfi_exec_code` but originally never applied it — violations were
-detected and silently dropped. It is now enforced (`CPU_Stage1.bsv:326`):
+detected and silently dropped. Commit `6280c1a` added enforcement, but wrote the
+module-level `alu_outputs` from *inside* the `fv_out` function, which `bsc` rejects
+(P0039, non-local assignment). The compiling form (2026-07-04, [chapter 10](10-building.md))
+folds the override into function-local effective values that the ALU-output path consumes
+(`CPU_Stage1.bsv:326`):
 
 ```bsv
+// fold the CFI trap override into locals used by the ALU-output path below
+Control  eff_control  = alu_outputs.control;
+Exc_Code eff_exc_code = alu_outputs.exc_code;
 if (cfi_exec_code != 0) begin
-   alu_outputs.exc_code = cfi_exec_code;
-   alu_outputs.control  = CONTROL_TRAP;
+   eff_exc_code = cfi_exec_code;
+   eff_control  = CONTROL_TRAP;
 end
+// ... later, the ALU-output path uses eff_control / eff_exc_code:
+//   output_stage1.control = eff_control;   trap_info.exc_code = eff_exc_code;
 ```
+
+Semantics are unchanged from `6280c1a`'s intent — a Stage-1 CFI violation still forces
+`CONTROL_TRAP` with `excep_CFI` / `excep_RAP`; only the (illegal) direct write to
+`alu_outputs` was replaced.
 
 > **Invariant:** `cfi_exec_code` is non-zero only in U-mode and only on a genuine
 > violation (the compiler tags every legal target). This mirrors how an

@@ -96,10 +96,32 @@ Bit #(4) result_tag = (rg_stage2.addr[3] == 1'b0) ? dtcache.word64[3:0]
                                                    : dtcache.word64[7:4];
 ```
 
-> **History / bug fix.** Before `3f7c56f`, the read always took the low nibble — so a
-> load/store to the high slot validated the *wrong* tag. The `addr[3]` select fixed it.
-> If you touch the nibble layout, this is the invariant to preserve: **`addr[3]` picks
-> the slot on both read and RMW-write.**
+The **ordinary store** side must honor the same slot select. Stage2 packs the slot bit
+above the 4-bit tag in the DT store-value (`CPU_Stage2.bsv`, store branch):
+
+```bsv
+// STORE value: { addr[3] , val2_tag[3:0] }  -- bit4 = slot select, bits[3:0] = new tag
+: zeroExtend ({ x.addr[3], x.val2_tag })
+```
+
+and the DT-cache store-hit branch does a read-modify-write that rewrites **only** the
+selected nibble, preserving the adjacent slot (`DTCache.bsv`, store-hit):
+
+```bsv
+Bit #(8) merged = (req.st_value[4] == 1'b0) ? { data[7:4], req.st_value[3:0] }   // write slot A, keep B
+                                            : { req.st_value[3:0], data[3:0] };  // write slot B, keep A
+fa_write (pa, req.f3, zeroExtend (merged));
+```
+
+> **History / bug fix.** Before `3f7c56f`, the *read* always took the low nibble — so a
+> load/store to the high slot validated the *wrong* tag; the `addr[3]` select fixed the
+> read. The ordinary *store* path, however, still wrote the whole tag byte as
+> `{4'h0, tag}`, which **zeroed the adjacent 64-bit slot's tag** (silently downgrading a
+> neighboring pointer or return-address word to `[DT]`). Commit `929c791` fixed the store
+> path to carry `addr[3]` and RMW only its own nibble, as shown above. If you touch the
+> nibble layout, this is the invariant to preserve: **`addr[3]` picks the slot on both
+> read and RMW-write** — and that now holds on the load-`[CLR]` scrub *and* the ordinary
+> store.
 
 ---
 
@@ -144,6 +166,11 @@ flowchart TD
 Mismatch → **no scrub** (and Stage2 raises the pointer-integrity violation separately).
 The symmetric CLR-on-*store* scrubs the *source register's* TRF tag instead — that lives
 in Stage3, [chapter 08](08-context-switch.md).
+
+The same in-cache RMW pattern applies to an **ordinary store** (§4.3): it too rewrites
+only its own `addr[3]` nibble and leaves the adjacent slot intact. The load-`[CLR]`
+scrub and the ordinary store are the two writers of a tag byte, and both now preserve
+the sibling nibble.
 
 ---
 
@@ -221,7 +248,7 @@ protocol is introduced — the DT-cache is just a third participant.
 |---|---|
 | DT-cache config | same as D-cache (e.g. 8 KiB, set-assoc, WB) |
 | Storage unit | 1 tag byte per 16 data bytes = two 4-bit slot tags |
-| Slot select | `addr[3]` (read + RMW), `CPU_Stage2.bsv:293` |
+| Slot select | `addr[3]` on read (`CPU_Stage2.bsv:293`) and on the store-hit RMW (`DTCache.bsv` store branch, `929c791`) |
 | Tag address | `(data_addr >> 4) + 0x003c_0000_0000`, `EX_ALU_functions.bsv:760/836` |
 | Access gated to | user mode, data addr `< 0x003c_0000_0000` |
 | Page walks | delegated to D-cache; `PTW_DCACHE_FAULT` sentinel |

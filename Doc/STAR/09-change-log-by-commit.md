@@ -185,6 +185,7 @@ TPRF), the forwarding paths, and the memory-tag encoding. Concludes by packing C
 | `8b68a36` | 2026-06-19 | Context switch saves BOTH TRF + TPRF; CLR-on-store scrub |
 | `d13d3c0` | 2026-06-22 | Live rank resolution + CFI trap fixes; fix 2 compile-breaking regressions |
 | `04a5327` | 2026-06-26 | Widen CFI label signature 18→19 bits (S&P 2023) |
+| `929c791` | 2026-07-04 | DTCache: preserve adjacent slot's tag nibble on store |
 
 **Significant commits**
 
@@ -221,6 +222,12 @@ TPRF), the forwarding paths, and the memory-tag encoding. Concludes by packing C
 - **`04a5327`** — Widens the CFI label signature 18→19 bits (20-bit LUI imm = 1 type +
   19 sig): Stage1 extracts `instr[30:12]`, TPRF entry-1 label slice `[21:3]`, Stage3
   packs 19 bits. ([ch 02](02-isa-and-tags.md), [ch 07](07-cfi-and-pointer-integrity.md))
+- **`929c791`** — Fixes the ordinary DT-cache store to preserve the adjacent 64-bit
+  slot's tag nibble. The store path wrote the whole tag byte as `{4'h0, tag}`, zeroing
+  the sibling slot's tag; now Stage2 carries `addr[3]` in the store value and the
+  store-hit branch RMWs only the selected nibble, mirroring the load-`[CLR]` scrub.
+  Verified against `bsc` 2026.01 (WB_L1_L2 build elaborates clean).
+  ([ch 04](04-dtcache-and-tlb.md))
 
 ---
 
@@ -231,7 +238,7 @@ TPRF), the forwarding paths, and the memory-tag encoding. Concludes by packing C
 | File | Created by | Later touched by |
 |---|---|---|
 | `Near_Mem_VM_WB_L1_L2/ICache.bsv` | `b0dbd64` | `721d2f8`, `b43b0a1`, `7c762a1`, `9158460`, `09ce3ed` |
-| `Near_Mem_VM_WB_L1_L2/DTCache.bsv` | `c7f4b5e` | `0efb34c`, `3f7c56f`, `09ce3ed` |
+| `Near_Mem_VM_WB_L1_L2/DTCache.bsv` | `c7f4b5e` | `0efb34c`, `3f7c56f`, `09ce3ed`, `929c791` |
 | `Near_Mem_VM_WB_L1_L2/DT_MMU_Cache.bsv` | `18d85fc` | `696acf2`, `0efb34c`, `09ce3ed` |
 | `RegFiles/GPR_TAG_RegFile.bsv` | `b9a0250` | `5c02582`, `09ce3ed` |
 | `RegFiles/FPR_TAG_RegFile.bsv` | `b9a0250` | `09ce3ed` |
@@ -243,7 +250,7 @@ TPRF), the forwarding paths, and the memory-tag encoding. Concludes by packing C
 |---|---|
 | `CPU/EX_ALU_functions.bsv` | `b56b5ca`, `64d59c1`, `422fdef`, `a1470e9`, `8f9c84f`, `65c5e37`, `3f3ca3a`, `b9a0250`, `d092280`, `18bec3f`, `5c02582`, `de91b2b`, `04054cc`, `64bfd9f`, `e75cb8d`, `fd93f80`, `b6f2fa2`, `ebf18f6`, `8b68a36`, `d13d3c0` |
 | `CPU/CPU_Stage1.bsv` | `b56b5ca`, `879b95d`, `422fdef`, `b5d133f`, `455be17`, `e7e0bef`, `3f3ca3a`, `990a0ce`, `b9a0250`, `18bec3f`, `5c02582`, `f7329f4`, `913161e`, `04054cc`, `64bfd9f`, `e75cb8d`, `b6f2fa2`, `6280c1a`, `d13d3c0`, `04a5327` |
-| `CPU/CPU_Stage2.bsv` | `b56b5ca`, `5d38dc9`, `d1cbab4`, `3f3ca3a`, `d092280`, `18bec3f`, `5c02582`, `f7329f4`, `709344d`, `6f67e3e`, `e75cb8d`, `2eab4f6`, `3f7c56f` |
+| `CPU/CPU_Stage2.bsv` | `b56b5ca`, `5d38dc9`, `d1cbab4`, `3f3ca3a`, `d092280`, `18bec3f`, `5c02582`, `f7329f4`, `709344d`, `6f67e3e`, `e75cb8d`, `2eab4f6`, `3f7c56f`, `929c791` |
 | `CPU/CPU_Stage3.bsv` | `3f3ca3a`, `d092280`, `18bec3f`, `5c02582`, `f7329f4`, `0bde341`, `64bfd9f`, `b6f2fa2`, `8b68a36`, `04a5327` |
 | `CPU/CPU_Globals.bsv` | `952c919`, `bc0f057`, `3f3ca3a`, `b9a0250`, `d092280`, `5c02582`, `09ce3ed`, `04a5327` |
 | `CPU/CPU_StageF.bsv` | `b56b5ca`, `879b95d`, `1d67863`, `09ce3ed` |

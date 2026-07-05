@@ -1214,7 +1214,13 @@ module mkDTCache #(parameter Bool      dcache_not_icache,
 	 else if (valid && (req.op == CACHE_ST) && (valid_info.valid_state > META_SHARED)) begin
 	    if (verbosity >= 1)
 	       $display ("    STORE-HIT: va %0h pa %0h data %0h", req.va, pa, req.st_value);
-	    fa_write (pa, req.f3, req.st_value);
+	    // STAR: a tag byte packs two 64-bit slots' nibbles. req.st_value[4] is the
+	    // slot select (data addr bit 3) and req.st_value[3:0] is the new tag. RMW only
+	    // the selected nibble, preserving the adjacent slot -- INVARIANT: addr[3] picks
+	    // the slot on both read and write, mirroring the load-[CLR] scrub above.
+	    Bit #(8) merged = (req.st_value [4] == 1'b0) ? { data [7:4], req.st_value [3:0] }
+	                                                 : { req.st_value [3:0], data [3:0] };
+	    fa_write (pa, req.f3, zeroExtend (merged));
 	    result = Cache_Result {outcome:      CACHE_WRITE_HIT,
 				   final_ld_val: 0,
 				   final_st_val: req.st_value};

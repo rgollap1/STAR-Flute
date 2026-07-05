@@ -781,8 +781,10 @@ module mkCPU_Stage2 #(Bit #(4)         verbosity,
                                          : (itag_op (x.tag) == op_DPO) ? dtag_DP [1:0]
                                          : (itag_op (x.tag) == op_CPO) ? dtag_CP [1:0]
                                          :                               dtag_DT [1:0] ) })  // bits[1:0]: expected per-word tag
-                         // STORE: unchanged -- the tag value to write.
-                         : zeroExtend (x.val2_tag)),
+                         // STORE: pack the slot-select bit above the 4-bit tag so the
+                         // DT-cache RMWs only this 64-bit slot's nibble and preserves the
+                         // adjacent slot. bit4: nibble select (data addr bit 3); bits[3:0]: tag.
+                         : zeroExtend ({ x.addr [3], x.val2_tag })),
 			mem_priv,
 			sstatus_SUM,
 			mstatus_MXR,

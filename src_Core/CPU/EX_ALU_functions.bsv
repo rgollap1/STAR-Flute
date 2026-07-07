@@ -914,6 +914,13 @@ endfunction
 
 function ALU_Outputs fv_LDC (ALU_Inputs inputs);
    let alu_outputs = fv_LD (inputs);
+   // STAR: LOAD_CONTEXT restores the TRF/TSRF tag state and is an S-mode (or
+   // above) instruction. Executing it in user mode is illegal; otherwise U-mode
+   // code could reload the tag state the security checks depend on. -- STAR
+   if (inputs.cur_priv < s_Priv_Mode) begin
+      alu_outputs.control  = CONTROL_TRAP;
+      alu_outputs.exc_code = exc_code_ILLEGAL_INSTRUCTION;
+   end
    return alu_outputs;
 endfunction
 
@@ -934,6 +941,13 @@ function ALU_Outputs fv_STC (ALU_Inputs inputs);
                           ? inputs.tprf_val
                           : zeroExtend (inputs.rs2_val_tag);
    alu_outputs.val2_tag = dtag_DT;
+   // STAR: STORE_CONTEXT saves the TRF/TSRF tag state and is an S-mode (or
+   // above) instruction. Trap as illegal in user mode, mirroring LOAD_CONTEXT,
+   // so the tag-state path is reachable only by the kernel. -- STAR
+   if (inputs.cur_priv < s_Priv_Mode) begin
+      alu_outputs.control  = CONTROL_TRAP;
+      alu_outputs.exc_code = exc_code_ILLEGAL_INSTRUCTION;
+   end
    return alu_outputs;
 endfunction
 

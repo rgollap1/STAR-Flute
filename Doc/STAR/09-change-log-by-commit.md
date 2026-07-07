@@ -228,6 +228,12 @@ TPRF), the forwarding paths, and the memory-tag encoding. Concludes by packing C
   store-hit branch RMWs only the selected nibble, mirroring the load-`[CLR]` scrub.
   Verified against `bsc` 2026.01 (WB_L1_L2 build elaborates clean).
   ([ch 04](04-dtcache-and-tlb.md))
+- **`STORE_CONTEXT`/`LOAD_CONTEXT` privilege gate (working tree)** — Adds an S-mode
+  restriction: `fv_STC`/`fv_LDC` (`EX_ALU_functions.bsv`) trap
+  `exc_code_ILLEGAL_INSTRUCTION` when `cur_priv < s_Priv_Mode`. Previously these
+  tag-state save/restore instructions had no privilege check, so U-mode code could
+  read or reload the TRF/TSRF the security checks depend on. Verified against `bsc`
+  2026.01 (WB_L1_L2 elaborates clean). ([ch 08](08-context-switch.md))
 - **`[EQR]` enforcement (working tree, uncommitted)** — Implements Equal Rank Matching,
   previously a defined-but-unenforced encoding (`op_EQR` was reserved but no stage
   consumed it). `[EQR]` becomes the `tag[3]` modifier on arithmetic ops (opcode-dependent

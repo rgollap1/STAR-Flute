@@ -46,6 +46,10 @@ Two pieces of tag state must be saved/restored explicitly by the kernel:
 - **`op_LOAD_CONTEXT` (`7'b01_010_10`)** — `file[rd] ← mem[rs1+imm]`. Restores a TRF or
   TPRF entry.
 
+Both are **S-mode-restricted**: `fv_STC`/`fv_LDC` (`EX_ALU_functions.bsv`) trap
+`exc_code_ILLEGAL_INSTRUCTION` when `cur_priv < s_Priv_Mode`, so user code cannot
+read or reload the tag state the security checks rely on.
+
 To read a TPRF entry for a save without disturbing the pipeline's own TPRF reads, Stage1
 uses the **spare TPRF read port** (`read_rs1_port2`, the debugger port) indexed by the
 instruction's rs2 field, and carries it as `tprf_val` into Stage2/3 (see

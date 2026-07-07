@@ -461,11 +461,18 @@ Bit #(3) op_CPO = 3'd2;
 Bit #(3) op_RAP = 3'd3;
 Bit #(3) op_CAL = 3'd4;
 Bit #(3) op_RET = 3'd5;
-Bit #(3) op_EQR = 3'd6;
+// 3'd6 reserved (formerly a standalone op_EQR; EQR is now the tag[3] modifier
+// on arithmetic ops, so it needs no op-field slot and carries the rank of its
+// base op GEN/DPO/CPO instead).
 Bit #(3) op_LBL = 3'd7;
 
-// CLR modifier, tag[3]  (valid only with memory ops GEN/DPO/CPO/RAP)
+// tag[3] modifier bit -- opcode-dependent interpretation:
+//   * on memory ops (GEN/DPO/CPO/RAP load/store): CLR (validate then scrub to [DT])
+//   * on arithmetic ops (OP/OP_IMM):              EQR (Equal Rank Matching)
+// The two instruction classes are disjoint, so the opcode selects the meaning
+// with no ambiguity. CLR is meaningless on arithmetic and EQR on memory.
 Bit #(1) clr_SET = 1'b1;
+Bit #(1) eqr_SET = 1'b1;   // same bit[3], read on arithmetic ops
 
 // Control-transfer target field, tag[5:4]
 Bit #(2) tgt_NONE = 2'd0;
@@ -475,7 +482,8 @@ Bit #(2) tgt_TIJ  = 2'd3;   // target of an indirect jump
 
 // Field extractors on the 6-bit instruction tag
 function Bit #(3) itag_op     (Bit #(8) t) = t[2:0];
-function Bool     itag_is_clr (Bit #(8) t) = (t[3] == clr_SET);
+function Bool     itag_is_clr (Bit #(8) t) = (t[3] == clr_SET);   // memory ops
+function Bool     itag_is_eqr (Bit #(8) t) = (t[3] == eqr_SET);   // arithmetic ops
 function Bit #(2) itag_target (Bit #(8) t) = t[5:4];
 
 // Bare (uncombined) instruction-tag values (target = none, clr = 0)
@@ -485,7 +493,6 @@ Bit #(8) itag_CPO = 8'h02;   // op_CPO
 Bit #(8) itag_RAP = 8'h03;   // op_RAP
 Bit #(8) itag_CAL = 8'h04;   // op_CAL
 Bit #(8) itag_RET = 8'h05;   // op_RET
-Bit #(8) itag_EQR = 8'h06;   // op_EQR
 Bit #(8) itag_LBL = 8'h07;   // op_LBL (standalone CFI-label NOP)
 
 // Bare landing-pad tags (target set, op = GEN); for combined forms the op

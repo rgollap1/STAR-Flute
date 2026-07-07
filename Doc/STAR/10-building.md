@@ -207,6 +207,22 @@ No other STAR source errors surfaced — the rest of the 2026 layer type-checked
 elaborated as-is. `make simulator` then linked a working Bluesim executable
 (`exe_HW_sim`) with every STAR module included.
 
+**Known benign warning (not a STAR bug).** The build emits one `G0015` warning:
+
+```
+Core.bsv:88: (G0015) Instance `cpu' requires the following methods to be always
+enabled ... could not be proven to be always True:
+  software_interrupt_req, timer_interrupt_req
+```
+
+This is **inherited from base Flute** — the `(* always_enabled *)` attributes on those
+interrupt-request methods exist verbatim in the base boundary commit `c6f66da`
+(`CPU_IFC.bsv:77-81`), before any STAR code. In the assembled SoC those methods *are*
+driven every cycle by the Near_Mem_IO / PLIC wiring, so the design is correct; `bsc`
+simply cannot prove the condition statically. It is left as-is deliberately: removing the
+attribute would change base Flute's generated hardware interface, an upstream, non-STAR
+change outside this work's scope. Not to be confused with a STAR defect.
+
 ### 10.5.1 "Compiles" ≠ "validated" — and why stock ISA tests don't apply
 
 A clean `make compile` / `make simulator` proves the STAR RTL **elaborates and builds**.

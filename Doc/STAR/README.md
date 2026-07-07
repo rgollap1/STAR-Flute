@@ -193,13 +193,14 @@ in the *base Flute* machine specifically.
 |---|---|
 | **STAR** | Secure Tagged Architecture — the security mechanism this repo implements |
 | **TPP** | Tag Processing Pipeline — the tag-checking logic threaded through the 5 stages |
-| **Instruction tag / itag** | 8-bit field (6 meaningful bits) fetched inline with each instruction: `op[2:0]`, `CLR[3]`, `target[5:4]` |
+| **Instruction tag / itag** | 8-bit field (6 meaningful bits) fetched inline with each instruction: `op[2:0]`, `CLR`/`EQR`[3] (opcode-dependent), `target[5:4]` |
 | **Data tag / dtag** | 2-bit tag per 32-bit word; `DT`=plain data, `DP`=data pointer, `CP`=code pointer, `RA`=return address. Stored 4-bit (two words) per register/nibble |
 | **TRF** | Tag Register File — shadow of the GPR/FPR files holding each register's data tag (`GPR_TAG_RegFile` / `FPR_TAG_RegFile`) |
 | **TPRF / TSRF** | TPP State Register File — holds the CFI target-check latch + the active function label/signature (`TPRF_RegFile`) |
 | **DT-Cache / DT-TLB** | Data-Tag Cache and its TLB — a third L1 cache holding the per-word memory tags |
 | **Rank** | Ordering of data tags `DT(0) < DP(1) < CP(2) < RA(3)`; encoding value equals rank |
 | **Landing pad / target tag** | `TFC`/`TFR`/`TIJ` — a tag marking a legal target of a call / return / indirect jump |
-| **`[CLR]`** | "clear/scrub" modifier bit — enforces the single-copy invariant by wiping a tag after a move |
+| **`[CLR]`** | `tag[3]` on memory ops: "clear/scrub" modifier — enforces the single-copy invariant by wiping a tag after a move |
+| **`[EQR]`** | `tag[3]` on arithmetic ops: "equal rank matching" — a source must carry exactly the base op's implied rank, else `excep_CFI` |
 | **`excep_CFI` / `excep_RAP`** | The two STAR HARD exceptions: CFI/label violation (16) and return-address-protection violation (17) |
 | **CFI latch** | The 3-bit `cfi_TCHK_*` state armed by a control-transfer instruction, checked on the next instruction |

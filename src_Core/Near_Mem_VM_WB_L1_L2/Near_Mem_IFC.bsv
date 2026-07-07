@@ -186,8 +186,9 @@ interface IMem_IFC;
    (* always_ready *)  method WordXL   pc;
    (* always_ready *)  method Instr    instr;
    // STAR: 8-bit instruction tag (itag) fetched inline with the instruction word;
-   // tag[2:0]=op (GEN/DPO/CPO/RAP/CAL/RET/EQR/LBL), tag[3]=CLR scrub,
-   // tag[5:4]=control-transfer target (NONE/TFC/TFR/TIJ).
+   // tag[2:0]=op (GEN/DPO/CPO/RAP/CAL/RET/-/LBL), tag[3]=CLR scrub on memory ops
+   // or EQR equal-rank match on arithmetic ops, tag[5:4]=control-transfer target
+   // (NONE/TFC/TFR/TIJ).
    (* always_ready *)  method Bit #(8) tag;
    (* always_ready *)  method Bool     exc;
    (* always_ready *)  method Exc_Code exc_code;

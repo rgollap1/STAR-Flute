@@ -28,12 +28,17 @@ Since commit `e75cb8d`, the itag is a **structured 6-bit bit-field** carried in 
 decodes each field and applies each policy independently.
 
 ```
- bit:  7  6  5  4  3  2  1  0
-       ┌──┬──┬─────┬──┬────────┐
-       │ 0│ 0│ tgt │CLR│  op   │
-       └──┴──┴─────┴──┴────────┘
-              5:4   3    2:0
+ bit:  7  6  5  4  3    2  1  0
+       ┌──┬──┬─────┬────┬────────┐
+       │ 0│ 0│ tgt │CLR │  op    │
+       │  │  │     │/EQR│        │
+       └──┴──┴─────┴────┴────────┘
+              5:4   3      2:0
 ```
+
+`tag[3]` is opcode-dependent: it is the `CLR` scrub bit on memory ops and the
+`EQR` equal-rank-match bit on arithmetic ops (the two instruction classes are
+disjoint, so the opcode selects the meaning unambiguously).
 
 ### Operation field `tag[2:0]` (`:458`)
 
@@ -45,14 +50,24 @@ decodes each field and applies each policy independently.
 | `op_RAP` | 3 | Return-address protected (mem op that must touch an `[RA]` word) |
 | `op_CAL` | 4 | Function call |
 | `op_RET` | 5 | Function return |
-| `op_EQR` | 6 | Equal-to-return (reserved) |
+| `3'd6` | 6 | reserved (formerly a standalone `op_EQR`; EQR is now the `tag[3]` modifier) |
 | `op_LBL` | 7 | Standalone CFI-label NOP |
 
-### CLR modifier `tag[3]` (`:468`)
+### CLR / EQR modifier `tag[3]` (`:467`)
 
-`clr_SET = 1'b1`. Valid only with memory ops (GEN/DPO/CPO/RAP). Enforces the
-**single-copy invariant**: after a tagged value is moved, its source copy's tag is
-scrubbed to `[DT]`. See [chapter 08](08-context-switch.md).
+`tag[3]` carries an **opcode-dependent** modifier — the two uses land on disjoint
+instruction classes, so there is never any ambiguity:
+
+- **`CLR` on memory ops** (`clr_SET = 1'b1`, GEN/DPO/CPO/RAP load/store). Enforces the
+  **single-copy invariant**: after a tagged value is moved, its source copy's tag is
+  scrubbed to `[DT]`. See [chapter 08](08-context-switch.md).
+- **`EQR` on arithmetic ops** (`eqr_SET = 1'b1`, OP/OP_IMM). **Equal Rank Matching**:
+  at least one source operand must carry *exactly* the rank the base op implies
+  (`GEN`→`[DT]`, `DPO`→`[DP]`, `CPO`→`[CP]`), else the op traps with `excep_CFI` at the
+  arithmetic instruction. Tightens the baseline rank rule
+  ([chapter 07](07-cfi-and-pointer-integrity.md)) for code that must operate on a single
+  type — a prologue stack-pointer adjust (`[DP]`) or a loop-counter increment (`[DT]`).
+  Enforced in `EX_ALU_functions.bsv`.
 
 ### Control-transfer target field `tag[5:4]` (`:471`)
 
@@ -67,7 +82,8 @@ scrubbed to `[DT]`. See [chapter 08](08-context-switch.md).
 
 ```bsv
 function Bit #(3) itag_op     (Bit #(8) t) = t[2:0];
-function Bool     itag_is_clr (Bit #(8) t) = (t[3] == clr_SET);
+function Bool     itag_is_clr (Bit #(8) t) = (t[3] == clr_SET);   // memory ops
+function Bool     itag_is_eqr (Bit #(8) t) = (t[3] == eqr_SET);   // arithmetic ops
 function Bit #(2) itag_target (Bit #(8) t) = t[5:4];
 ```
 

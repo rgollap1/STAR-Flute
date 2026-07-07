@@ -228,6 +228,13 @@ TPRF), the forwarding paths, and the memory-tag encoding. Concludes by packing C
   store-hit branch RMWs only the selected nibble, mirroring the load-`[CLR]` scrub.
   Verified against `bsc` 2026.01 (WB_L1_L2 build elaborates clean).
   ([ch 04](04-dtcache-and-tlb.md))
+- **`[EQR]` enforcement (working tree, uncommitted)** — Implements Equal Rank Matching,
+  previously a defined-but-unenforced encoding (`op_EQR` was reserved but no stage
+  consumed it). `[EQR]` becomes the `tag[3]` modifier on arithmetic ops (opcode-dependent
+  with `[CLR]`, which stays memory-only); `EX_ALU_functions.bsv` traps `excep_CFI` unless
+  a source carries exactly the base op's implied rank. Frees op-field slot `3'd6`. Keeps
+  the 6-bit / 12-type invariant. Verified against `bsc` 2026.01 (WB_L1_L2 elaborates
+  clean). ([ch 02](02-isa-and-tags.md), [ch 06](06-pipeline-integration.md))
 
 ---
 

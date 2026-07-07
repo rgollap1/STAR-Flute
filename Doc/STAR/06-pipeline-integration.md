@@ -101,6 +101,17 @@ if (inputs.cur_priv == 0) begin
       else if (itag_op(inputs.tag) == op_DPO) inst_tag = dtag_DP;
       // result data tag = MIN(reg_tag, inst_tag)
       alu_outputs.val1_tag = (reg_tag <= inst_tag) ? reg_tag : inst_tag;
+
+      // [EQR] Equal Rank Matching (tag[3] modifier on arithmetic ops):
+      // at least one source must carry EXACTLY inst_tag's rank, else trap.
+      if (itag_is_eqr(inputs.tag) && (alu_outputs.control != CONTROL_TRAP)) begin
+         Bool rank_matched = (inputs.rs1_val_tag == inst_tag)
+                          || (two_src && (inputs.rs2_val_tag == inst_tag));
+         if (! rank_matched) begin
+            alu_outputs.exc_code = excep_CFI;
+            alu_outputs.control  = CONTROL_TRAP;
+         end
+      end
    end
 end
 ```
@@ -112,7 +123,19 @@ flowchart TD
   G -->|no| M["reg_tag = MAX(rs1_tag, rs2_tag)"]
   M --> I["inst_tag = CP if CPO,<br/>DP if DPO, else DT"]
   I --> R["val1_tag = MIN(reg_tag, inst_tag)"]
+  R --> E{"[EQR] set and no<br/>source == inst_tag?"}
+  E -->|yes| ETRAP["excep_CFI → CONTROL_TRAP"]
+  E -->|no| OK["commit val1_tag"]
 ```
+
+**`[EQR]` — Equal Rank Matching.** The baseline rule only guarantees a pointer
+output needs a pointer source. `[EQR]` (the `tag[3]` bit on an arithmetic op,
+[chapter 02](02-isa-and-tags.md)) tightens it so at least one source must carry
+*exactly* the rank the base op implies — `GEN`→`[DT]`, `DPO`→`[DP]`, `CPO`→`[CP]`.
+A prologue stack-pointer adjust tagged `[DPO+EQR]` therefore traps unless it is
+operating on a genuine data pointer, catching type misuse at the arithmetic
+instruction. The guard `alu_outputs.control != CONTROL_TRAP` lets the more
+specific `[GEN]`-consumes-`[RA]` RAP trap win when both would fire.
 
 **Scope:** integer arithmetic — `op_OP`, `op_OP_IMM`, `op_OP_32`, `op_OP_IMM_32`
 (incl. shifts) and the `M` (MUL/DIV/REM) ops (whose result *value* is produced later by

@@ -1468,6 +1468,24 @@ function ALU_Outputs fv_ALU (ALU_Inputs inputs);
 
          // result data tag = MIN(reg_tag, inst_tag)
          alu_outputs.val1_tag = (reg_tag <= inst_tag) ? reg_tag : inst_tag;
+
+         // [EQR] Equal Rank Matching (tag[3] modifier on arithmetic ops).
+         // The baseline rank rule only requires MAX(src ranks) >= 1 for a
+         // pointer output. EQR tightens this: at least one source operand must
+         // carry EXACTLY the rank the instruction tag implies (inst_tag), else
+         // the op is operating on the wrong data type and we trap. Catches, at
+         // the arithmetic instruction, a stack-pointer adjust ([DPO], expect
+         // [DP]) or loop-counter increment ([GEN], expect [DT]) fed a value of
+         // the wrong type. x0 reads as [DT]/rank-0 here, matching read_rs1.
+         // Guarded so the more specific [GEN]-consumes-[RA] RAP trap above wins.
+         if (itag_is_eqr(inputs.tag) && (alu_outputs.control != CONTROL_TRAP)) begin
+            Bool rank_matched = (inputs.rs1_val_tag == inst_tag)
+                             || (two_src && (inputs.rs2_val_tag == inst_tag));
+            if (! rank_matched) begin
+               alu_outputs.exc_code = excep_CFI;
+               alu_outputs.control  = CONTROL_TRAP;
+            end
+         end
       end
    end
 
